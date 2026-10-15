@@ -26,5 +26,11 @@ namespace NewsPortal.Controllers
 
             return View("trangancut");
         }
+        public ActionResult Privacy()
+        {
+            ViewBag.Message = "Your privacy page.";
+
+            return View();
+        }
     }
 }
