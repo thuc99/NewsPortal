@@ -1,0 +1,33 @@
+﻿@model NewsPortal.Models.Article
+
+@{
+    ViewBag.Title = "Xóa bài viết";
+}
+
+<h2>Xóa bài viết</h2>
+
+<h3>Bạn có chắc chắn muốn xóa bài viết này không?</h3>
+<div>
+    <h4>Bài viết</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>@Html.DisplayNameFor(model => model.Title)</dt>
+        <dd>@Html.DisplayFor(model => model.Title)</dd>
+
+        <dt>@Html.DisplayNameFor(model => model.Content)</dt>
+        <dd>@Html.DisplayFor(model => model.Content)</dd>
+
+        <dt>@Html.DisplayNameFor(model => model.CreatedDate)</dt>
+        <dd>@Html.DisplayFor(model => model.CreatedDate)</dd>
+    </dl>
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Xóa" class="btn btn-danger" /> |
+            @Html.ActionLink("Quay lại danh sách", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    }
+</div>

@@ -1,0 +1,36 @@
+﻿@model IEnumerable<NewsPortal.Models.Article>
+
+@{
+    ViewBag.Title = "Quản lý bài viết";
+}
+
+<h2>Quản lý bài viết</h2>
+
+<p>
+    @Html.ActionLink("Thêm mới bài viết", "Create", null, new { @class = "btn btn-primary" })
+</p>
+
+<table class="table table-bordered table-striped">
+    <tr>
+        <th>Hình ảnh</th>
+        <th>Tiêu đề</th>
+        <th>Ngày đăng</th>
+        <th>Thao tác</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                <img src="~/Content/Images/@item.Image" width="80" height="60" style="object-fit: cover;" />
+            </td>
+            <td>@Html.DisplayFor(modelItem => item.Title)</td>
+            <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
+            <td>
+                @Html.ActionLink("Sửa", "Edit", new { id = item.Id }, new { @class = "btn btn-sm btn-warning" }) |
+                @Html.ActionLink("Chi tiết", "Details", new { id = item.Id }, new { @class = "btn btn-sm btn-info" }) |
+                @Html.ActionLink("Xóa", "Delete", new { id = item.Id }, new { @class = "btn btn-sm btn-danger" })
+            </td>
+        </tr>
+    }
+</table>
