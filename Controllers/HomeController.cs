@@ -27,5 +27,11 @@ namespace NewsPortal.Controllers
 
             return View();
         }
+        public ActionResult Privacy()
+        {
+            ViewBag.Message = "Your privacy page.";
+
+            return View();
+        }
     }
 }
