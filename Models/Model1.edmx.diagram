@@ -4,7 +4,13 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="f1728136d5564b349e949f5fa88f8b6f" Name="Diagram1" />
+      <Diagram DiagramId="f1728136d5564b349e949f5fa88f8b6f" Name="Diagram1" ZoomLevel="94" >
+        <EntityTypeShape EntityType="NewsPortalDBModel.Articles" Width="1.5" PointX="3" PointY="1" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.Author" Width="1.5" PointX="0.75" PointY="1.625" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.Category" Width="1.5" PointX="0.75" PointY="5.625" />
+        <AssociationConnector Association="NewsPortalDBModel.FK_Articles_Authors" />
+        <AssociationConnector Association="NewsPortalDBModel.FK_Articles_Categories" />
+      </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
 </edmx:Edmx>

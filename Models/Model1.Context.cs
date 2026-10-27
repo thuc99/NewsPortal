@@ -25,5 +25,8 @@ namespace NewsPortal.Models
             throw new UnintentionalCodeFirstException();
         }
     
+        public virtual DbSet<Articles> Articles { get; set; }
+        public virtual DbSet<Author> Authors { get; set; }
+        public virtual DbSet<Category> Categories { get; set; }
     }
 }

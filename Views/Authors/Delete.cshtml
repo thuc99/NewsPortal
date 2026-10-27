@@ -1,0 +1,16 @@
+﻿
+@model NewsPortal.Models.Author
+@{ ViewBag.Title = "Xóa tác giả"; }
+
+<h2>Xóa tác giả</h2>
+
+<div class="alert alert-warning">
+    Bạn có chắc muốn xóa tác giả <strong>@Model.AuthorName</strong> (@Model.Email)?
+</div>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+    @Html.ActionLink("Hủy", "Index", null, new { @class = "btn btn-default" })
+}
