@@ -1,39 +1,385 @@
-﻿<!DOCTYPE html>
-<html>
+﻿
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewBag.Title - NewsPortal</title>
+
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding-top: 90px;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f6fa;
+            color: #263445;
+        }
+
+        /* THANH DIEU HUONG */
+        .news-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            width: 100%;
+            background: #152d4a;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .news-nav-container {
+            max-width: 1320px;
+            min-height: 72px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        /* LOGO */
+        .news-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+            .news-brand:hover,
+            .news-brand:focus {
+                color: #fff;
+                text-decoration: none;
+            }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            background: #2878f0;
+            color: #fff;
+            font-size: 22px;
+        }
+
+        /* CAC MUC MENU */
+        .news-nav-content {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .news-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .news-nav-links li {
+                margin: 0;
+                padding: 0;
+            }
+
+            .news-nav-links a {
+                display: block;
+                padding: 12px 13px;
+                color: #e8eef7;
+                font-size: 14px;
+                text-decoration: none;
+                border-radius: 6px;
+                white-space: nowrap;
+                transition: background 0.2s;
+            }
+
+                .news-nav-links a:hover,
+                .news-nav-links a:focus {
+                    background: #284867;
+                    color: #fff;
+                    text-decoration: none;
+                }
+
+        /* TIM KIEM */
+        .news-search {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0;
+        }
+
+            .news-search input {
+                width: 210px;
+                height: 38px;
+                padding: 8px 12px;
+                border: 1px solid #d5deea;
+                border-radius: 6px;
+                background: #fff;
+                color: #263445;
+                font-size: 14px;
+                outline: none;
+            }
+
+                .news-search input:focus {
+                    border-color: #6ea8fe;
+                }
+
+            .news-search button {
+                height: 38px;
+                padding: 0 15px;
+                border: none;
+                border-radius: 6px;
+                background: #2878f0;
+                color: #fff;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+                .news-search button:hover {
+                    background: #1764d1;
+                }
+
+        /* NUT MENU DIEN THOAI */
+        .news-menu-toggle {
+            display: none;
+            margin-left: auto;
+            padding: 7px 12px;
+            border: 1px solid #60758d;
+            border-radius: 6px;
+            background: transparent;
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        /* NOI DUNG */
+        .body-content {
+            min-height: 70vh;
+            padding: 25px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(30, 50, 80, 0.05);
+        }
+
+            .body-content h1,
+            .body-content h2 {
+                color: #1b2f46;
+            }
+
+        /* FOOTER */
+        .news-footer {
+            margin-top: 25px;
+            padding: 20px 0;
+            color: #718096;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        /* RESPONSIVE */
+        @@media (max-width: 1050px) {
+            .news-nav-container {
+                gap: 15px;
+                padding: 0 16px;
+            }
+
+            .news-brand {
+                font-size: 19px;
+            }
+
+            .news-nav-links a {
+                padding: 10px 8px;
+            }
+
+            .news-search input {
+                width: 150px;
+            }
+        }
+
+        @@media (max-width: 850px) {
+            body {
+                padding-top: 78px;
+            }
+
+            .news-nav-container {
+                min-height: 68px;
+                flex-wrap: wrap;
+                padding: 14px 18px;
+                gap: 12px;
+            }
+
+            .news-menu-toggle {
+                display: block;
+            }
+
+            .news-nav-content {
+                display: none;
+                flex-basis: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+                padding: 8px 0 6px;
+            }
+
+                .news-nav-content.is-open {
+                    display: flex;
+                }
+
+            .news-nav-links {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+
+                .news-nav-links a {
+                    padding: 12px;
+                }
+
+            .news-search {
+                width: 100%;
+            }
+
+                .news-search input {
+                    width: 100%;
+                    min-width: 0;
+                    flex: 1;
+                }
+
+            .body-content {
+                padding: 16px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
-        <div class="container">
-            @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" title="Toggle navigation" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+
+    <!-- THANH DIEU HUONG -->
+    <nav class="news-navbar">
+        <div class="news-nav-container">
+
+            <!-- LOGO -->
+            <a class="news-brand"
+               href="@Url.Action("Index", "Home")">
+                <span class="brand-icon">N</span>
+                <span>NEWSPORTAL</span>
+            </a>
+
+            <!-- NUT MENU TREN DIEN THOAI -->
+            <button type="button"
+                    class="news-menu-toggle"
+                    id="newsMenuToggle"
+                    aria-label="Mo menu"
+                    aria-expanded="false"
+                    aria-controls="newsNavContent">
+                ☰
             </button>
-            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li>@Html.ActionLink("Home", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("About", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
+
+            <!-- CAC LIEN KET -->
+            <div class="news-nav-content" id="newsNavContent">
+
+                <ul class="news-nav-links">
+                    <li>
+                        <a href="@Url.Action("Index", "Home")">
+                            Trang chủ
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="@Url.Action("Index", "Articles")">
+                            Bài viết
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="@Url.Action("Index", "Categories")">
+                            Danh mục
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="@Url.Action("Index", "Authors")">
+                            Tác giả
+                        </a>
+                    </li>
                 </ul>
+
+                <!-- FORM TIM KIEM -->
+                <form class="news-search"
+                      action="@Url.Action("Index", "Articles")"
+                      method="get">
+
+                    <input type="text"
+                           name="searchString"
+                           placeholder="Tìm kiếm tin tức..."
+                           aria-label="Tìm kiếm tin tức" />
+
+                    <button type="submit">Tìm</button>
+                </form>
+
             </div>
         </div>
     </nav>
+
+    <!-- NOI DUNG CAC TRANG -->
     <div class="container body-content">
         @RenderBody()
-        <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+    </div>
+
+    <!-- CHAN TRANG -->
+    <div class="container">
+        <footer class="news-footer">
+            <p>
+                &copy; @DateTime.Now.Year - NewsPortal.
+                Hệ thống quản lý và chia sẻ tin tức.
+            </p>
         </footer>
     </div>
 
+    <!-- SCRIPT -->
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+
+    <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    var toggle = document.getElementById("newsMenuToggle");
+                    var content = document.getElementById("newsNavContent");
+
+                    if (toggle && content) {
+                        toggle.addEventListener("click", function () {
+                            content.classList.toggle("is-open");
+
+                            var isOpen =
+                                content.classList.contains("is-open");
+
+                            toggle.setAttribute("aria-expanded", isOpen);
+                            toggle.setAttribute(
+                                "aria-label",
+                                isOpen ? "Dong menu" : "Mo menu"
+                            );
+
+                            toggle.textContent = isOpen ? "✕" : "☰";
+                        });
+                    }
+                });
+    </script>
+
     @RenderSection("scripts", required: false)
+
 </body>
 </html>
