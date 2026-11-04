@@ -1,0 +1,190 @@
+/* BEGIN EXTERNAL SOURCE */
+
+    body {
+        background: #fff !important;
+        font-family: 'Segoe UI', sans-serif;
+        color: #243047;
+    }
+
+    .edit-container {
+        max-width: 1050px;
+        margin: 35px auto;
+        padding: 20px;
+    }
+
+    .edit-card {
+        background: #fff;
+        border: 1px solid #eeeeee;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.04);
+    }
+
+    /* Tiêu đề nằm bên trong khung trắng */
+    .edit-header {
+        text-align: left;
+        padding-bottom: 25px;
+        margin-bottom: 25px;
+        border-bottom: 1px solid #eeeeee;
+    }
+
+        .edit-header h2 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 10px;
+        }
+
+        .edit-header p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin: 0;
+        }
+
+    .section-title {
+        font-size: 19px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 5px;
+    }
+
+    .section-subtitle {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 10px;
+    }
+
+    .edit-input {
+        width: 100%;
+        height: auto;
+        padding: 13px 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 9px;
+        font-size: 14px;
+        color: #334155;
+        box-shadow: none;
+        transition: 0.2s;
+    }
+
+        .edit-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            outline: none;
+        }
+
+    textarea.edit-input {
+        min-height: 200px;
+        resize: vertical;
+        line-height: 1.7;
+    }
+
+    .image-box {
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        gap: 25px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .image-preview {
+        width: 190px;
+        height: 135px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .image-info {
+        flex: 1;
+        min-width: 220px;
+    }
+
+        .image-info h5 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .image-info p {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+    .file-input {
+        font-size: 13px;
+        width: 100%;
+    }
+
+    .form-actions {
+        border-top: 1px solid #eeeeee;
+        padding-top: 25px;
+        margin-top: 30px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Nút xác nhận màu đỏ */
+    .btn-save {
+        background: #dc2626;
+        color: white !important;
+        border: none;
+        padding: 12px 23px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .btn-save:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+    .btn-back {
+        background: #f1f5f9;
+        color: #475569 !important;
+        padding: 12px 23px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: 0.2s;
+    }
+
+        .btn-back:hover {
+            background: #e2e8f0;
+        }
+pa    .text-danger {di        font-size:-13px;XT        margin-top:N6px;XT    } SOU    @@media/(max-width:i768px)g{
+        .edit-containert{:             padding:L12px;OU        }
+/*        .edit-cardN{pa            padding:t20px;ei        }bold        .edit-headergh2b{ E            font-size:*26px;EG        }ERNA        .image-preview { S            width:R100%;
+            height:*180px;it        }#d    }ordeadius: 4px;
+}
+/* END EXTERNAL SOURCE */
+/* BEGIN EXTERNAL SOURCE */
+span {
+display: block; margin-bottom: 5px;
+}
+/* END EXTERNAL SOURCE */
+/* BEGIN EXTERNAL SOURCE */
+div {
+margin-top: 15px;
+}
+/* END EXTERNAL SOURCE */

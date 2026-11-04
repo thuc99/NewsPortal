@@ -64,6 +64,90 @@
         border: 1px solid #edf0f5;
     }
 
+
+    /* Thanh tìm kiếm */
+    .search-area {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+    }
+
+    .search-form {
+        display: flex;
+        gap: 8px;
+        flex: 1;
+        max-width: 500px;
+    }
+
+    .search-input {
+        flex: 1;
+        min-width: 0;
+        height: 42px;
+        padding: 0 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        outline: none;
+        font-size: 14px;
+    }
+
+        .search-input:focus {
+            border-color: #2563eb;
+        }
+
+    .btn-search {
+        border: none;
+        background: #2563eb;
+        color: white;
+        padding: 0 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .btn-search:hover {
+            background: #1d4ed8;
+        }
+
+    .btn-reset {
+        display: inline-flex;
+        align-items: center;
+        padding: 0 14px;
+        height: 42px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        color: #475569 !important;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .search-result {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 35px;
+        color: #94a3b8;
+    }
+
+    @@media (max-width: 600px) {
+        .search-form {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .search-area {
+            align-items: stretch;
+        }
+    }
+
+
     .table {
         width: 100%;
         border-collapse: collapse;

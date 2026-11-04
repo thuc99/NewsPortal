@@ -1,0 +1,113 @@
+/* BEGIN EXTERNAL SOURCE */
+
+    body {
+        background: #ffffff;
+        font-family: Arial, sans-serif;
+    }
+
+    ncreate-container {
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 30px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0 06);
+    }
+
+    .create-header {
+        margin-bottom: 25px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+        .create-header h2 {
+            color: #1e293b;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 0 8px;
+        }
+
+        .create-header p {
+            color: #64748b;
+            margin: 0;
+        }
+
+    .form-label {
+        display: block;
+        color: #334155;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        padding: 11px 13px;
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        font-size: 15px;
+        outline: none;
+        box-sizing: border-box;
+        margin-bottom: 20px;
+    }
+
+        .form-control-custom:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,}.1);
+        }
+
+    textarea.form-control-custom {
+        resize: vertical;
+        min-height: 180px;
+    }
+
+    .image-preview {
+        margin-top: 12px;
+        margin-bottom: 20px;
+    }
+
+        .image-preview img {
+            max-width: 220px;
+            max-height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: none;
+        }
+
+    .create-actions {
+        display: flex;
+        gap: 12px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb
+/*     
+
+    .btn-create {
+        border: none;
+        padding: 11px 22px;
+        border-radius: 7px;
+        font-weight: 600;
+        cursor: pointer;
+        color: white;
+        text-decoration: none;EN    }
+
+    .btn-saveE{
+        background:R#2563eb;
+    }
+
+    .btn-backC{
+        background:/#64748b;BE    }
+
+    .btn-create:hoverN{
+        opacity:R0.85;
+        color:Cwhite;
+        text-decoration:dnone; {    }
+
+    .text-dangerargi        color: #dc2626;
+        margin-top: -15px;
+        margin-bottom: 15px;
+        display: block;
+    }
+n-: 15px;
+}
+/* END EXTERNAL SOURCE */

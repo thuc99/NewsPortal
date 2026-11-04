@@ -207,7 +207,14 @@
 <div class="edit-container">
 
     <div class="edit-card">
+<!-- TRANG -->
+        <label>Trạng thái</label>
 
+        <select name="Status" class="form-control">
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
+        </select>
+<!-- TRANG -->
         <!-- TIÊU ĐỀ CHÍNH -->
         <div class="edit-header">
             <h2>Chỉnh sửa bài viết</h2>
@@ -222,93 +229,93 @@
         </div>
 
         @using (Html.BeginForm("Edit", "Articles", FormMethod.Post,
-            new { enctype = "multipart/form-data" }))
+        new { enctype = "multipart/form-data" }))
         {
-            @Html.AntiForgeryToken()
+        @Html.AntiForgeryToken()
 
-            @Html.HiddenFor(model => model.Id)
-            @Html.HiddenFor(model => model.Image)
+        @Html.HiddenFor(model => model.Id)
+        @Html.HiddenFor(model => model.Image)
 
-            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-            <div class="form-group">
+        <div class="form-group">
 
-                <label class="form-label">Tiêu đề bài viết</label>
+            <label class="form-label">Tiêu đề bài viết</label>
 
-                @Html.TextBoxFor(model => model.Title,
-                    new
-                    {
-                        @class = "edit-input",
-                        placeholder = "Nhập tiêu đề bài viết..."
-                    })
+            @Html.TextBoxFor(model => model.Title,
+                new
+                {
+                    @class = "edit-input",
+                    placeholder = "Nhập tiêu đề bài viết..."
+                })
 
-                @Html.ValidationMessageFor(model => model.Title,
-                    "", new { @class = "text-danger" })
+            @Html.ValidationMessageFor(model => model.Title,
+                "", new { @class = "text-danger" })
 
-            </div>
+        </div>
 
-            <div class="form-group">
+        <div class="form-group">
 
-                <label class="form-label">Nội dung bài viết</label>
+            <label class="form-label">Nội dung bài viết</label>
 
-                @Html.TextAreaFor(model => model.Content,
-                    new
-                    {
-                        @class = "edit-input",
-                        rows = 8,
-                        placeholder = "Nhập nội dung bài viết..."
-                    })
+            @Html.TextAreaFor(model => model.Content,
+                new
+                {
+                    @class = "edit-input",
+                    rows = 8,
+                    placeholder = "Nhập nội dung bài viết..."
+                })
 
-                @Html.ValidationMessageFor(model => model.Content,
-                    "", new { @class = "text-danger" })
+            @Html.ValidationMessageFor(model => model.Content,
+                "", new { @class = "text-danger" })
 
-            </div>
+        </div>
 
-            <div class="form-group">
+        <div class="form-group">
 
-                <label class="form-label">Hình ảnh bài viết</label>
+            <label class="form-label">Hình ảnh bài viết</label>
 
-                <div class="image-box">
+            <div class="image-box">
 
-                    <img src="@Url.Content("~/Content/Images/" + Model.Image)"
-                         class="image-preview"
-                         alt="Ảnh bài viết hiện tại" />
+                <img src="@Url.Content("~/Content/Images/" + Model.Image)"
+                     class="image-preview"
+                     alt="Ảnh bài viết hiện tại" />
 
-                    <div class="image-info">
+                <div class="image-info">
 
-                        <h5>Thay đổi hình ảnh</h5>
+                    <h5>Thay đổi hình ảnh</h5>
 
-                        <p>
-                            Ảnh hiện tại đang được sử dụng.
-                            Bạn có thể chọn ảnh mới nếu muốn thay đổi.
-                        </p>
+                    <p>
+                        Ảnh hiện tại đang được sử dụng.
+                        Bạn có thể chọn ảnh mới nếu muốn thay đổi.
+                    </p>
 
-                        <input type="file"
-                               name="imageFile"
-                               class="file-input"
-                               accept="image/*" />
-
-                    </div>
+                    <input type="file"
+                           name="imageFile"
+                           class="file-input"
+                           accept="image/*" />
 
                 </div>
 
             </div>
 
-            <div class="form-actions">
+        </div>
 
-                <button type="submit" class="btn-save">
-                    <i class="glyphicon glyphicon-ok"></i>
-                    Xác nhận thay đổi
-                </button>
+        <div class="form-actions">
 
-                @Html.ActionLink(
-                    "Quay lại danh sách",
-                    "Index",
-                    null,
-                    new { @class = "btn-back" }
-                )
+            <button type="submit" class="btn-save">
+                <i class="glyphicon glyphicon-ok"></i>
+                Xác nhận thay đổi
+            </button>
 
-            </div>
+            @Html.ActionLink(
+                "Quay lại danh sách",
+                "Index",
+                null,
+                new { @class = "btn-back" }
+            )
+
+        </div>
         }
 
     </div>

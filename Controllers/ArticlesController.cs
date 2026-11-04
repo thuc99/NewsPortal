@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
+using System;
 using System.IO;
 using System.Linq;
+using System.Data.Entity;
 using System.Web;
 using System.Web.Mvc;
 using NewsPortal.Models;
@@ -10,27 +11,50 @@ namespace NewsPortal.Controllers
 {
     public class ArticlesController : Controller
     {
-        // Danh sách lưu trữ tạm thời trong bộ nhớ
-        private static List<Article> dbArticles = new List<Article>()
-        {
-            new Article { Id = 1, Title = "Giới thiệu trang tin tức NewsPortal", Content = "Nội dung chào mừng...", Image = "default.jpg", CreatedDate = DateTime.Now },
-            new Article { Id = 2, Title = "Cập nhật công nghệ lập trình Web", Content = "ASP.NET MVC...", Image = "default.jpg", CreatedDate = DateTime.Now }
-        };
+        private NewsPortalDBEntities db = new NewsPortalDBEntities();
 
         // GET: Articles
-        public ActionResult Index()
+        // Hiển thị danh sách và tìm kiếm bài viết
+        public ActionResult Index(string searchString)
         {
-            return View(dbArticles);
+            var articles = db.Articles
+                .Include(a => a.Categories)
+                .Include(a => a.Authors)
+                .AsQueryable();
+
+            // Tìm kiếm theo tiêu đề hoặc nội dung
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                searchString = searchString.Trim();
+
+                articles = articles.Where(a =>
+                    a.Title.Contains(searchString) ||
+                    a.Content.Contains(searchString)
+                );
+            }
+
+            ViewBag.SearchString = searchString;
+
+            var result = articles
+                .OrderByDescending(a => a.CreatedDate)
+                .ToList();
+
+            return View(result);
         }
 
         // GET: Articles/Details/5
         public ActionResult Details(int id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
+            var article = db.Articles
+                .Include(a => a.Categories)
+                .Include(a => a.Authors)
+                .FirstOrDefault(a => a.Id == id);
+
             if (article == null)
             {
                 return HttpNotFound();
             }
+
             return View(article);
         }
 
@@ -47,11 +71,15 @@ namespace NewsPortal.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Xử lý upload ảnh
                 if (imageFile != null && imageFile.ContentLength > 0)
                 {
                     string fileName = Path.GetFileName(imageFile.FileName);
-                    string path = Path.Combine(Server.MapPath("~/Content/Images/"), fileName);
+
+                    string path = Path.Combine(
+                        Server.MapPath("~/Content/Images/"),
+                        fileName
+                    );
+
                     imageFile.SaveAs(path);
                     article.Image = fileName;
                 }
@@ -60,9 +88,11 @@ namespace NewsPortal.Controllers
                     article.Image = "no-image.jpg";
                 }
 
-                article.Id = dbArticles.Count > 0 ? dbArticles.Max(x => x.Id) + 1 : 1;
                 article.CreatedDate = DateTime.Now;
-                dbArticles.Add(article);
+
+                db.Articles.Add(article);
+                db.SaveChanges();
+
                 return RedirectToAction("Index");
             }
 
@@ -77,7 +107,7 @@ namespace NewsPortal.Controllers
                 return RedirectToAction("Index");
             }
 
-            var article = dbArticles.FirstOrDefault(x => x.Id == id.Value);
+            var article = db.Articles.Find(id);
 
             if (article == null)
             {
@@ -94,34 +124,47 @@ namespace NewsPortal.Controllers
         {
             if (ModelState.IsValid)
             {
-                var existing = dbArticles.FirstOrDefault(x => x.Id == article.Id);
-                if (existing != null)
-                {
-                    existing.Title = article.Title;
-                    existing.Content = article.Content;
+                var existing = db.Articles.Find(article.Id);
 
-                    // Nếu chọn ảnh mới khi sửa
-                    if (imageFile != null && imageFile.ContentLength > 0)
-                    {
-                        string fileName = Path.GetFileName(imageFile.FileName);
-                        string path = Path.Combine(Server.MapPath("~/Content/Images/"), fileName);
-                        imageFile.SaveAs(path);
-                        existing.Image = fileName;
-                    }
+                if (existing == null)
+                {
+                    return HttpNotFound();
                 }
+
+                existing.Title = article.Title;
+                existing.Content = article.Content;
+
+                if (imageFile != null && imageFile.ContentLength > 0)
+                {
+                    string fileName = Path.GetFileName(imageFile.FileName);
+
+                    string path = Path.Combine(
+                        Server.MapPath("~/Content/Images/"),
+                        fileName
+                    );
+
+                    imageFile.SaveAs(path);
+                    existing.Image = fileName;
+                }
+
+                db.SaveChanges();
+
                 return RedirectToAction("Index");
             }
+
             return View(article);
         }
 
         // GET: Articles/Delete/5
         public ActionResult Delete(int id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
+            var article = db.Articles.Find(id);
+
             if (article == null)
             {
                 return HttpNotFound();
             }
+
             return View(article);
         }
 
@@ -130,12 +173,25 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
+            var article = db.Articles.Find(id);
+
             if (article != null)
             {
-                dbArticles.Remove(article);
+                db.Articles.Remove(article);
+                db.SaveChanges();
             }
+
             return RedirectToAction("Index");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

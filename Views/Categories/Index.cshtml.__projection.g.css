@@ -1,0 +1,142 @@
+/* BEGIN EXTERNAL SOURCE */
+
+    .management-page {
+        max-width: 1150px;
+        margin: 35px auto;
+        padding: 0 20px;
+        color: #1e293b;
+    }
+
+    .management-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+
+        .management-header h2 {
+            font-size: 28px;
+            font-weight: 750;
+            margin-bottom: 6px;
+        }
+
+    .management-subtitle {
+        color: #64748b;
+        margin: 0;
+    }
+
+    .management-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .04);
+    }
+
+    .management-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .management-table th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .management-table td {
+            padding: 17px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .management-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .management-table tbody tr:hover {
+            background: #fafcff;
+        }
+
+    .category-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-weight: bold;
+    }
+
+    .btn-add {
+        display: inline-block;
+        background: #b91c1c;
+        color: white !important;
+        padding: 11px 17px;
+        border-radius: 8px;
+        text-decoration: none !important;
+        font-weight: 600;
+    }
+
+        .btn-add:hover {
+            background: #991b1b;
+        }
+
+    .action-link {
+        display: inline-block;
+        padding: 7px 10px;
+        margin: 2px;
+        border-radius: 6px;
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .action-edit {
+        color: #1d4ed8;
+        background: #dbeafe;
+    }
+
+    .action-delete {
+        color: #b91c1c;
+        background: #fee2e2;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 35px !important;
+        color: #64748b;
+    }
+
+    @@media (max-width: 650px) {
+        .management-page {
+            padding: 0 10px;
+            margin-top: 22px;
+        }
+
+        .management-table th,
+        .management-table td {
+            padding: 11px 9px;
+        }
+
+        .management-table {
+            font-size: 13px;
+        }
+    }
+
+/* END EXTERNAL SOURCE */
+/* BEGIN EXTERNAL SOURCE */
+th {
+width: 180px;
+}
+/* END EXTERNAL SOURCE */

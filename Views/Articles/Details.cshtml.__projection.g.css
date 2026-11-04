@@ -1,0 +1,81 @@
+/* BEGIN EXTERNAL SOURCE */
+
+    body {
+        background: #ffffff;
+        font-family: Arial, sans-serif;
+    }
+
+    .detail-container {
+        max-width: 900px;
+        margin: 35px auto;
+        padding: 30px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+    }
+
+    .detail-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+        .detail-header h2 {
+            color: #1e293b;
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+    .detail-date {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .detail-image {
+        width: 100%;
+        max-height: 430px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+
+    .detail-content {
+        color: #334155;
+        font-size: 16px;
+        line-height: 1.8;
+        white-space: pre-line;
+        margin-bottom: 30px;
+    }
+
+    .detail-actions {
+        display: flex;
+        gap: 10px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 20px;
+    }
+
+    .btn-detail {
+        padding: 10px 18px;
+        border-radius: 7px;
+        text-decoration: none;
+        font-weight: 600;
+        color: white;
+        display: inline-block;
+    }
+
+    .btn-edit {
+        background: #2563eb;
+    }
+
+    .btn-back {
+        background: #64748b;
+    }
+
+    .btn-detail:hover {
+        opacity: 0.85;
+        color: white;
+        text-decoration: none;
+    }
+
+/* END EXTERNAL SOURCE */
