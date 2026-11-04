@@ -4,34 +4,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Data.Entity;
+using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
 {
     public class HomeController : Controller
     {
+        private NewsPortalDBEntities db = new NewsPortalDBEntities();
+
         public ActionResult Index()
         {
-            return View();
-        }
+            var articles = db.Articles
+                .Include(a => a.Categories)
+                .Include(a => a.Authors)
+                .Where(a => a.Status == "Published")
+                .OrderByDescending(a => a.CreatedDate)
+                .ToList();
 
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your application description page.";
-
-            return View();
-        }
-
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
-
-            return View();
-        }
-        public ActionResult Privacy()
-        {
-            ViewBag.Message = "Your privacy page.";
-
-            return View();
+            return View(articles);
         }
     }
 }

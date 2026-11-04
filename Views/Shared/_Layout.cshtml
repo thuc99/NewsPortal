@@ -4,382 +4,249 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>@ViewBag.Title - NewsPortal</title>
-
-    @Styles.Render("~/Content/css")
-    @Scripts.Render("~/bundles/modernizr")
-
     <style>
-        * {
-            box-sizing: border-box;
+        :root {
+            --red: #b91c32;
+            --red-dark: #861b2b;
+            --ink: #20232a;
+            --muted: #737985;
+            --line: #e9e9ed;
+            --paper: #ffffff;
+            --soft: #f6f7f9;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            padding-top: 90px;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f3f6fa;
-            color: #263445;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: "Segoe UI", Arial, sans-serif;
+            line-height: 1.65;
         }
 
-        /* THANH DIEU HUONG */
-        .news-navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            width: 100%;
-            background: #152d4a;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        a { color: inherit; text-decoration: none; }
+        a:hover { color: var(--red); }
+
+        .top-strip {
+            background: var(--red-dark);
+            color: white;
+            font-size: 12px;
+            padding: 7px 0;
         }
 
-        .news-nav-container {
-            max-width: 1320px;
-            min-height: 72px;
-            margin: 0 auto;
-            padding: 0 24px;
+        .container {
+            width: min(1160px, calc(100% - 36px));
+            margin: auto;
+        }
+
+        .top-inner {
             display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        /* LOGO */
-        .news-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #fff;
-            text-decoration: none;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            white-space: nowrap;
-        }
-
-            .news-brand:hover,
-            .news-brand:focus {
-                color: #fff;
-                text-decoration: none;
-            }
-
-        .brand-icon {
-            width: 38px;
-            height: 38px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 8px;
-            background: #2878f0;
-            color: #fff;
-            font-size: 22px;
-        }
-
-        /* CAC MUC MENU */
-        .news-nav-content {
-            display: flex;
-            flex: 1;
-            align-items: center;
             justify-content: space-between;
+            gap: 12px;
+        }
+
+        .masthead {
+            padding: 25px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             gap: 20px;
         }
 
-        .news-nav-links {
+        .brand {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            line-height: 1.2;
+        }
+
+        .brand span { color: var(--red); }
+
+        .brand-caption {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .brand-note {
+            color: var(--muted);
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid var(--line);
+            position: relative;
+            z-index: 2;
+        }
+
+        .nav-inner {
             display: flex;
             align-items: center;
+            gap: 30px;
+            min-height: 53px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            min-height: 53px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 3px solid transparent;
+            padding-top: 3px;
+        }
+
+        .nav-link:hover {
+            color: var(--red);
+            border-bottom-color: var(--red);
+        }
+
+        .nav-home { color: var(--red); }
+
+        main { min-height: 60vh; }
+
+        .page-content { padding: 32px 0 55px; }
+
+        .site-footer {
+            background: #1d2027;
+            color: #d8d9de;
+            padding: 35px 0 20px;
+            margin-top: 20px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 35px;
+        }
+
+        .footer-brand {
+            color: white;
+            font-size: 23px;
+            font-weight: 900;
+        }
+
+        .footer-brand span { color: #ef6477; }
+
+        .footer-text {
+            color: #b9bbc4;
+            font-size: 13px;
+            max-width: 520px;
+        }
+
+        .footer-heading {
+            color: white;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
             gap: 5px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-            .news-nav-links li {
-                margin: 0;
-                padding: 0;
-            }
-
-            .news-nav-links a {
-                display: block;
-                padding: 12px 13px;
-                color: #e8eef7;
-                font-size: 14px;
-                text-decoration: none;
-                border-radius: 6px;
-                white-space: nowrap;
-                transition: background 0.2s;
-            }
-
-                .news-nav-links a:hover,
-                .news-nav-links a:focus {
-                    background: #284867;
-                    color: #fff;
-                    text-decoration: none;
-                }
-
-        /* TIM KIEM */
-        .news-search {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin: 0;
-        }
-
-            .news-search input {
-                width: 210px;
-                height: 38px;
-                padding: 8px 12px;
-                border: 1px solid #d5deea;
-                border-radius: 6px;
-                background: #fff;
-                color: #263445;
-                font-size: 14px;
-                outline: none;
-            }
-
-                .news-search input:focus {
-                    border-color: #6ea8fe;
-                }
-
-            .news-search button {
-                height: 38px;
-                padding: 0 15px;
-                border: none;
-                border-radius: 6px;
-                background: #2878f0;
-                color: #fff;
-                font-weight: 600;
-                cursor: pointer;
-            }
-
-                .news-search button:hover {
-                    background: #1764d1;
-                }
-
-        /* NUT MENU DIEN THOAI */
-        .news-menu-toggle {
-            display: none;
-            margin-left: auto;
-            padding: 7px 12px;
-            border: 1px solid #60758d;
-            border-radius: 6px;
-            background: transparent;
-            color: #fff;
-            font-size: 22px;
-            cursor: pointer;
-        }
-
-        /* NOI DUNG */
-        .body-content {
-            min-height: 70vh;
-            padding: 25px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(30, 50, 80, 0.05);
-        }
-
-            .body-content h1,
-            .body-content h2 {
-                color: #1b2f46;
-            }
-
-        /* FOOTER */
-        .news-footer {
-            margin-top: 25px;
-            padding: 20px 0;
-            color: #718096;
-            text-align: center;
             font-size: 13px;
         }
 
-        /* RESPONSIVE */
-        @@media (max-width: 1050px) {
-            .news-nav-container {
-                gap: 15px;
-                padding: 0 16px;
-            }
-
-            .news-brand {
-                font-size: 19px;
-            }
-
-            .news-nav-links a {
-                padding: 10px 8px;
-            }
-
-            .news-search input {
-                width: 150px;
-            }
+        .footer-bottom {
+            border-top: 1px solid #383b43;
+            margin-top: 25px;
+            padding-top: 15px;
+            color: #a8abb4;
+            font-size: 12px;
         }
 
-        @@media (max-width: 850px) {
-            body {
-                padding-top: 78px;
-            }
-
-            .news-nav-container {
-                min-height: 68px;
-                flex-wrap: wrap;
-                padding: 14px 18px;
-                gap: 12px;
-            }
-
-            .news-menu-toggle {
-                display: block;
-            }
-
-            .news-nav-content {
-                display: none;
-                flex-basis: 100%;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 14px;
-                padding: 8px 0 6px;
-            }
-
-                .news-nav-content.is-open {
-                    display: flex;
-                }
-
-            .news-nav-links {
-                flex-direction: column;
-                align-items: stretch;
-                width: 100%;
-            }
-
-                .news-nav-links a {
-                    padding: 12px;
-                }
-
-            .news-search {
-                width: 100%;
-            }
-
-                .news-search input {
-                    width: 100%;
-                    min-width: 0;
-                    flex: 1;
-                }
-
-            .body-content {
-                padding: 16px;
-            }
+        @@media (max-width: 650px) {
+            .brand { font-size: 27px; }
+            .brand-note { display: none; }
+            .nav-inner { gap: 18px; }
+            .nav-link { font-size: 11px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 20px; }
+            .top-inner { flex-direction: column; gap: 0; }
         }
     </style>
+    @RenderSection("styles", required: false)
 </head>
-
 <body>
+    <div class="top-strip">
+        <div class="container top-inner">
+            <span>TIN TỨC • CÔNG NGHỆ • ĐỜI SỐNG</span>
+            <span>Cập nhật thông tin mỗi ngày</span>
+        </div>
+    </div>
 
-    <!-- THANH DIEU HUONG -->
-    <nav class="news-navbar">
-        <div class="news-nav-container">
-
-            <!-- LOGO -->
-            <a class="news-brand"
-               href="@Url.Action("Index", "Home")">
-                <span class="brand-icon">N</span>
-                <span>NEWSPORTAL</span>
-            </a>
-
-            <!-- NUT MENU TREN DIEN THOAI -->
-            <button type="button"
-                    class="news-menu-toggle"
-                    id="newsMenuToggle"
-                    aria-label="Mo menu"
-                    aria-expanded="false"
-                    aria-controls="newsNavContent">
-                ☰
-            </button>
-
-            <!-- CAC LIEN KET -->
-            <div class="news-nav-content" id="newsNavContent">
-
-                <ul class="news-nav-links">
-                    <li>
-                        <a href="@Url.Action("Index", "Home")">
-                            Trang chủ
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="@Url.Action("Index", "Articles")">
-                            Bài viết
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="@Url.Action("Index", "Categories")">
-                            Danh mục
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="@Url.Action("Index", "Authors")">
-                            Tác giả
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- FORM TIM KIEM -->
-                <form class="news-search"
-                      action="@Url.Action("Index", "Articles")"
-                      method="get">
-
-                    <input type="text"
-                           name="searchString"
-                           placeholder="Tìm kiếm tin tức..."
-                           aria-label="Tìm kiếm tin tức" />
-
-                    <button type="submit">Tìm</button>
-                </form>
-
+    <header class="masthead">
+        <div class="container brand-row">
+            <div>
+                <a class="brand" href="@Url.Action("Index", "Home")">
+                    NEWS<span>PORTAL</span>
+                </a>
+                <div class="brand-caption">
+                    Thông tin mới · Góc nhìn đa chiều
+                </div>
             </div>
+            <div class="brand-note">
+                Cập nhật kiến thức<br />
+                Kết nối thông tin
+            </div>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a class="nav-link nav-home"
+               href="@Url.Action("Index", "Home")">Trang chủ</a>
+            <a class="nav-link"
+               href="@Url.Action("Index", "Articles")">Tin tức</a>
+            <a class="nav-link"
+               href="@Url.Action("Index", "Categories")">Danh mục</a>
+            <a class="nav-link"
+               href="@Url.Action("Index", "Authors")">Tác giả</a>
         </div>
     </nav>
 
-    <!-- NOI DUNG CAC TRANG -->
-    <div class="container body-content">
-        @RenderBody()
-    </div>
+    <main>
+        <div class="container page-content">
+            @RenderBody()
+        </div>
+    </main>
 
-    <!-- CHAN TRANG -->
-    <div class="container">
-        <footer class="news-footer">
-            <p>
-                &copy; @DateTime.Now.Year - NewsPortal.
-                Hệ thống quản lý và chia sẻ tin tức.
-            </p>
-        </footer>
-    </div>
-
-    <!-- SCRIPT -->
-    @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/bootstrap")
-
-    <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    var toggle = document.getElementById("newsMenuToggle");
-                    var content = document.getElementById("newsNavContent");
-
-                    if (toggle && content) {
-                        toggle.addEventListener("click", function () {
-                            content.classList.toggle("is-open");
-
-                            var isOpen =
-                                content.classList.contains("is-open");
-
-                            toggle.setAttribute("aria-expanded", isOpen);
-                            toggle.setAttribute(
-                                "aria-label",
-                                isOpen ? "Dong menu" : "Mo menu"
-                            );
-
-                            toggle.textContent = isOpen ? "✕" : "☰";
-                        });
-                    }
-                });
-    </script>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand">NEWS<span>PORTAL</span></div>
+                    <p class="footer-text">
+                        NewsPortal là website tổng hợp và chia sẻ tin tức,
+                        mang đến nội dung dễ đọc, rõ ràng và thuận tiện cho người dùng.
+                    </p>
+                </div>
+                <div>
+                    <div class="footer-heading">LIÊN KẾT</div>
+                    <div class="footer-links">
+                        <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                        <a href="@Url.Action("Index", "Articles")">Tin tức</a>
+                        <a href="@Url.Action("Index", "Categories")">Danh mục</a>
+                        <a href="@Url.Action("Index", "Authors")">Tác giả</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © @DateTime.Now.Year NewsPortal. Website phục vụ mục đích học tập.
+            </div>
+        </div>
+    </footer>
 
     @RenderSection("scripts", required: false)
-
 </body>
 </html>
