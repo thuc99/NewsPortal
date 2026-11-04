@@ -1,38 +1,221 @@
-﻿@model IEnumerable<NewsPortal.Models.Author>
-@{ ViewBag.Title = "Quản lý tác giả"; }
+﻿
+@model IEnumerable<NewsPortal.Models.Author>
 
-<h2>Quản lý tác giả</h2>
-
-@if (TempData["Success"] != null)
-{<div class="alert alert-success">@TempData["Success"]</div>}
-@if (TempData["Error"] != null)
-{<div class="alert alert-danger">@TempData["Error"]</div>}
-
-<p>@Html.ActionLink("+ Thêm tác giả", "Create", null, new { @class = "btn btn-primary" })</p>
-
-@using (Html.BeginForm("Index", "Authors", FormMethod.Get))
-{
-    <input type="text" name="search" value="@ViewBag.Search" placeholder="Tìm theo tên hoặc email..." class="form-control" style="width:250px; display:inline-block" />
-    <button type="submit" class="btn btn-default">Tìm</button>
+@{
+    ViewBag.Title = "Quản lý tác giả";
 }
-<br />
 
-<table class="table table-striped">
-    <tr><th>#</th><th>Tên tác giả</th><th>Email</th><th></th></tr>
-    @foreach (var item in Model)
-    {
-        <tr>
-            <td>@item.AuthorID</td>
-            <td>@item.AuthorName</td>
-            <td>@item.Email</td>
-            <td>
-                @Html.ActionLink("Sửa", "Edit", new { id = item.AuthorID }) |
-                @Html.ActionLink("Xóa", "Delete", new { id = item.AuthorID })
-            </td>
-        </tr>
+<style>
+    .management-page {
+        max-width: 1150px;
+        margin: 35px auto;
+        padding: 0 20px;
+        color: #1e293b;
     }
-    @if (!Model.Any())
-    {
-        <tr><td colspan="4" class="text-center text-muted">Không có tác giả nào.</td></tr>
+
+    .management-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
     }
-</table>
+
+        .management-header h2 {
+            font-size: 28px;
+            font-weight: 750;
+            margin-bottom: 6px;
+        }
+
+    .management-subtitle {
+        color: #64748b;
+        margin: 0;
+    }
+
+    .management-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .04);
+    }
+
+    .management-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .management-table th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .management-table td {
+            padding: 17px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .management-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .management-table tbody tr:hover {
+            background: #fafcff;
+        }
+
+    .author-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+        border-radius: 50%;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 700;
+    }
+
+    .author-email {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .btn-add {
+        display: inline-block;
+        background: #b91c1c;
+        color: white !important;
+        padding: 11px 17px;
+        border-radius: 8px;
+        text-decoration: none !important;
+        font-weight: 600;
+    }
+
+        .btn-add:hover {
+            background: #991b1b;
+        }
+
+    .action-link {
+        display: inline-block;
+        padding: 7px 10px;
+        margin: 2px;
+        border-radius: 6px;
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .action-edit {
+        color: #1d4ed8;
+        background: #dbeafe;
+    }
+
+    .action-delete {
+        color: #b91c1c;
+        background: #fee2e2;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 35px !important;
+        color: #64748b;
+    }
+
+    @@media (max-width: 650px) {
+        .management-page {
+            padding: 0 10px;
+            margin-top: 22px;
+        }
+
+        .management-table th,
+        .management-table td {
+            padding: 11px 9px;
+        }
+
+        .management-table {
+            font-size: 13px;
+        }
+    }
+</style>
+
+<div class="management-page">
+    <div class="management-header">
+        <div>
+            <h2>Quản lý tác giả</h2>
+            <p class="management-subtitle">
+                Quản lý thông tin các tác giả của NewsPortal.
+            </p>
+        </div>
+
+        <div>
+            @Html.ActionLink(
+                "+ Thêm tác giả",
+                "Create",
+                "Authors",
+                null,
+                new { @class = "btn-add" }
+            )
+        </div>
+    </div>
+
+    <div class="management-card">
+        <table class="management-table">
+            <thead>
+                <tr>
+                    <th>Tác giả</th>
+                    <th>Email</th>
+                    <th style="width: 180px;">Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="author-avatar">A</span>
+                                <strong>@item.AuthorName</strong>
+                            </td>
+                            <td>
+                                <span class="author-email">
+                                    @item.Email
+                                </span>
+                            </td>
+                            <td>
+                                @Html.ActionLink(
+                                    "Sửa", "Edit",
+                                    new { id = item.AuthorID },
+                                    new { @class = "action-link action-edit" }
+                                )
+
+                                @Html.ActionLink(
+                                    "Xóa", "Delete",
+                                    new { id = item.AuthorID },
+                                    new { @class = "action-link action-delete" }
+                                )
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3" class="empty-message">
+                            Chưa có tác giả nào.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,16 +1,97 @@
 ﻿
 @model NewsPortal.Models.Author
-@{ ViewBag.Title = "Xóa tác giả"; }
 
-<h2>Xóa tác giả</h2>
-
-<div class="alert alert-warning">
-    Bạn có chắc muốn xóa tác giả <strong>@Model.AuthorName</strong> (@Model.Email)?
-</div>
-
-@using (Html.BeginForm())
-{
-    @Html.AntiForgeryToken()
-    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
-    @Html.ActionLink("Hủy", "Index", null, new { @class = "btn btn-default" })
+@{
+    ViewBag.Title = "Xóa tác giả";
 }
+
+<style>
+    .delete-page {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 18px;
+    }
+
+    .delete-card {
+        background: white;
+        border: 1px solid #fecaca;
+        border-radius: 13px;
+        padding: 30px;
+    }
+
+        .delete-card h2 {
+            color: #b91c1c;
+            font-size: 26px;
+            font-weight: 750;
+        }
+
+    .delete-warning {
+        background: #fff7ed;
+        color: #9a3412;
+        border: 1px solid #fed7aa;
+        border-radius: 8px;
+        padding: 14px;
+        margin: 20px 0;
+    }
+
+    .delete-info {
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .btn-delete, .btn-back {
+        border: 0;
+        padding: 10px 17px;
+        border-radius: 8px;
+        text-decoration: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-delete {
+        background: #b91c1c;
+        color: white;
+    }
+
+    .btn-back {
+        background: #e2e8f0;
+        color: #334155;
+    }
+</style>
+
+<div class="delete-page">
+    <div class="delete-card">
+        <h2>Xóa tác giả</h2>
+
+        <div class="delete-warning">
+            Bạn có chắc chắn muốn xóa tác giả này không?
+            Nếu tác giả vẫn còn bài viết, hệ thống sẽ từ chối thao tác.
+        </div>
+
+        <div class="delete-info">
+            <strong>Mã tác giả:</strong> @Model.AuthorID
+        </div>
+        <div class="delete-info">
+            <strong>Tên tác giả:</strong> @Model.AuthorName
+        </div>
+        <div class="delete-info">
+            <strong>Email:</strong> @Model.Email
+        </div>
+
+        @using (Html.BeginForm("Delete", "Authors", new { id = Model.AuthorID }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="delete-actions">
+                <button type="submit" class="btn-delete">Xác nhận xóa</button>
+                @Html.ActionLink("Hủy", "Index", null, new { @class = "btn-back" })
+            </div>
+        }
+    </div>
+</div>

@@ -1,16 +1,100 @@
-﻿@model NewsPortal.Models.Category
-@{ ViewBag.Title = "Xóa danh mục"; }
+﻿
+@model NewsPortal.Models.Category
 
-<h2>Xóa danh mục</h2>
-
-<div class="alert alert-warning">
-    Bạn có chắc muốn xóa danh mục <strong>@Model.CategoryName</strong>?
-    (Hiện có @ViewBag.ArticleCount bài viết thuộc danh mục này)
-</div>
-
-@using (Html.BeginForm())
-{
-    @Html.AntiForgeryToken()
-    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
-    @Html.ActionLink("Hủy", "Index", null, new { @class = "btn btn-default" })
+@{
+    ViewBag.Title = "Xóa danh mục";
 }
+
+<style>
+    .delete-page {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 0 18px;
+    }
+
+    .delete-card {
+        background: white;
+        border: 1px solid #fecaca;
+        border-radius: 13px;
+        padding: 30px;
+    }
+
+        .delete-card h2 {
+            color: #b91c1c;
+            font-size: 26px;
+            font-weight: 750;
+        }
+
+    .delete-warning {
+        background: #fff7ed;
+        color: #9a3412;
+        border: 1px solid #fed7aa;
+        border-radius: 8px;
+        padding: 14px;
+        margin: 20px 0;
+    }
+
+    .delete-info {
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .btn-delete, .btn-back {
+        border: 0;
+        padding: 10px 17px;
+        border-radius: 8px;
+        text-decoration: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-delete {
+        background: #b91c1c;
+        color: white;
+    }
+
+    .btn-back {
+        background: #e2e8f0;
+        color: #334155;
+    }
+</style>
+
+<div class="delete-page">
+    <div class="delete-card">
+        <h2>Xóa danh mục</h2>
+
+        <div class="delete-warning">
+            Bạn có chắc chắn muốn xóa danh mục này không?
+            Nếu danh mục vẫn còn bài viết, hệ thống sẽ từ chối thao tác.
+        </div>
+
+        <div class="delete-info">
+            <strong>Mã danh mục:</strong> @Model.CategoryID
+        </div>
+        <div class="delete-info">
+            <strong>Tên danh mục:</strong> @Model.CategoryName
+        </div>
+        <div class="delete-info">
+            <strong>Mô tả:</strong> @Model.Description
+        </div>
+        <div class="delete-info">
+            <strong>Số bài viết:</strong> @ViewBag.ArticleCount
+        </div>
+
+        @using (Html.BeginForm("Delete", "Categories", new { id = Model.CategoryID }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="delete-actions">
+                <button type="submit" class="btn-delete">Xác nhận xóa</button>
+                @Html.ActionLink("Hủy", "Index", null, new { @class = "btn-back" })
+            </div>
+        }
+    </div>
+</div>
