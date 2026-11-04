@@ -1,36 +1,294 @@
-﻿@model IEnumerable<NewsPortal.Models.Article>
+﻿
+@model IEnumerable<NewsPortal.Models.Article>
 
 @{
     ViewBag.Title = "Quản lý bài viết";
 }
 
-<h2>Quản lý bài viết</h2>
-
-<p>
-    @Html.ActionLink("Thêm mới bài viết", "Create", null, new { @class = "btn btn-primary" })
-</p>
-
-<table class="table table-bordered table-striped">
-    <tr>
-        <th>Hình ảnh</th>
-        <th>Tiêu đề</th>
-        <th>Ngày đăng</th>
-        <th>Thao tác</th>
-    </tr>
-
-    @foreach (var item in Model)
-    {
-        <tr>
-            <td>
-                <img src="~/Content/Images/@item.Image" width="80" height="60" style="object-fit: cover;" />
-            </td>
-            <td>@Html.DisplayFor(modelItem => item.Title)</td>
-            <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
-            <td>
-                @Html.ActionLink("Sửa", "Edit", new { id = item.Id }, new { @class = "btn btn-sm btn-warning" }) |
-                @Html.ActionLink("Chi tiết", "Details", new { id = item.Id }, new { @class = "btn btn-sm btn-info" }) |
-                @Html.ActionLink("Xóa", "Delete", new { id = item.Id }, new { @class = "btn btn-sm btn-danger" })
-            </td>
-        </tr>
+<style>
+    body {
+        background: #ffffff;
+        font-family: 'Segoe UI', sans-serif;
+        color: #243047;
     }
-</table>
+
+    .article-container {
+        padding: 30px;
+        max-width: 1200px;
+        margin: 25px auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 8px;
+    }
+
+    .page-subtitle {
+        color: #94a3b8;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .btn-create {
+        background: #2563eb;
+        color: white !important;
+        padding: 12px 20px;
+        border-radius: 10px;
+        text-decoration: none !important;
+        font-weight: 600;
+        transition: 0.3s;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+        .btn-create:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+    .article-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        border: 1px solid #edf0f5;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 18px 15px;
+            border: none;
+            text-align: left;
+        }
+
+            .table thead th:first-child {
+                border-radius: 10px 0 0 10px;
+            }
+
+            .table thead th:last-child {
+                border-radius: 0 10px 10px 0;
+            }
+
+        .table tbody td {
+            padding: 18px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tbody tr:hover {
+            background: #f8fbff;
+        }
+
+    .article-image {
+        width: 90px;
+        height: 65px;
+        object-fit: cover;
+        border-radius: 9px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .article-title {
+        font-weight: 600;
+        color: #1e293b;
+        min-width: 180px;
+    }
+
+    .article-date {
+        white-space: nowrap;
+        color: #64748b;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 7px;
+        text-decoration: none !important;
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.2s;
+        white-space: nowrap;
+    }
+
+    .btn-edit {
+        background: #fef3c7;
+        color: #b45309 !important;
+    }
+
+        .btn-edit:hover {
+            background: #fde68a;
+        }
+
+    .btn-detail {
+        background: #dbeafe;
+        color: #1d4ed8 !important;
+    }
+
+        .btn-detail:hover {
+            background: #bfdbfe;
+        }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #dc2626 !important;
+    }
+
+        .btn-delete:hover {
+            background: #fecaca;
+        }
+
+    
+        .empty-message {
+        text-align: center;
+        padding: 35px;
+        color: #94a3b8;
+    }
+
+    @@media (max-width: 768px) {
+        .article-container {
+            padding: 15px;
+        }
+
+        .article-card {
+            padding: 12px;
+            overflow-x: auto;
+        }
+
+        .table {
+            min-width: 650px;
+        }
+
+        .page-title {
+            font-size: 23px;
+        }
+    }
+</style>
+
+<div class="article-container">
+
+    <div class="page-header">
+        <div>
+            <h2 class="page-title">Quản lý bài viết</h2>
+            <p class="page-subtitle">
+                Quản lý và cập nhật các bài viết trên NewsPortal
+            </p>
+        </div>
+
+        @Html.ActionLink(
+            "+ Thêm bài viết",
+            "Create",
+            null,
+            new { @class = "btn-create" }
+        )
+    </div>
+
+    <div class="article-card">
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Hình ảnh</th>
+                    <th>Tiêu đề bài viết</th>
+                    <th>Ngày đăng</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@Url.Content("~/Content/Images/" + item.Image)"
+                                     class="article-image"
+                                     alt="Ảnh bài viết" />
+                            </td>
+
+                            <td>
+                                <div class="article-title">
+                                    @item.Title
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="article-date">
+                                    @item.CreatedDate.ToString("dd/MM/yyyy")
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="action-group">
+
+                                    @Html.ActionLink(
+                                        "Sửa",
+                                        "Edit",
+                                        new { id = item.Id },
+                                        new { @class = "action-btn btn-edit" }
+                                    )
+
+                                    @Html.ActionLink(
+                                        "Chi tiết",
+                                        "Details",
+                                        new { id = item.Id },
+                                        new { @class = "action-btn btn-detail" }
+                                    )
+
+                                    @Html.ActionLink(
+                                        "Xóa",
+                                        "Delete",
+                                        new { id = item.Id },
+                                        new { @class = "action-btn btn-delete" }
+                                    )
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="empty-message">
+                            Chưa có bài viết nào.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+</div>

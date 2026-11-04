@@ -1,25 +1,117 @@
-﻿@model NewsPortal.Models.Article
+﻿
+@model NewsPortal.Models.Article
 
 @{
     ViewBag.Title = "Chi tiết bài viết";
 }
 
-<h2>Chi tiết bài viết</h2>
+<style>
+    body {
+        background: #ffffff;
+        font-family: Arial, sans-serif;
+    }
 
-<div>
-    <h4>Bài viết</h4>
-    <hr />
-    <dl class="dl-horizontal">
-        <dt>@Html.DisplayNameFor(model => model.Title)</dt>
-        <dd>@Html.DisplayFor(model => model.Title)</dd>
+    .detail-container {
+        max-width: 900px;
+        margin: 35px auto;
+        padding: 30px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+    }
 
-        <dt>@Html.DisplayNameFor(model => model.Content)</dt>
-        <dd>@Html.DisplayFor(model => model.Content)</dd>
+    .detail-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
 
-        <dt>@Html.DisplayNameFor(model => model.CreatedDate)</dt>
-        <dd>@Html.DisplayFor(model => model.CreatedDate)</dd>
-    </dl>
+        .detail-header h2 {
+            color: #1e293b;
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+    .detail-date {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .detail-image {
+        width: 100%;
+        max-height: 430px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+
+    .detail-content {
+        color: #334155;
+        font-size: 16px;
+        line-height: 1.8;
+        white-space: pre-line;
+        margin-bottom: 30px;
+    }
+
+    .detail-actions {
+        display: flex;
+        gap: 10px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 20px;
+    }
+
+    .btn-detail {
+        padding: 10px 18px;
+        border-radius: 7px;
+        text-decoration: none;
+        font-weight: 600;
+        color: white;
+        display: inline-block;
+    }
+
+    .btn-edit {
+        background: #2563eb;
+    }
+
+    .btn-back {
+        background: #64748b;
+    }
+
+    .btn-detail:hover {
+        opacity: 0.85;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+<div class="detail-container">
+
+    <div class="detail-header">
+        <h2>@Model.Title</h2>
+        <div class="detail-date">
+            <i class="glyphicon glyphicon-calendar"></i>
+            Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Image))
+    {
+        <img src="@Url.Content("~/Content/Images/" + Model.Image)"
+             class="detail-image"
+             alt="Hình ảnh bài viết" />
+    }
+
+    <div class="detail-content">
+        @Model.Content
+    </div>
+
+    <div class="detail-actions">
+        @Html.ActionLink("Chỉnh sửa", "Edit", new { id = Model.Id },
+            new { @class = "btn-detail btn-edit" })
+
+        @Html.ActionLink("Quay lại danh sách", "Index", null,
+            new { @class = "btn-detail btn-back" })
+    </div>
+
 </div>
-<p>
-    @Html.ActionLink("Sửa", "Edit", new { id = Model.Id }, new { @class = "btn btn-warning" }) |
-    @Html.ActionLink("Quay lại danh sách", "Index", null, new { @class = "btn btn-default" })

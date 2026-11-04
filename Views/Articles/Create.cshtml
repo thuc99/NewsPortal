@@ -1,49 +1,180 @@
-﻿@model NewsPortal.Models.Article
+﻿
+@model NewsPortal.Models.Article
 
 @{
-    ViewBag.Title = "Thêm mới bài viết";
+    ViewBag.Title = "Thêm bài viết";
 }
 
-<h2>Thêm mới bài viết</h2>
+<style>
+    body {
+        background: #ffffff;
+        font-family: Arial, sans-serif;
+    }
 
-@using (Html.BeginForm("Create", "Articles", FormMethod.Post, new { enctype = "multipart/form-data" }))
-{
-    @Html.AntiForgeryToken()
+    .create-container {
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 30px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+    }
 
-    <div class="form-horizontal">
-        <h4>Bài viết</h4>
-        <hr />
+    .create-header {
+        margin-bottom: 25px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+        .create-header h2 {
+            color: #1e293b;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 0 8px;
+        }
+
+        .create-header p {
+            color: #64748b;
+            margin: 0;
+        }
+
+    .form-label {
+        display: block;
+        color: #334155;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        padding: 11px 13px;
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        font-size: 15px;
+        outline: none;
+        box-sizing: border-box;
+        margin-bottom: 20px;
+    }
+
+        .form-control-custom:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+    textarea.form-control-custom {
+        resize: vertical;
+        min-height: 180px;
+    }
+
+    .image-preview {
+        margin-top: 12px;
+        margin-bottom: 20px;
+    }
+
+        .image-preview img {
+            max-width: 220px;
+            max-height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: none;
+        }
+
+    .create-actions {
+        display: flex;
+        gap: 12px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-create {
+        border: none;
+        padding: 11px 22px;
+        border-radius: 7px;
+        font-weight: 600;
+        cursor: pointer;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-save {
+        background: #2563eb;
+    }
+
+    .btn-back {
+        background: #64748b;
+    }
+
+    .btn-create:hover {
+        opacity: 0.85;
+        color: white;
+        text-decoration: none;
+    }
+
+    .text-danger {
+        color: #dc2626;
+        margin-top: -15px;
+        margin-bottom: 15px;
+        display: block;
+    }
+</style>
+
+<div class="create-container">
+
+    <div class="create-header">
+        <h2>Thêm bài viết mới</h2>
+        <p>Điền thông tin bên dưới để tạo bài viết mới.</p>
+    </div>
+
+    @using (Html.BeginForm("Create", "Articles", FormMethod.Post,
+        new { enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
-            </div>
+        <label class="form-label">Tiêu đề bài viết</label>
+        @Html.TextBoxFor(model => model.Title,
+            new { @class = "form-control-custom", placeholder = "Nhập tiêu đề bài viết..." })
+        @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+
+        <label class="form-label">Nội dung bài viết</label>
+        @Html.TextAreaFor(model => model.Content,
+            new { @class = "form-control-custom", rows = 8, placeholder = "Nhập nội dung bài viết..." })
+        @Html.ValidationMessageFor(model => model.Content, "", new { @class = "text-danger" })
+
+        <label class="form-label">Hình ảnh bài viết</label>
+        <input type="file" name="imageFile" id="imageFile"
+               class="form-control-custom" accept="image/*" />
+
+        <div class="image-preview">
+            <img id="previewImage" alt="Ảnh xem trước" />
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.Content, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.TextAreaFor(model => model.Content, new { @class = "form-control", rows = 5 })
-                @Html.ValidationMessageFor(model => model.Content, "", new { @class = "text-danger" })
-            </div>
-        </div>
+        <div class="create-actions">
+            <button type="submit" class="btn-create btn-save">
+                <i class="glyphicon glyphicon-plus"></i>
+                Thêm bài viết
+            </button>
 
-        <!-- Ô chọn file hình ảnh -->
-        <div class="form-group">
-            <label class="control-label col-md-2">Hình ảnh</label>
-            <div class="col-md-10" style="padding-top: 6px;">
-                <input type="file" name="imageFile" id="imageFile" />
-            </div>
+            @Html.ActionLink("Quay lại danh sách", "Index", null,
+                new { @class = "btn-create btn-back" })
         </div>
+    }
+</div>
 
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10" style="margin-top: 15px;">
-                <input type="submit" value="Thêm mới" class="btn btn-primary" />
-                @Html.ActionLink("Quay lại danh sách", "Index", null, new { @class = "btn btn-default" })
-            </div>
-        </div>
-    </div>
-}
+<script>
+    document.getElementById("imageFile").addEventListener("change", function (event) {
+        var file = event.target.files[0];
+        var preview = document.getElementById("previewImage");
+
+        if (file && file.type.startsWith("image/")) {
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
+        } else {
+            preview.removeAttribute("src");
+            preview.style.display = "none";
+        }
+    });
+</script>

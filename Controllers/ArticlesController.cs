@@ -70,13 +70,20 @@ namespace NewsPortal.Controllers
         }
 
         // GET: Articles/Edit/5
-        public ActionResult Edit(int id)
+        public ActionResult Edit(int? id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var article = dbArticles.FirstOrDefault(x => x.Id == id.Value);
+
             if (article == null)
             {
                 return HttpNotFound();
             }
+
             return View(article);
         }
 
