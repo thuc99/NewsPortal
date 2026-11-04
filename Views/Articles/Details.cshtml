@@ -14,11 +14,11 @@
     .detail-container {
         max-width: 900px;
         margin: 35px auto;
-        padding: 30px;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        padding: 30px 15px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .detail-header {
@@ -89,6 +89,7 @@
 
     <div class="detail-header">
         <h2>@Model.Title</h2>
+
         <div class="detail-date">
             <i class="glyphicon glyphicon-calendar"></i>
             Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
