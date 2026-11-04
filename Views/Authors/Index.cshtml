@@ -183,7 +183,11 @@
                     {
                         <tr>
                             <td>
-                                <span class="author-avatar">A</span>
+                                <span class="author-avatar">
+                                    @(string.IsNullOrWhiteSpace(item.AuthorName)
+                            ? "?"
+                            : item.AuthorName.Trim().Substring(0, 1).ToUpper())
+                                </span>
                                 <strong>@item.AuthorName</strong>
                             </td>
                             <td>

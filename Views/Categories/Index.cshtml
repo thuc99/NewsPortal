@@ -178,7 +178,11 @@
                     {
                         <tr>
                             <td>
-                                <span class="category-icon">C</span>
+                                <span class="category-icon">
+                                    @(string.IsNullOrWhiteSpace(item.CategoryName)
+                            ? "?"
+                            : item.CategoryName.Trim().Substring(0, 1).ToUpper())
+                                </span>
                                 <strong>@item.CategoryName</strong>
                             </td>
                             <td>@item.Description</td>
