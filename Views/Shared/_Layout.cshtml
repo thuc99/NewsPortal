@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewBag.Title - NewsPortal</title>
     <style>
+        @{
+            string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+            string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+            }
+
         :root {
             --red: #b91c32;
             --red-dark: #861b2b;
@@ -111,7 +116,10 @@
             border-bottom-color: var(--red);
         }
 
-        .nav-home { color: var(--red); }
+        .nav-link.active {
+            color: var(--red);
+            border-bottom-color: var(--red);
+        }
 
         main { min-height: 60vh; }
 
@@ -204,14 +212,27 @@
 
     <nav class="navbar">
         <div class="container nav-inner">
-            <a class="nav-link nav-home"
-               href="@Url.Action("Index", "Home")">Trang chủ</a>
-            <a class="nav-link"
-               href="@Url.Action("Index", "Articles")">Tin tức</a>
-            <a class="nav-link"
-               href="@Url.Action("Index", "Categories")">Danh mục</a>
-            <a class="nav-link"
-               href="@Url.Action("Index", "Authors")">Tác giả</a>
+
+            <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")"
+               href="@Url.Action("Index", "Home")">
+                Trang chủ
+            </a>
+
+            <a class="nav-link @(currentController == "Articles" ? "active" : "")"
+               href="@Url.Action("Index", "Articles")">
+                Tin tức
+            </a>
+
+            <a class="nav-link @(currentController == "Categories" ? "active" : "")"
+               href="@Url.Action("Index", "Categories")">
+                Danh mục
+            </a>
+
+            <a class="nav-link @(currentController == "Authors" ? "active" : "")"
+               href="@Url.Action("Index", "Authors")">
+                Tác giả
+            </a>
+
         </div>
     </nav>
 
