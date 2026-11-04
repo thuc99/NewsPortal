@@ -1,0 +1,34 @@
+﻿@model NewsPortal.Models.Articles
+
+@{
+    ViewBag.Title = "Chi tiết bài viết";
+}
+
+<h2>@Model.Title</h2>
+
+<div style="margin-bottom:16px; color:#555; font-size:14px;">
+    <strong>Danh mục:</strong> @(Model.Categories != null ? Model.Categories.CategoryName : "—") |
+    <strong>Tác giả:</strong> @(Model.Authors != null ? Model.Authors.AuthorName : "—") |
+    <strong>Trạng thái:</strong> @Model.Status |
+    <strong>Ngày tạo:</strong> @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+    @if (Model.UpdatedDate.HasValue)
+    {
+        <span> | <strong>Cập nhật:</strong> @Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")</span>
+    }
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Summary))
+{
+    <p style="font-weight:bold; background:#f6f7f9; padding:12px; border-left:4px solid #b91c32;">
+        @Model.Summary
+    </p>
+}
+
+<div style="line-height:1.8; white-space:pre-line; margin-bottom:24px;">
+    @Model.Content
+</div>
+
+<p>
+    @Html.ActionLink("Sửa bài viết", "Edit", new { id = Model.ArticleID }, new { @class = "btn btn-warning" }) |
+    @Html.ActionLink("Quay lại danh sách", "Index", null, new { @class = "btn btn-default" })
+</p>

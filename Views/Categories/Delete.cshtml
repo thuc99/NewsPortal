@@ -1,0 +1,16 @@
+﻿@model NewsPortal.Models.Category
+@{ ViewBag.Title = "Xóa danh mục"; }
+
+<h2>Xóa danh mục</h2>
+
+<div class="alert alert-warning">
+    Bạn có chắc muốn xóa danh mục <strong>@Model.CategoryName</strong>?
+    (Hiện có @ViewBag.ArticleCount bài viết thuộc danh mục này)
+</div>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+    @Html.ActionLink("Hủy", "Index", null, new { @class = "btn btn-default" })
+}

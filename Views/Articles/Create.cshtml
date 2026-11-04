@@ -1,0 +1,62 @@
+﻿@model NewsPortal.Models.Articles
+
+@{
+    ViewBag.Title = "Thêm mới bài viết";
+}
+
+<h2>Thêm mới bài viết</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div style="color:red; margin-bottom:12px; font-weight:bold;">@TempData["Error"]</div>
+}
+
+@using (Html.BeginForm("Create", "Articles", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:4px;">Tiêu đề bài viết:</label>
+            @Html.TextBoxFor(model => model.Title, new { @class = "form-control", style = "width:100%; max-width:650px;" })
+            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:4px;">Danh mục:</label>
+            @Html.DropDownList("CategoryID", null, "-- Chọn danh mục --", new { @class = "form-control", style = "width:300px;" })
+            @Html.ValidationMessageFor(model => model.CategoryID, "", new { @class = "text-danger" })
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:4px;">Tác giả:</label>
+            @Html.DropDownList("AuthorID", null, "-- Chọn tác giả --", new { @class = "form-control", style = "width:300px;" })
+            @Html.ValidationMessageFor(model => model.AuthorID, "", new { @class = "text-danger" })
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:4px;">Trạng thái:</label>
+            @Html.DropDownListFor(model => model.Status, (IEnumerable<SelectListItem>)ViewBag.StatusList, new { @class = "form-control", style = "width:300px;" })
+            @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:4px;">Tóm tắt ngắn gọn:</label>
+            @Html.TextAreaFor(model => model.Summary, new { @class = "form-control", rows = 3, style = "width:100%; max-width:650px;" })
+            @Html.ValidationMessageFor(model => model.Summary, "", new { @class = "text-danger" })
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-weight:bold; display:block; margin-bottom:4px;">Nội dung chi tiết:</label>
+            @Html.TextAreaFor(model => model.Content, new { @class = "form-control", rows = 8, style = "width:100%; max-width:650px;" })
+            @Html.ValidationMessageFor(model => model.Content, "", new { @class = "text-danger" })
+        </div>
+
+        <div style="margin-top:18px;">
+            <input type="submit" value="Lưu bài viết" class="btn btn-primary" />
+            @Html.ActionLink("Quay lại danh sách", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+}
