@@ -6,7 +6,7 @@ namespace NewsPortal.Models
     public class Article
     {
  //trang
-        public class Article
+        public class Articles
         {
             public int ArticleID { get; set; }
 
