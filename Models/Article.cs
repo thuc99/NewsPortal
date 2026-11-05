@@ -5,18 +5,6 @@ namespace NewsPortal.Models
 {
     public class Article
     {
- //trang
-        public class Articles
-        {
-            public int ArticleID { get; set; }
-
-            public string Title { get; set; }
-
-            public string Content { get; set; }
-
-            public string Status { get; set; } // Draft hoặc Published
-        }
-//trang
         [Key]
         public int Id { get; set; }
 

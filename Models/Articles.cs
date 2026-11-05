@@ -11,7 +11,7 @@ namespace NewsPortal.Models
 {
     using System;
     using System.Collections.Generic;
-    
+
     public partial class Articles
     {
         public int ArticleID { get; set; }
@@ -23,7 +23,7 @@ namespace NewsPortal.Models
         public System.DateTime CreatedDate { get; set; }
         public Nullable<System.DateTime> UpdatedDate { get; set; }
         public string Status { get; set; }
-    
+
         public virtual Author Authors { get; set; }
         public virtual Category Categories { get; set; }
     }
