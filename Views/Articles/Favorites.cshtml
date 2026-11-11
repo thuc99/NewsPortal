@@ -1,0 +1,55 @@
+@model IEnumerable<NewsPortal.Models.Article>
+@using System.Linq
+
+@{
+    ViewBag.Title = "Bài viết yêu thích";
+}
+
+<style>
+    .favorites-page { max-width: 1100px; margin: 0 auto; }
+    .favorites-heading { margin-bottom: 24px; border-bottom: 2px solid #252830; padding-bottom: 10px; }
+    .favorites-heading h1 { margin: 0; font-size: 25px; }
+    .favorites-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+    .favorite-card { overflow: hidden; border: 1px solid #e9e9ed; border-radius: 10px; background: #fff; transition: .2s ease; }
+    .favorite-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(20,20,30,.09); }
+    .favorite-image { display: block; height: 155px; background: #f5dce1; }
+    .favorite-image img { width: 100%; height: 100%; object-fit: cover; }
+    .favorite-body { padding: 17px; }
+    .favorite-body h2 { margin: 0 0 8px; font-size: 18px; line-height: 1.4; }
+    .favorite-body p { color: #64748b; line-height: 1.6; }
+    .favorite-date { color: #94a3b8; font-size: 12px; }
+    .favorites-empty { padding: 36px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; }
+    @@media (max-width: 700px) { .favorites-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="favorites-page">
+    <div class="favorites-heading">
+        <h1>♡ Bài viết yêu thích</h1>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="favorites-grid">
+            @foreach (var article in Model)
+            {
+                <article class="favorite-card">
+                    <a class="favorite-image" href="@Url.Action("View", "Articles", new { id = article.Id })">
+                        @if (!string.IsNullOrWhiteSpace(article.Image))
+                        {
+                            <img src="@(article.Image.StartsWith("http", System.StringComparison.OrdinalIgnoreCase) ? article.Image : Url.Content("~/Content/Images/" + article.Image))" alt="@article.Title" />
+                        }
+                    </a>
+                    <div class="favorite-body">
+                        <h2><a href="@Url.Action("View", "Articles", new { id = article.Id })">@article.Title</a></h2>
+                        <p>@article.Content</p>
+                        <div class="favorite-date">@article.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="favorites-empty">Bạn chưa lưu bài viết nào. Hãy bấm biểu tượng ♡ khi đọc bài viết.</div>
+    }
+</div>

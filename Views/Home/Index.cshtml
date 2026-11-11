@@ -50,8 +50,15 @@
     .pagination a { padding: 7px 11px; border-radius: 6px; background: #f1f5f9; color: #334155; text-decoration: none; }
     .pagination a.active { background: #b91c32; color: white; }
     .empty-state { padding: 35px; border: 1px dashed #d7d8de; color: #737985; text-align: center; }
+    .weather-widget { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 28px; min-height: 166px; padding: 22px 26px; border: 1px solid #e1e5eb; border-radius: 10px; background: #fff; box-shadow: 0 8px 22px rgba(30, 41, 59, .05); }
+    .weather-label { margin: 0 0 3px; color: #1e293b; font-size: 19px; font-weight: 800; }
+    .weather-location, .weather-date { color: #64748b; }
+    .weather-date { font-size: 13px; }
+    .weather-temperature { color: #b91c32; font-size: 31px; font-weight: 900; white-space: nowrap; }
+    .article-link { display: block; }
+    .article-link:hover { color: inherit; }
     @@media (max-width: 760px) { .hero-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: repeat(2, 1fr); } }
-    @@media (max-width: 480px) { .news-grid { grid-template-columns: 1fr; } }
+    @@media (max-width: 480px) { .news-grid { grid-template-columns: 1fr; } .weather-widget { align-items: flex-start; flex-direction: column; } }
 </style>
 
 <div class="home-page">
@@ -63,22 +70,32 @@
     {
         <section class="hero-grid">
             <article class="featured-card">
-                <div class="featured-visual">
+                <a class="featured-visual article-link" href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
                     @if (!string.IsNullOrWhiteSpace(featured.ImageUrl))
                     {
                         <img src="@featured.ImageUrl" alt="@featured.Title" />
                     }
                     <span class="featured-label">TIN NỔI BẬT</span>
-                </div>
+                </a>
                 <div class="featured-body">
-                    <h1 class="featured-title">@featured.Title</h1>
-                    <p class="featured-summary">@featured.Summary</p>
+                    <h1 class="featured-title"><a href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">@featured.Title</a></h1>
+                    <a class="article-link" href="@Url.Action("View", "Articles", new { id = featured.ArticleID })"><p class="featured-summary">@featured.Summary</p></a>
                     <div class="article-meta">@featured.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
                     @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = featured.ArticleID }, new { @class = "read-more" })
                 </div>
             </article>
 
-            <aside class="latest-panel">
+            <aside>
+                <section class="weather-widget" aria-label="Thời tiết hôm nay">
+                    <div>
+                        <h2 class="weather-label">Thời tiết hôm nay</h2>
+                        <div class="weather-location" id="weather-location">TP. Hồ Chí Minh · Đang cập nhật...</div>
+                        <div class="weather-date" id="weather-date"></div>
+                    </div>
+                    <div class="weather-temperature" id="weather-temperature">--°C ☼</div>
+                </section>
+
+                <div class="latest-panel">
                 <h3 class="latest-heading">TIN MỚI NHẤT</h3>
                 @foreach (var item in articles.Take(4))
                 {
@@ -88,6 +105,7 @@
                         <span class="article-meta">@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
                     </div>
                 }
+                </div>
             </aside>
         </section>
 
@@ -101,18 +119,36 @@
                 @foreach (var item in remaining)
                 {
                     <article class="news-card">
-                        <div class="news-card-visual">
+                        <a class="news-card-visual article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
                             @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                             {
                                 <img src="@item.ImageUrl" alt="@item.Title" />
                             }
-                        </div>
+                        </a>
                         <div class="news-card-body">
                             <div class="news-tag">@(item.Categories == null ? "TIN TỨC" : item.Categories.CategoryName)</div>
-                            <h3 class="news-card-title">@item.Title</h3>
-                            <p class="news-summary">@item.Summary</p>
+                            <h3 class="news-card-title"><a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">@item.Title</a></h3>
+                            <a class="article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })"><p class="news-summary">@item.Summary</p></a>
                             @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = item.ArticleID }, new { @class = "read-more" })
                         </div>
+
+<script>
+    (function () {
+        var date = new Date();
+        document.getElementById('weather-date').textContent = date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+        fetch('https://api.open-meteo.com/v1/forecast?latitude=10.8231&longitude=106.6297&current=temperature_2m,weather_code&timezone=Asia%2FBangkok')
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                var weatherNames = { 0: 'Trời quang', 1: 'Trời quang', 2: 'Có mây', 3: 'Nhiều mây', 45: 'Sương mù', 51: 'Mưa phùn', 61: 'Mưa', 80: 'Mưa rào', 95: 'Giông bão' };
+                var current = data.current;
+                document.getElementById('weather-location').textContent = 'TP. Hồ Chí Minh · ' + (weatherNames[current.weather_code] || 'Thời tiết hiện tại');
+                document.getElementById('weather-temperature').textContent = Math.round(current.temperature_2m) + '°C ☼';
+            })
+            .catch(function () {
+                document.getElementById('weather-location').textContent = 'TP. Hồ Chí Minh · Chưa thể cập nhật';
+            });
+    }());
+</script>
                     </article>
                 }
             </section>

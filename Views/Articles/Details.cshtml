@@ -302,6 +302,67 @@
         background: #fee2e2;
     }
 
+    .recommendations-card {
+        margin-top: 38px;
+        padding-top: 26px;
+        border-top: 2px solid #e2e8f0;
+    }
+
+    .recommendations-title {
+        margin: 0 0 18px;
+        color: #1e293b;
+        font-size: 21px;
+    }
+
+    .recommendations-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .recommendation-item {
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        border-radius: 9px;
+        background: #fff;
+        transition: .2s ease;
+    }
+
+    .recommendation-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(30, 41, 59, .08);
+    }
+
+    .recommendation-image {
+        display: block;
+        height: 110px;
+        background: #f8fafc;
+    }
+
+    .recommendation-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .recommendation-body {
+        padding: 12px;
+    }
+
+    .recommendation-body h4 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 15px;
+        line-height: 1.4;
+    }
+
+    .recommendation-date {
+        display: block;
+        margin-top: 8px;
+        color: #94a3b8;
+        font-size: 11px;
+    }
+
     @@media (max-width: 650px) {
         .detail-container {
             margin-top: 22px;
@@ -336,6 +397,16 @@
 
         .rating-feedback {
             text-align: left;
+        }
+
+        .recommendations-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .recommendations-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -401,6 +472,31 @@
                 null,
                 new { @class = "btn-detail btn-back" })
         </div>
+    }
+
+    @{ var recommendedArticles = ViewBag.RecommendedArticles as IEnumerable<Articles> ?? new List<Articles>(); }
+    @if (ViewBag.CanComment == true && recommendedArticles.Any())
+    {
+        <section class="recommendations-card">
+            <h3 class="recommendations-title">Đề xuất dành cho bạn</h3>
+            <div class="recommendations-grid">
+                @foreach (var recommendation in recommendedArticles)
+                {
+                    <article class="recommendation-item">
+                        <a class="recommendation-image" href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">
+                            @if (!string.IsNullOrWhiteSpace(recommendation.ImageUrl))
+                            {
+                                <img src="@recommendation.ImageUrl" alt="@recommendation.Title" />
+                            }
+                        </a>
+                        <div class="recommendation-body">
+                            <h4><a href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">@recommendation.Title</a></h4>
+                            <span class="recommendation-date">@recommendation.CreatedDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
     }
 
     <section class="comments-card">

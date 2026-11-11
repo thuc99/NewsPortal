@@ -95,7 +95,9 @@ namespace NewsPortal.Controllers
 
         private ActionResult LoadArticleDetails(int id, bool canComment)
         {
-            var article = db.Articles.Find(id);
+            var article = db.Articles
+                .Include(a => a.Categories)
+                .FirstOrDefault(a => a.ArticleID == id);
             if (article == null)
                 return HttpNotFound();
 
@@ -121,6 +123,26 @@ namespace NewsPortal.Controllers
                 .Average() ?? 0;
             ViewBag.IsFavorite = GetFavoriteIds().Contains(id);
             ViewBag.CanComment = canComment;
+
+            var recommendations = db.Articles
+                .Include(a => a.Categories)
+                .Where(a => a.ArticleID != id && a.Status == "Published" && a.CategoryID == article.CategoryID)
+                .OrderByDescending(a => a.CreatedDate)
+                .Take(4)
+                .ToList();
+
+            if (recommendations.Count < 4)
+            {
+                var existingIds = recommendations.Select(a => a.ArticleID).Concat(new[] { id }).ToList();
+                recommendations.AddRange(db.Articles
+                    .Include(a => a.Categories)
+                    .Where(a => a.Status == "Published" && !existingIds.Contains(a.ArticleID))
+                    .OrderByDescending(a => a.CreatedDate)
+                    .Take(4 - recommendations.Count)
+                    .ToList());
+            }
+
+            ViewBag.RecommendedArticles = recommendations;
 
             return View("Details", ToArticleViewModel(article));
         }
@@ -242,6 +264,21 @@ namespace NewsPortal.Controllers
                 .Distinct()
                 .ToList();
         }
+
+        public ActionResult Favorites()
+        {
+            var favoriteIds = GetFavoriteIds();
+            var articles = db.Articles
+                .Include(a => a.Categories)
+                .Where(a => favoriteIds.Contains(a.ArticleID) && a.Status == "Published")
+                .OrderByDescending(a => a.CreatedDate)
+                .ToList()
+                .Select(ToArticleViewModel)
+                .ToList();
+
+            return View(articles);
+        }
+
         [AdminAuthorize]
         public ActionResult Create()
         {
