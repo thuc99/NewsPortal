@@ -5,8 +5,8 @@
 }
 
 <style>
-    .delete-page { max-width: 700px; margin: 40px auto; padding: 0 18px; }
-    .delete-card { background: white; border: 1px solid #fecaca; border-radius: 13px; padding: 30px; }
+    .delete-page { width: min(700px, calc(100% - 32px)); max-width: 700px; margin: 40px auto; padding: 0; }
+    .delete-card { background: white; border: 0; border-radius: 0; padding: 0 0 30px; }
     .delete-card h2 { color: #b91c1c; font-size: 26px; font-weight: 750; margin-top: 0; }
     .delete-warning { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; border-radius: 8px; padding: 14px; margin: 20px 0; }
     .delete-info { padding: 12px 0; border-bottom: 1px solid #e2e8f0; color: #334155; }
@@ -15,6 +15,7 @@
     .btn-delete, .btn-back { border: 0; padding: 10px 17px; border-radius: 8px; text-decoration: none; cursor: pointer; font-weight: 600; }
     .btn-delete { background: #b91c1c; color: white; }
     .btn-back { background: #e2e8f0; color: #334155; }
+    @@media (max-width: 650px) { .delete-page { width: calc(100% - 24px); margin-top: 22px; } .delete-actions { flex-wrap: wrap; } .btn-delete, .btn-back { flex: 1 1 160px; text-align: center; } .delete-image { max-height: 220px; } }
 </style>
 
 <div class="delete-page">

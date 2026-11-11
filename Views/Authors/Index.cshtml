@@ -7,9 +7,10 @@
 
 <style>
     .management-page {
+        width: min(1150px, calc(100% - 32px));
         max-width: 1150px;
         margin: 35px auto;
-        padding: 0 20px;
+        padding: 0;
         color: #1e293b;
     }
 
@@ -37,10 +38,11 @@
 
     .management-card {
         background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 5px 20px rgba(15, 23, 42, .04);
+        border: 0;
+        border-radius: 0;
+        overflow-x: auto;
+        box-shadow: none;
+        overflow-x: auto;
     }
 
     .management-table {
@@ -133,7 +135,8 @@
 
     @@media (max-width: 650px) {
         .management-page {
-            padding: 0 10px;
+            width: calc(100% - 24px);
+            padding: 0;
             margin-top: 22px;
         }
 
@@ -143,8 +146,12 @@
         }
 
         .management-table {
+            min-width: 680px;
             font-size: 13px;
         }
+
+        .management-header h2 { font-size: 25px; }
+        .btn-add { width: 100%; text-align: center; }
     }
 </style>
 

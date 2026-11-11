@@ -12,13 +12,14 @@
     }
 
     .create-container {
+        width: min(850px, calc(100% - 32px));
         max-width: 850px;
         margin: 35px auto;
-        padding: 30px;
+        padding: 28px 0;
         background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .create-header {
@@ -83,6 +84,7 @@
 
     .create-actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 12px;
         padding-top: 20px;
         border-top: 1px solid #e5e7eb;
@@ -117,6 +119,23 @@
         margin-top: -15px;
         margin-bottom: 15px;
         display: block;
+    }
+
+    @@media (max-width: 650px) {
+        .create-container {
+            width: calc(100% - 24px);
+            margin: 22px auto;
+            padding: 18px 0 30px;
+        }
+
+        .create-header h2 {
+            font-size: 24px;
+        }
+
+        .btn-create {
+            flex: 1 1 180px;
+            text-align: center;
+        }
     }
 </style>
 

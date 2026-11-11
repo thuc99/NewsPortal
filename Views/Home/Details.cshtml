@@ -18,10 +18,10 @@
     .article-detail-card,
     .comments-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 28px;
-        box-shadow: 0 5px 20px rgba(15, 23, 42, .04);
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
     }
 
     .article-detail-card {
@@ -29,9 +29,12 @@
     }
 
     .article-detail-image {
+        display: block;
         width: 100%;
+        max-width: 100%;
         max-height: 430px;
         object-fit: cover;
+        box-sizing: border-box;
         border-radius: 10px;
         margin-bottom: 22px;
     }
@@ -168,7 +171,16 @@
 
         .article-detail-card,
         .comments-card {
-            padding: 20px;
+            padding: 0;
+        }
+
+        .article-detail-image {
+            max-height: 300px;
+        }
+
+        .article-detail h1 {
+            font-size: 26px;
+            overflow-wrap: anywhere;
         }
 
         .article-detail h1 {

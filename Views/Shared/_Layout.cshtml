@@ -3,11 +3,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewBag.Title - NewsPortal</title>
+	<title>@ViewBag.Title - TinNhanh</title>
 
     @{
-        string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-        string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+		string currentController = Convert.ToString(ViewContext.RouteData.Values["controller"]);
+		string currentAction = Convert.ToString(ViewContext.RouteData.Values["action"]);
     }
 
     <style>
@@ -50,7 +50,7 @@
         }
 
         .container {
-            width: min(1160px, calc(100% - 36px));
+			width: min(1160px, calc(100% - 32px));
             margin: auto;
         }
 
@@ -261,8 +261,69 @@
             font-size: 12px;
         }
 
+		@@media (max-width: 900px) {
+			.nav-inner {
+				gap: 18px;
+			}
+
+			.search-form {
+				width: 100%;
+				margin-left: 0;
+				padding-bottom: 12px;
+			}
+
+			.search-input {
+				width: 100%;
+			}
+		}
+
         /* Responsive */
         @@media (max-width: 650px) {
+
+			.container {
+				width: calc(100% - 24px);
+			}
+
+			.masthead {
+				padding: 18px 0;
+			}
+
+			.brand-row,
+			.top-inner {
+				align-items: flex-start;
+				flex-direction: column;
+			}
+
+			.brand {
+				font-size: 30px;
+			}
+
+			.brand-note {
+				text-align: left;
+			}
+
+			.nav-inner {
+				gap: 8px 16px;
+			}
+
+			.nav-link {
+				min-height: 44px;
+				font-size: 12px;
+			}
+
+			.search-form {
+				flex-wrap: wrap;
+			}
+
+			.search-button,
+			.search-reset {
+				flex: 0 0 auto;
+			}
+
+			.footer-grid {
+				grid-template-columns: 1fr;
+				gap: 22px;
+			}
             .brand {
                 font-size: 27px;
             }
