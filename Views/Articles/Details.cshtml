@@ -474,31 +474,6 @@
         </div>
     }
 
-    @{ var recommendedArticles = ViewBag.RecommendedArticles as IEnumerable<Articles> ?? new List<Articles>(); }
-    @if (ViewBag.CanComment == true && recommendedArticles.Any())
-    {
-        <section class="recommendations-card">
-            <h3 class="recommendations-title">Đề xuất dành cho bạn</h3>
-            <div class="recommendations-grid">
-                @foreach (var recommendation in recommendedArticles)
-                {
-                    <article class="recommendation-item">
-                        <a class="recommendation-image" href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">
-                            @if (!string.IsNullOrWhiteSpace(recommendation.ImageUrl))
-                            {
-                                <img src="@recommendation.ImageUrl" alt="@recommendation.Title" />
-                            }
-                        </a>
-                        <div class="recommendation-body">
-                            <h4><a href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">@recommendation.Title</a></h4>
-                            <span class="recommendation-date">@recommendation.CreatedDate.ToString("dd/MM/yyyy")</span>
-                        </div>
-                    </article>
-                }
-            </div>
-        </section>
-    }
-
     <section class="comments-card">
         <h3 class="comments-title">Bình luận (@comments.Count())</h3>
 
@@ -578,5 +553,30 @@
                 <button type="submit" class="rating-submit">Gửi đánh giá</button>
             }
         </div>
+    }
+
+    @{ var recommendedArticles = ViewBag.RecommendedArticles as IEnumerable<Articles> ?? new List<Articles>(); }
+    @if (ViewBag.CanComment == true && recommendedArticles.Any())
+    {
+        <section class="recommendations-card">
+            <h3 class="recommendations-title">Đề xuất dành cho bạn</h3>
+            <div class="recommendations-grid">
+                @foreach (var recommendation in recommendedArticles)
+                {
+                    <article class="recommendation-item">
+                        <a class="recommendation-image" href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">
+                            @if (!string.IsNullOrWhiteSpace(recommendation.ImageUrl))
+                            {
+                                <img src="@recommendation.ImageUrl" alt="@recommendation.Title" />
+                            }
+                        </a>
+                        <div class="recommendation-body">
+                            <h4><a href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">@recommendation.Title</a></h4>
+                            <span class="recommendation-date">@recommendation.CreatedDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
     }
 </div>
