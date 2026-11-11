@@ -3,6 +3,7 @@
 
 @{
     ViewBag.Title = "Quản lý tác giả";
+    bool isAdmin = Session["Admin"] != null;
 }
 
 <style>
@@ -42,7 +43,6 @@
         border-radius: 0;
         overflow-x: auto;
         box-shadow: none;
-        overflow-x: auto;
     }
 
     .management-table {
@@ -146,16 +146,23 @@
         }
 
         .management-table {
-            min-width: 680px;
+            min-width: 500px;
             font-size: 13px;
         }
 
-        .management-header h2 { font-size: 25px; }
-        .btn-add { width: 100%; text-align: center; }
+        .management-header h2 {
+            font-size: 25px;
+        }
+
+        .btn-add {
+            width: 100%;
+            text-align: center;
+        }
     }
 </style>
 
 <div class="management-page">
+
     <div class="management-header">
         <div>
             <h2>Quản lý tác giả</h2>
@@ -164,15 +171,18 @@
             </p>
         </div>
 
-        <div>
-            @Html.ActionLink(
-                "+ Thêm tác giả",
-                "Create",
-                "Authors",
-                null,
-                new { @class = "btn-add" }
-            )
-        </div>
+        @if (isAdmin)
+        {
+            <div>
+                @Html.ActionLink(
+                         "+ Thêm tác giả",
+                         "Create",
+                         "Authors",
+                         null,
+                         new { @class = "btn-add" }
+                     )
+            </div>
+        }
     </div>
 
     <div class="management-card">
@@ -181,7 +191,11 @@
                 <tr>
                     <th>Tác giả</th>
                     <th>Email</th>
-                    <th style="width: 180px;">Thao tác</th>
+
+                    @if (isAdmin)
+                    {
+                        <th style="width: 180px;">Thao tác</th>
+                    }
                 </tr>
             </thead>
 
@@ -194,36 +208,44 @@
                             <td>
                                 <span class="author-avatar">
                                     @(string.IsNullOrWhiteSpace(item.AuthorName)
-                            ? "?"
-                            : item.AuthorName.Trim().Substring(0, 1).ToUpper())
+                                        ? "?"
+                                        : item.AuthorName.Trim().Substring(0, 1).ToUpper())
                                 </span>
+
                                 <strong>@item.AuthorName</strong>
                             </td>
+
                             <td>
                                 <span class="author-email">
                                     @item.Email
                                 </span>
                             </td>
-                            <td>
-                                @Html.ActionLink(
-                                    "Sửa", "Edit",
-                                    new { id = item.AuthorID },
-                                    new { @class = "action-link action-edit" }
-                                )
 
-                                @Html.ActionLink(
-                                    "Xóa", "Delete",
-                                    new { id = item.AuthorID },
-                                    new { @class = "action-link action-delete" }
-                                )
-                            </td>
+                            @if (isAdmin)
+                            {
+                                <td>
+                                    @Html.ActionLink(
+                                             "Sửa",
+                                             "Edit",
+                                             new { id = item.AuthorID },
+                                             new { @class = "action-link action-edit" }
+                                         )
+
+                                    @Html.ActionLink(
+                                             "Xóa",
+                                             "Delete",
+                                             new { id = item.AuthorID },
+                                             new { @class = "action-link action-delete" }
+                                         )
+                                </td>
+                            }
                         </tr>
                     }
                 }
                 else
                 {
                     <tr>
-                        <td colspan="3" class="empty-message">
+                        <td colspan="@(isAdmin ? 3 : 2)" class="empty-message">
                             Chưa có tác giả nào.
                         </td>
                     </tr>
@@ -231,4 +253,5 @@
             </tbody>
         </table>
     </div>
+
 </div>

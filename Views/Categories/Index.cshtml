@@ -3,6 +3,7 @@
 
 @{
     ViewBag.Title = "Quản lý danh mục";
+    bool isAdmin = Session["Admin"] != null;
 }
 
 <style>
@@ -42,7 +43,6 @@
         border-radius: 0;
         overflow-x: auto;
         box-shadow: none;
-        overflow-x: auto;
     }
 
     .management-table {
@@ -141,16 +141,23 @@
         }
 
         .management-table {
-            min-width: 680px;
+            min-width: 500px;
             font-size: 13px;
         }
 
-        .management-header h2 { font-size: 25px; }
-        .btn-add { width: 100%; text-align: center; }
+        .management-header h2 {
+            font-size: 25px;
+        }
+
+        .btn-add {
+            width: 100%;
+            text-align: center;
+        }
     }
 </style>
 
 <div class="management-page">
+
     <div class="management-header">
         <div>
             <h2>Quản lý danh mục</h2>
@@ -159,15 +166,18 @@
             </p>
         </div>
 
-        <div>
-            @Html.ActionLink(
-                "+ Thêm danh mục",
-                "Create",
-                "Categories",
-                null,
-                new { @class = "btn-add" }
-            )
-        </div>
+        @if (isAdmin)
+        {
+            <div>
+                @Html.ActionLink(
+                         "+ Thêm danh mục",
+                         "Create",
+                         "Categories",
+                         null,
+                         new { @class = "btn-add" }
+                     )
+            </div>
+        }
     </div>
 
     <div class="management-card">
@@ -176,7 +186,11 @@
                 <tr>
                     <th>Danh mục</th>
                     <th>Mô tả</th>
-                    <th style="width: 180px;">Thao tác</th>
+
+                    @if (isAdmin)
+                    {
+                        <th style="width: 180px;">Thao tác</th>
+                    }
                 </tr>
             </thead>
 
@@ -189,32 +203,42 @@
                             <td>
                                 <span class="category-icon">
                                     @(string.IsNullOrWhiteSpace(item.CategoryName)
-                            ? "?"
-                            : item.CategoryName.Trim().Substring(0, 1).ToUpper())
+                                        ? "?"
+                                        : item.CategoryName.Trim().Substring(0, 1).ToUpper())
                                 </span>
+
                                 <strong>@item.CategoryName</strong>
                             </td>
-                            <td>@item.Description</td>
-                            <td>
-                                @Html.ActionLink(
-                                    "Sửa", "Edit",
-                                    new { id = item.CategoryID },
-                                    new { @class = "action-link action-edit" }
-                                )
 
-                                @Html.ActionLink(
-                                    "Xóa", "Delete",
-                                    new { id = item.CategoryID },
-                                    new { @class = "action-link action-delete" }
-                                )
+                            <td>
+                                @item.Description
                             </td>
+
+                            @if (isAdmin)
+                            {
+                                <td>
+                                    @Html.ActionLink(
+                                             "Sửa",
+                                             "Edit",
+                                             new { id = item.CategoryID },
+                                             new { @class = "action-link action-edit" }
+                                         )
+
+                                    @Html.ActionLink(
+                                             "Xóa",
+                                             "Delete",
+                                             new { id = item.CategoryID },
+                                             new { @class = "action-link action-delete" }
+                                         )
+                                </td>
+                            }
                         </tr>
                     }
                 }
                 else
                 {
                     <tr>
-                        <td colspan="3" class="empty-message">
+                        <td colspan="@(isAdmin ? 3 : 2)" class="empty-message">
                             Chưa có danh mục nào.
                         </td>
                     </tr>
@@ -222,4 +246,5 @@
             </tbody>
         </table>
     </div>
+
 </div>
