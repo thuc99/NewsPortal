@@ -24,6 +24,10 @@ namespace NewsPortal.Controllers
                 .Include(a => a.Authors)
                 .AsQueryable();
 
+            if (Session["Admin"] == null)
+            {
+                query = query.Where(a => a.Status == "Published");
+            }
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 searchString = searchString.Trim();
@@ -238,7 +242,7 @@ namespace NewsPortal.Controllers
                 .Distinct()
                 .ToList();
         }
-
+        [AdminAuthorize]
         public ActionResult Create()
         {
             return View(new Article());
@@ -246,6 +250,7 @@ namespace NewsPortal.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize]
         public ActionResult Create(Article article, HttpPostedFileBase imageFile)
         {
             if (!ModelState.IsValid)
@@ -258,7 +263,7 @@ namespace NewsPortal.Controllers
                 ModelState.AddModelError("", "Cần có danh mục và tác giả trước khi thêm bài viết.");
                 return View(article);
             }
-
+            
             db.Articles.Add(new Articles
             {
                 CategoryID = category.CategoryID,
@@ -274,7 +279,8 @@ namespace NewsPortal.Controllers
             db.SaveChanges();
             return RedirectToAction("Index");
         }
-
+        [AdminAuthorize]
+        
         public ActionResult Edit(int id)
         {
             var article = db.Articles.Find(id);
@@ -285,6 +291,7 @@ namespace NewsPortal.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize]
         public ActionResult Edit(Article article, HttpPostedFileBase imageFile)
         {
             if (!ModelState.IsValid)
@@ -309,7 +316,7 @@ namespace NewsPortal.Controllers
             db.SaveChanges();
             return RedirectToAction("Index");
         }
-
+        [AdminAuthorize]
         public ActionResult Delete(int id)
         {
             var article = db.Articles.Find(id);

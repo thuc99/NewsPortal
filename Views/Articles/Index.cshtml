@@ -1,10 +1,14 @@
-﻿@model IEnumerable<NewsPortal.Models.Article>
+﻿
+@model IEnumerable<NewsPortal.Models.Article>
 @using System
 @using System.Linq
 @using NewsPortal.Models
 
 @{
-    ViewBag.Title = "Quản lý bài viết";
+    bool isAdmin = Session["Admin"] != null;
+
+    ViewBag.Title = isAdmin ? "Quản lý bài viết" : "Tin tức";
+
     var categories = ViewBag.Categories as IEnumerable<Category> ?? Enumerable.Empty<Category>();
     var authors = ViewBag.Authors as IEnumerable<Author> ?? Enumerable.Empty<Author>();
     var currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
@@ -13,95 +17,391 @@
 }
 
 <style>
-    .management-page { width: min(1150px, calc(100% - 32px)); max-width: 1150px; margin: 35px auto; color: #1e293b; }
-    .management-header { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 24px; }
-    .management-header h2 { margin: 0 0 6px; font-size: 28px; font-weight: 750; line-height: 1.3; }
-    .management-subtitle { margin: 0; color: #64748b; font-size: 14px; }
-    .btn-add { display: inline-block; padding: 11px 17px; border-radius: 8px; background: #b91c1c; color: white !important; text-decoration: none !important; font-weight: 600; }
-    .btn-add:hover { background: #991b1b; }
-    .filter-toggle { border: 0; padding: 9px 14px; border-radius: 8px; background: #e2e8f0; color: #334155; font-weight: 700; cursor: pointer; }
-    .filter-toggle:hover { background: #cbd5e1; }
-    .filter-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
-    .advanced-filter { margin: 12px 0 18px; padding: 16px 0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; background: transparent; }
-    .advanced-filter.is-hidden { display: none; }
-    .advanced-filter form { display: flex; flex-wrap: wrap; gap: 9px; }
-    .advanced-filter input, .advanced-filter select { min-height: 38px; min-width: 145px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 7px; background: white; font: inherit; color: #334155; }
-    .advanced-filter input[type="search"] { flex: 1; min-width: 230px; }
-    .filter-submit, .filter-reset { display: inline-flex; align-items: center; min-height: 38px; padding: 8px 14px; border: 0; border-radius: 7px; font-weight: 700; text-decoration: none; cursor: pointer; }
-    .filter-submit { background: #b91c1c; color: white; }
-    .filter-reset { background: #e2e8f0; color: #334155 !important; }
-    .result-count { margin: 0 0 12px; color: #64748b; font-size: 13px; }
-    .management-card { overflow-x: auto; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-    .management-table { width: 100%; border-collapse: collapse; }
-    .management-table th { padding: 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 12px; text-align: left; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
-    .management-table td { padding: 17px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-    .management-table tbody tr:hover { background: #fafcff; }
-    .article-image { width: 88px; height: 62px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; }
-    .article-title { min-width: 240px; color: #1e293b; font-weight: 700; line-height: 1.45; }
-    .article-date { color: #64748b; white-space: nowrap; font-size: 13px; }
-    .status-badge { display: inline-block; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-    .status-published { background: #dcfce7; color: #166534; }
-    .status-draft { background: #fef3c7; color: #92400e; }
-    .action-group { display: flex; flex-wrap: wrap; gap: 6px; }
-    .action-btn { display: inline-block; padding: 7px 10px; margin: 2px; border-radius: 6px; text-decoration: none !important; font-size: 13px; font-weight: 600; white-space: nowrap; }
-    .btn-edit, .btn-detail { background: #dbeafe; color: #1d4ed8 !important; }
-    .btn-delete { background: #fee2e2; color: #b91c1c !important; }
-    .empty-message { padding: 40px !important; color: #64748b; text-align: center; }
-    .pagination { display: flex; justify-content: center; gap: 6px; margin: 22px 0; }
-    .pagination a { padding: 7px 11px; border-radius: 6px; background: #f1f5f9; color: #334155; text-decoration: none; }
-    .pagination a.active { background: #b91c1c; color: white; }
-    @@media (max-width: 850px) { .management-table { min-width: 900px; } }
-    @@media (max-width: 600px) { .management-page { width: calc(100% - 24px); margin-top: 22px; } .management-header h2 { font-size: 25px; } .btn-add { width: 100%; text-align: center; } .advanced-filter form { display: grid; grid-template-columns: 1fr; } .advanced-filter input, .advanced-filter select, .filter-submit, .filter-reset { width: 100%; min-width: 0; } .advanced-filter input[type="search"] { min-width: 0; } }
+    .management-page {
+        width: min(1150px, calc(100% - 32px));
+        max-width: 1150px;
+        margin: 35px auto;
+        color: #1e293b;
+    }
+
+    .management-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+        .management-header h2 {
+            margin: 0 0 6px;
+            font-size: 28px;
+            font-weight: 750;
+            line-height: 1.3;
+        }
+
+    .management-subtitle {
+        margin: 0;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .btn-add {
+        display: inline-block;
+        padding: 11px 17px;
+        border-radius: 8px;
+        background: #b91c1c;
+        color: white !important;
+        text-decoration: none !important;
+        font-weight: 600;
+    }
+
+        .btn-add:hover {
+            background: #991b1b;
+        }
+
+    .filter-toggle {
+        border: 0;
+        padding: 9px 14px;
+        border-radius: 8px;
+        background: #e2e8f0;
+        color: #334155;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .filter-toggle:hover {
+            background: #cbd5e1;
+        }
+
+    .filter-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 12px;
+    }
+
+    .advanced-filter {
+        margin: 12px 0 18px;
+        padding: 16px 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        background: transparent;
+    }
+
+        .advanced-filter.is-hidden {
+            display: none;
+        }
+
+        .advanced-filter form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .advanced-filter input,
+        .advanced-filter select {
+            min-height: 38px;
+            min-width: 145px;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: white;
+            font: inherit;
+            color: #334155;
+        }
+
+            .advanced-filter input[type="search"] {
+                flex: 1;
+                min-width: 230px;
+            }
+
+    .filter-submit,
+    .filter-reset {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 7px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .filter-submit {
+        background: #b91c1c;
+        color: white;
+    }
+
+    .filter-reset {
+        background: #e2e8f0;
+        color: #334155 !important;
+    }
+
+    .result-count {
+        margin: 0 0 12px;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .management-card {
+        overflow-x: auto;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .management-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .management-table th {
+            padding: 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+            font-size: 12px;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            white-space: nowrap;
+        }
+
+        .management-table td {
+            padding: 17px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .management-table tbody tr:hover {
+            background: #fafcff;
+        }
+
+    .article-image {
+        width: 88px;
+        height: 62px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .article-title {
+        min-width: 240px;
+        color: #1e293b;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .article-date {
+        color: #64748b;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .status-published {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-draft {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .action-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .action-btn {
+        display: inline-block;
+        padding: 7px 10px;
+        margin: 2px;
+        border-radius: 6px;
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .btn-edit,
+    .btn-detail {
+        background: #dbeafe;
+        color: #1d4ed8 !important;
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #b91c1c !important;
+    }
+
+    .empty-message {
+        padding: 40px !important;
+        color: #64748b;
+        text-align: center;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin: 22px 0;
+    }
+
+        .pagination a {
+            padding: 7px 11px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #334155;
+            text-decoration: none;
+        }
+
+            .pagination a.active {
+                background: #b91c1c;
+                color: white;
+            }
+
+    @@media (max-width: 850px) {
+        .management-table {
+            min-width: 700px;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .management-page {
+            width: calc(100% - 24px);
+            margin-top: 22px;
+        }
+
+        .management-header h2 {
+            font-size: 25px;
+        }
+
+        .btn-add {
+            width: 100%;
+            text-align: center;
+        }
+
+        .advanced-filter form {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .advanced-filter input,
+        .advanced-filter select,
+        .filter-submit,
+        .filter-reset {
+            width: 100%;
+            min-width: 0;
+        }
+
+            .advanced-filter input[type="search"] {
+                min-width: 0;
+            }
+    }
 </style>
 
 <div class="management-page">
+
     <div class="management-header">
         <div>
-            <h2>Quản lý bài viết</h2>
-            <p class="management-subtitle">Quản lý, tìm kiếm và cập nhật các bài viết trên NewsPortal.</p>
+            <h2>@(isAdmin ? "Quản lý bài viết" : "Tin tức mới nhất")</h2>
+
+            <p class="management-subtitle">
+                @(isAdmin
+                    ? "Quản lý, tìm kiếm và cập nhật các bài viết trên NewsPortal."
+                    : "Cập nhật những tin tức mới nhất trên NewsPortal.")
+            </p>
         </div>
-        @Html.ActionLink("+ Thêm bài viết", "Create", "Articles", null, new { @class = "btn-add" })
-    </div>
 
-    <div class="filter-toolbar">
-        <button type="button" id="filterToggle" class="filter-toggle">Bộ lọc nâng cao</button>
-    </div>
-
-    <div id="advancedFilter" class="advanced-filter is-hidden">
-        @using (Html.BeginForm("Index", "Articles", FormMethod.Get))
+        @if (isAdmin)
         {
-            <input type="search" name="searchString" value="@(ViewBag.SearchString ?? "")" placeholder="Tìm tiêu đề, tóm tắt, nội dung..." />
-
-            <select name="categoryId">
-                <option value="">Tất cả danh mục</option>
-                @foreach (var category in categories)
-                {
-                    <option value="@category.CategoryID" @(ViewBag.CategoryId != null && ViewBag.CategoryId == category.CategoryID ? "selected" : "")>@category.CategoryName</option>
-                }
-            </select>
-
-            <select name="authorId">
-                <option value="">Tất cả tác giả</option>
-                @foreach (var author in authors)
-                {
-                    <option value="@author.AuthorID" @(ViewBag.AuthorId != null && ViewBag.AuthorId == author.AuthorID ? "selected" : "")>@author.AuthorName</option>
-                }
-            </select>
-
-            <select name="status">
-                <option value="">Mọi trạng thái</option>
-                <option value="Published" @(ViewBag.Status as string == "Published" ? "selected" : "")>Published</option>
-                <option value="Draft" @(ViewBag.Status as string == "Draft" ? "selected" : "")>Draft</option>
-            </select>
-
-            <input type="date" name="fromDate" value="@(ViewBag.FromDate == null ? "" : ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd"))" />
-            <input type="date" name="toDate" value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
-            <button type="submit" class="filter-submit">Lọc</button>
-            @Html.ActionLink("Xóa lọc", "Index", "Articles", null, new { @class = "filter-reset" })
+            @Html.ActionLink("+ Thêm bài viết", "Create", "Articles",
+                     null, new { @class = "btn-add" })
         }
     </div>
 
-    <p class="result-count">Tìm thấy <strong>@totalArticles</strong> bài viết</p>
+    @if (isAdmin)
+    {
+        <div class="filter-toolbar">
+            <button type="button" id="filterToggle" class="filter-toggle">
+                Bộ lọc nâng cao
+            </button>
+        </div>
+
+        <div id="advancedFilter" class="advanced-filter is-hidden">
+            @using (Html.BeginForm("Index", "Articles", FormMethod.Get))
+            {
+                <input type="search"
+                       name="searchString"
+                       value="@(ViewBag.SearchString ?? "")"
+                       placeholder="Tìm tiêu đề, tóm tắt, nội dung..." />
+
+                <select name="categoryId">
+                    <option value="">Tất cả danh mục</option>
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category.CategoryID"
+                                @(ViewBag.CategoryId != null && ViewBag.CategoryId == category.CategoryID ? "selected" : "")>
+                            @category.CategoryName
+                        </option>
+                    }
+                </select>
+
+                <select name="authorId">
+                    <option value="">Tất cả tác giả</option>
+                    @foreach (var author in authors)
+                    {
+                        <option value="@author.AuthorID"
+                                @(ViewBag.AuthorId != null && ViewBag.AuthorId == author.AuthorID ? "selected" : "")>
+                            @author.AuthorName
+                        </option>
+                    }
+                </select>
+
+                <select name="status">
+                    <option value="">Mọi trạng thái</option>
+                    <option value="Published"
+                            @(ViewBag.Status as string == "Published" ? "selected" : "")>
+                        Published
+                    </option>
+                    <option value="Draft"
+                            @(ViewBag.Status as string == "Draft" ? "selected" : "")>
+                        Draft
+                    </option>
+                </select>
+
+                <input type="date"
+                       name="fromDate"
+                       value="@(ViewBag.FromDate == null ? "" : ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd"))" />
+
+                <input type="date"
+                       name="toDate"
+                       value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
+
+                <button type="submit" class="filter-submit">Lọc</button>
+
+                @Html.ActionLink("Xóa lọc", "Index", "Articles",
+                         null, new { @class = "filter-reset" })
+            }
+        </div>
+    }
+
+    <p class="result-count">
+        Tìm thấy <strong>@totalArticles</strong> bài viết
+    </p>
 
     <div class="management-card">
         <table class="management-table">
@@ -110,10 +410,18 @@
                     <th>Hình ảnh</th>
                     <th>Tiêu đề bài viết</th>
                     <th>Ngày đăng</th>
-                    <th>Trạng thái</th>
-                    <th style="width: 220px;">Thao tác</th>
+
+                    @if (isAdmin)
+                    {
+                        <th>Trạng thái</th>
+                    }
+
+                    <th style="width: @(isAdmin ? "220px" : "120px");">
+                        Thao tác
+                    </th>
                 </tr>
             </thead>
+
             <tbody>
                 @if (Model != null && Model.Any())
                 {
@@ -123,21 +431,53 @@
                             <td>
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {
-                                    <img src="@(item.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? item.Image : Url.Content("~/Content/Images/" + item.Image))" class="article-image" alt="@item.Title" />
+                                    <img src="@(item.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                        ? item.Image
+                                        : Url.Content("~/Content/Images/" + item.Image))"
+                                         class="article-image"
+                                         alt="@item.Title" />
                                 }
                                 else
                                 {
                                     <span>Không có ảnh</span>
                                 }
                             </td>
-                            <td class="article-title">@item.Title</td>
-                            <td class="article-date">@item.CreatedDate.ToString("dd/MM/yyyy")</td>
-                            <td><span class="status-badge @(item.Status == "Published" ? "status-published" : "status-draft")">@item.Status</span></td>
+
+                            <td class="article-title">
+                                @item.Title
+                            </td>
+
+                            <td class="article-date">
+                                @item.CreatedDate.ToString("dd/MM/yyyy")
+                            </td>
+
+                            @if (isAdmin)
+                            {
+                                <td>
+                                    <span class="status-badge @(item.Status == "Published" ? "status-published" : "status-draft")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                            }
+
                             <td>
                                 <div class="action-group">
-                                    @Html.ActionLink("Sửa", "Edit", new { id = item.Id }, new { @class = "action-btn btn-edit" })
-                                    @Html.ActionLink("Chi tiết", "Details", new { id = item.Id }, new { @class = "action-btn btn-detail" })
-                                    @Html.ActionLink("Xóa", "Delete", new { id = item.Id }, new { @class = "action-btn btn-delete" })
+
+                                    @Html.ActionLink("Chi tiết", "Details",
+                                             new { id = item.Id },
+                                             new { @class = "action-btn btn-detail" })
+
+                                    @if (isAdmin)
+                                    {
+                                        @Html.ActionLink("Sửa", "Edit",
+                                                 new { id = item.Id },
+                                                 new { @class = "action-btn btn-edit" })
+
+                                        @Html.ActionLink("Xóa", "Delete",
+                                                 new { id = item.Id },
+                                                 new { @class = "action-btn btn-delete" })
+                                    }
+
                                 </div>
                             </td>
                         </tr>
@@ -145,7 +485,11 @@
                 }
                 else
                 {
-                    <tr><td colspan="5" class="empty-message">Không tìm thấy bài viết phù hợp.</td></tr>
+                    <tr>
+                        <td colspan="@(isAdmin ? 5 : 4)" class="empty-message">
+                            Không tìm thấy bài viết phù hợp.
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>
@@ -156,21 +500,41 @@
         <nav class="pagination">
             @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
             {
-                <a class="@(pageNumber == currentPage ? "active" : "")" href="@Url.Action("Index", "Articles", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = pageNumber })">@pageNumber</a>
+                <a class="@(pageNumber == currentPage ? "active" : "")"
+                   href="@Url.Action("Index", "Articles", new {
+                       searchString = ViewBag.SearchString,
+                       categoryId = ViewBag.CategoryId,
+                       authorId = ViewBag.AuthorId,
+                       status = ViewBag.Status,
+                       fromDate = ViewBag.FromDate,
+                       toDate = ViewBag.ToDate,
+                       page = pageNumber
+                   })">
+                    @pageNumber
+                </a>
             }
         </nav>
     }
+
 </div>
 
-<script>
-    (function () {
-        var toggle = document.getElementById("filterToggle");
-        var filter = document.getElementById("advancedFilter");
-        if (toggle && filter) {
-            toggle.addEventListener("click", function () {
-                filter.classList.toggle("is-hidden");
-                toggle.textContent = filter.classList.contains("is-hidden") ? "Bộ lọc nâng cao" : "Ẩn bộ lọc";
-            });
-        }
-    })();
-</script>
+@if (isAdmin)
+{
+    <script>
+        (function () {
+            var toggle = document.getElementById("filterToggle");
+            var filter = document.getElementById("advancedFilter");
+
+            if (toggle && filter) {
+                toggle.addEventListener("click", function () {
+                    filter.classList.toggle("is-hidden");
+
+                    toggle.textContent =
+                        filter.classList.contains("is-hidden")
+                            ? "Bộ lọc nâng cao"
+                            : "Ẩn bộ lọc";
+                });
+            }
+        })();
+    </script>
+}

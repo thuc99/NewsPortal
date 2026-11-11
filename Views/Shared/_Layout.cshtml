@@ -11,6 +11,29 @@
     }
 
     <style>
+        .search-form {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-left: auto;
+        }
+
+        .admin-area {
+            margin-left: 0;
+            flex-shrink: 0;
+        }
+
+        .admin-login {
+            display: inline-block;
+            background: #bd1830;
+            color: white !important;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 12px;
+            white-space: nowrap;
+        }
         :root {
             --red: #b91c32;
             --red-dark: #861b2b;
@@ -103,13 +126,19 @@
             z-index: 2;
         }
 
-        .nav-inner {
+        .nav-inner 
+           
+
+        {
             display: flex;
             align-items: center;
-            gap: 30px;
+            gap: 25px;
             min-height: 53px;
-            flex-wrap: wrap;
+            width: min(1160px, calc(100% - 32px));
+            margin: auto;
+            flex-wrap: nowrap;
         }
+        
 
         .nav-link {
             display: inline-flex;
@@ -399,42 +428,39 @@
 
     <!-- Thanh điều hướng và tìm kiếm -->
     <nav class="navbar">
+        
+
         <div class="container nav-inner">
 
-            <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")"
-               href="@Url.Action("Index", "Home")">
-                Trang chủ
-            </a>
+            <!-- Các mục menu -->
+            <a class="nav-link" href="@Url.Action("Index", "Home")">Trang chủ</a>
+            <a class="nav-link" href="@Url.Action("Index", "Articles")">Tin tức</a>
+            <a class="nav-link" href="@Url.Action("Index", "Categories")">Danh mục</a>
+            <a class="nav-link" href="@Url.Action("Index", "Authors")">Tác giả</a>
 
-            <a class="nav-link @(currentController == "Articles" ? "active" : "")"
-               href="@Url.Action("Index", "Articles")">
-                Tin tức
-            </a>
-
-            <a class="nav-link @(currentController == "Categories" ? "active" : "")"
-               href="@Url.Action("Index", "Categories")">
-                Danh mục
-            </a>
-
-            <a class="nav-link @(currentController == "Authors" ? "active" : "")"
-               href="@Url.Action("Index", "Authors")">
-                Tác giả
-            </a>
-
-            <!-- Form tìm kiếm -->
+            <!-- Tìm kiếm -->
             <form action="@Url.Action("Index", "Articles")" method="get" class="search-form">
-                <input type="search"
-                       name="searchString"
-                       value="@(ViewBag.SearchString ?? "")"
+                <input type="search" name="searchString"
                        class="search-input"
-                       placeholder="Tìm kiếm bài viết..."
-                       aria-label="Tìm kiếm bài viết" />
+                       placeholder="Tìm kiếm bài viết..." />
                 <button type="submit" class="search-button">Tìm kiếm</button>
-                @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString as string))
-                {
-                    @Html.ActionLink("Xóa", "Index", "Articles", null, new { @class = "search-reset" })
-                }
             </form>
+
+            <!-- Đăng nhập -->
+            <div class="admin-area">
+                @if (Session["Admin"] == null)
+                {
+                    <a href="@Url.Action("Login", "Account")" class="admin-login">
+                        ĐĂNG NHẬP 
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Logout", "Account")" class="admin-login">
+                        ĐĂNG XUẤT
+                    </a>
+                }
+            </div>
 
         </div>
     </nav>
