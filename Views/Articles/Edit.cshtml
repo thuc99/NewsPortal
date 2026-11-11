@@ -1,323 +1,73 @@
-﻿
-@model NewsPortal.Models.Article
+﻿@model NewsPortal.Models.Article
 
 @{
     ViewBag.Title = "Chỉnh sửa bài viết";
 }
 
 <style>
-    body {
-        background: #fff !important;
-        font-family: 'Segoe UI', sans-serif;
-        color: #243047;
-    }
-
-    .edit-container {
-        max-width: 1050px;
-        margin: 35px auto;
-        padding: 20px;
-    }
-
-    .edit-card {
-        background: #fff;
-        border: 1px solid #eeeeee;
-        border-radius: 16px;
-        padding: 30px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.04);
-    }
-
-    /* Tiêu đề nằm bên trong khung trắng */
-    .edit-header {
-        text-align: left;
-        padding-bottom: 25px;
-        margin-bottom: 25px;
-        border-bottom: 1px solid #eeeeee;
-    }
-
-        .edit-header h2 {
-            font-size: 32px;
-            font-weight: 800;
-            color: #1e293b;
-            margin: 0 0 10px;
-        }
-
-        .edit-header p {
-            color: #94a3b8;
-            font-size: 14px;
-            margin: 0;
-        }
-
-    .section-title {
-        font-size: 19px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 5px;
-    }
-
-    .section-subtitle {
-        font-size: 13px;
-        color: #94a3b8;
-        margin-bottom: 28px;
-    }
-
-    .form-group {
-        margin-bottom: 25px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: #334155;
-        margin-bottom: 10px;
-    }
-
-    .edit-input {
-        width: 100%;
-        height: auto;
-        padding: 13px 15px;
-        border: 1px solid #e2e8f0;
-        border-radius: 9px;
-        font-size: 14px;
-        color: #334155;
-        box-shadow: none;
-        transition: 0.2s;
-    }
-
-        .edit-input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-            outline: none;
-        }
-
-    textarea.edit-input {
-        min-height: 200px;
-        resize: vertical;
-        line-height: 1.7;
-    }
-
-    .image-box {
-        border: 1px dashed #cbd5e1;
-        border-radius: 12px;
-        padding: 20px;
-        display: flex;
-        gap: 25px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .image-preview {
-        width: 190px;
-        height: 135px;
-        object-fit: cover;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .image-info {
-        flex: 1;
-        min-width: 220px;
-    }
-
-        .image-info h5 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #334155;
-            margin-bottom: 8px;
-        }
-
-        .image-info p {
-            color: #94a3b8;
-            font-size: 13px;
-            margin-bottom: 15px;
-        }
-
-    .file-input {
-        font-size: 13px;
-        width: 100%;
-    }
-
-    .form-actions {
-        border-top: 1px solid #eeeeee;
-        padding-top: 25px;
-        margin-top: 30px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    /* Nút xác nhận màu đỏ */
-    .btn-save {
-        background: #dc2626;
-        color: white !important;
-        border: none;
-        padding: 12px 23px;
-        border-radius: 9px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-        .btn-save:hover {
-            background: #b91c1c;
-            transform: translateY(-2px);
-        }
-
-    .btn-back {
-        background: #f1f5f9;
-        color: #475569 !important;
-        padding: 12px 23px;
-        border-radius: 9px;
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none !important;
-        transition: 0.2s;
-    }
-
-        .btn-back:hover {
-            background: #e2e8f0;
-        }
-
-    .text-danger {
-        font-size: 13px;
-        margin-top: 6px;
-    }
-
-    @@media (max-width: 768px) {
-        .edit-container {
-            padding: 12px;
-        }
-
-        .edit-card {
-            padding: 20px;
-        }
-
-        .edit-header h2 {
-            font-size: 26px;
-        }
-
-        .image-preview {
-            width: 100%;
-            height: 180px;
-        }
-    }
+    .form-page { max-width: 760px; margin: 35px auto; padding: 0 18px; }
+    .form-card { background: white; border: 1px solid #e2e8f0; border-radius: 13px; padding: 30px; box-shadow: 0 5px 20px rgba(15,23,42,.05); }
+    .form-page h2 { font-size: 27px; font-weight: 750; color: #1e293b; margin: 0 0 8px; }
+    .form-sub { color: #64748b; margin: 0 0 25px; }
+    .field { margin-bottom: 20px; }
+    .field label { display: block; font-weight: 600; margin-bottom: 8px; color: #334155; }
+    .field input, .field textarea, .field select { width: 100%; padding: 11px 13px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font: inherit; }
+    .field textarea { min-height: 220px; resize: vertical; line-height: 1.7; }
+    .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: #b91c1c; }
+    .field input[readonly] { background: #f1f5f9; color: #64748b; }
+    .form-actions { display: flex; gap: 10px; margin-top: 25px; }
+    .btn-save, .btn-back { padding: 10px 17px; border-radius: 8px; text-decoration: none; border: 0; cursor: pointer; font-weight: 600; }
+    .btn-save { background: #b91c1c; color: white; }
+    .btn-back { background: #e2e8f0; color: #334155; }
+    .text-danger, .validation-summary-errors { color: #b91c1c; font-size: 13px; }
+    @@media (max-width: 650px) { .form-page { margin-top: 22px; padding: 0 10px; } .form-card { padding: 20px; } .form-actions { flex-wrap: wrap; } }
 </style>
 
-<div class="edit-container">
+<div class="form-page">
+    <div class="form-card">
+        <h2>Chỉnh sửa bài viết</h2>
+        <p class="form-sub">Cập nhật nội dung và trạng thái bài viết.</p>
 
-    <div class="edit-card">
-<!-- TRANG -->
-        <label>Trạng thái</label>
-
-        <select name="Status" class="form-control">
-            <option value="Draft">Draft</option>
-            <option value="Published">Published</option>
-        </select>
-<!-- TRANG -->
-        <!-- TIÊU ĐỀ CHÍNH -->
-        <div class="edit-header">
-            <h2>Chỉnh sửa bài viết</h2>
-            <p>Cập nhật và quản lý nội dung bài viết trên NewsPortal</p>
-        </div>
-
-        <!-- THÔNG TIN BÀI VIẾT -->
-        <div class="section-title">Thông tin bài viết</div>
-
-        <div class="section-subtitle">
-            Thay đổi thông tin và hình ảnh bài viết của bạn.
-        </div>
-
-        @using (Html.BeginForm("Edit", "Articles", FormMethod.Post,
-        new { enctype = "multipart/form-data" }))
+        @using (Html.BeginForm("Edit", "Articles", FormMethod.Post, new { enctype = "multipart/form-data" }))
         {
-        @Html.AntiForgeryToken()
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
+            @Html.HiddenFor(m => m.Image)
+            @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
 
-        @Html.HiddenFor(model => model.Id)
-        @Html.HiddenFor(model => model.Image)
-
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-
-        <div class="form-group">
-
-            <label class="form-label">Tiêu đề bài viết</label>
-
-            @Html.TextBoxFor(model => model.Title,
-                new
-                {
-                    @class = "edit-input",
-                    placeholder = "Nhập tiêu đề bài viết..."
-                })
-
-            @Html.ValidationMessageFor(model => model.Title,
-                "", new { @class = "text-danger" })
-
-        </div>
-
-        <div class="form-group">
-
-            <label class="form-label">Nội dung bài viết</label>
-
-            @Html.TextAreaFor(model => model.Content,
-                new
-                {
-                    @class = "edit-input",
-                    rows = 8,
-                    placeholder = "Nhập nội dung bài viết..."
-                })
-
-            @Html.ValidationMessageFor(model => model.Content,
-                "", new { @class = "text-danger" })
-
-        </div>
-
-        <div class="form-group">
-
-            <label class="form-label">Hình ảnh bài viết</label>
-
-            <div class="image-box">
-
-                <img src="@Url.Content("~/Content/Images/" + Model.Image)"
-                     class="image-preview"
-                     alt="Ảnh bài viết hiện tại" />
-
-                <div class="image-info">
-
-                    <h5>Thay đổi hình ảnh</h5>
-
-                    <p>
-                        Ảnh hiện tại đang được sử dụng.
-                        Bạn có thể chọn ảnh mới nếu muốn thay đổi.
-                    </p>
-
-                    <input type="file"
-                           name="imageFile"
-                           class="file-input"
-                           accept="image/*" />
-
-                </div>
-
+            <div class="field">
+                @Html.LabelFor(m => m.Id, "Mã bài viết")
+                @Html.TextBoxFor(m => m.Id, new { @readonly = "readonly" })
             </div>
 
-        </div>
+            <div class="field">
+                @Html.LabelFor(m => m.Title, "Tiêu đề bài viết")
+                @Html.TextBoxFor(m => m.Title, new { placeholder = "Nhập tiêu đề bài viết..." })
+                @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+            </div>
 
-        <div class="form-actions">
+            <div class="field">
+                @Html.LabelFor(m => m.Content, "Nội dung bài viết")
+                @Html.TextAreaFor(m => m.Content, new { placeholder = "Nhập nội dung bài viết..." })
+                @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger" })
+            </div>
 
-            <button type="submit" class="btn-save">
-                <i class="glyphicon glyphicon-ok"></i>
-                Xác nhận thay đổi
-            </button>
+            <div class="field">
+                @Html.LabelFor(m => m.Status, "Trạng thái")
+                @Html.DropDownListFor(m => m.Status,
+                    new SelectList(new[] { "Draft", "Published" }, Model.Status),
+                    "-- Chọn trạng thái --")
+            </div>
 
-            @Html.ActionLink(
-                "Quay lại danh sách",
-                "Index",
-                null,
-                new { @class = "btn-back" }
-            )
+            <div class="field">
+                <label for="imageFile">Ảnh bài viết</label>
+                <input type="file" name="imageFile" id="imageFile" accept="image/*" />
+            </div>
 
-        </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-save">Lưu thay đổi</button>
+                @Html.ActionLink("Quay lại", "Index", "Articles", null, new { @class = "btn-back" })
+            </div>
         }
-
     </div>
-
 </div>

@@ -1,195 +1,49 @@
-﻿
-@model NewsPortal.Models.Article
+﻿@model NewsPortal.Models.Article
 
 @{
     ViewBag.Title = "Xóa bài viết";
 }
 
 <style>
-    body {
-        background: #ffffff;
-        font-family: Arial, sans-serif;
-    }
-
-    .delete-container {
-        max-width: 750px;
-        margin: 45px auto;
-        padding: 30px;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
-    }
-
-    .delete-header {
-        text-align: center;
-        margin-bottom: 25px;
-    }
-
-    .delete-icon {
-        width: 65px;
-        height: 65px;
-        margin: 0 auto 15px;
-        border-radius: 50%;
-        background: #fee2e2;
-        color: #dc2626;
-        font-size: 30px;
-        line-height: 65px;
-    }
-
-    .delete-header h2 {
-        color: #1e293b;
-        font-size: 27px;
-        font-weight: bold;
-    }
-
-    .delete-warning {
-        text-align: center;
-        color: #dc2626;
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 25px;
-    }
-
-    .article-info {
-        display: flex;
-        gap: 20px;
-        align-items: flex-start;
-        padding: 20px;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        margin-bottom: 25px;
-    }
-
-    .article-image {
-        width: 160px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 8px;
-    }
-
-    .article-text {
-        flex: 1;
-        min-width: 0;
-    }
-
-        .article-text h3 {
-            color: #1e293b;
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-    .article-date {
-        color: #64748b;
-        font-size: 14px;
-        margin-bottom: 12px;
-    }
-
-    .article-content {
-        color: #475569;
-        line-height: 1.6;
-        white-space: pre-line;
-        overflow-wrap: anywhere;
-    }
-
-    .delete-actions {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        padding-top: 20px;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .btn-delete {
-        border: none;
-        padding: 11px 22px;
-        border-radius: 7px;
-        font-weight: 600;
-        cursor: pointer;
-        color: white;
-    }
-
-    .btn-confirm {
-        background: #dc2626;
-    }
-
-    .btn-cancel {
-        background: #64748b;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .btn-delete:hover {
-        opacity: 0.85;
-        color: white;
-        text-decoration: none;
-    }
-
-    @@media (max-width: 600px) {
-        .article-info {
-            flex-direction: column;
-        }
-
-        .article-image {
-            width: 100%;
-            height: 200px;
-        }
-    }
+    .delete-page { max-width: 700px; margin: 40px auto; padding: 0 18px; }
+    .delete-card { background: white; border: 1px solid #fecaca; border-radius: 13px; padding: 30px; }
+    .delete-card h2 { color: #b91c1c; font-size: 26px; font-weight: 750; margin-top: 0; }
+    .delete-warning { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; border-radius: 8px; padding: 14px; margin: 20px 0; }
+    .delete-info { padding: 12px 0; border-bottom: 1px solid #e2e8f0; color: #334155; }
+    .delete-image { width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; margin-top: 18px; }
+    .delete-actions { display: flex; gap: 10px; margin-top: 25px; }
+    .btn-delete, .btn-back { border: 0; padding: 10px 17px; border-radius: 8px; text-decoration: none; cursor: pointer; font-weight: 600; }
+    .btn-delete { background: #b91c1c; color: white; }
+    .btn-back { background: #e2e8f0; color: #334155; }
 </style>
 
-<div class="delete-container">
-
-    <div class="delete-header">
-        <div class="delete-icon">
-            <i class="glyphicon glyphicon-trash"></i>
-        </div>
+<div class="delete-page">
+    <div class="delete-card">
         <h2>Xóa bài viết</h2>
-    </div>
 
-    <div class="delete-warning">
-        Bạn có chắc chắn muốn xóa bài viết này không?
-        <br />
-        Hành động này không thể hoàn tác.
-    </div>
+        <div class="delete-warning">
+            Bạn có chắc chắn muốn xóa bài viết này không?<br />
+            Hành động này không thể hoàn tác.
+        </div>
 
-    <div class="article-info">
+        <div class="delete-info"><strong>Mã bài viết:</strong> @Model.Id</div>
+        <div class="delete-info"><strong>Tiêu đề:</strong> @Model.Title</div>
+        <div class="delete-info"><strong>Ngày đăng:</strong> @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
+        <div class="delete-info"><strong>Trạng thái:</strong> @Model.Status</div>
+
         @if (!string.IsNullOrEmpty(Model.Image))
         {
-            <img src="@Url.Content("~/Content/Images/" + Model.Image)"
-                 class="article-image"
-                 alt="Hình ảnh bài viết" />
+            <img src="@(Model.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? Model.Image : Url.Content("~/Content/Images/" + Model.Image))"
+                 class="delete-image" alt="Ảnh bài viết" />
         }
 
-        <div class="article-text">
-            <h3>@Model.Title</h3>
-
-            <div class="article-date">
-                <i class="glyphicon glyphicon-calendar"></i>
-                Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+        @using (Html.BeginForm("Delete", "Articles", new { id = Model.Id }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <div class="delete-actions">
+                <button type="submit" class="btn-delete">Xác nhận xóa</button>
+                @Html.ActionLink("Hủy", "Index", "Articles", null, new { @class = "btn-back" })
             </div>
-
-            <div class="article-content">
-                @Model.Content
-            </div>
-        </div>
+        }
     </div>
-
-    @using (Html.BeginForm("Delete", "Articles", new { id = Model.Id }, FormMethod.Post))
-    {
-        @Html.AntiForgeryToken()
-
-        <div class="delete-actions">
-            <button type="submit" class="btn-delete btn-confirm">
-                <i class="glyphicon glyphicon-trash"></i>
-                Xác nhận xóa
-            </button>
-
-            @Html.ActionLink("Hủy bỏ", "Index", null,
-                new { @class = "btn-delete btn-cancel" })
-        </div>
-    }
-
 </div>

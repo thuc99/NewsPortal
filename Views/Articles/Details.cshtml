@@ -1,8 +1,11 @@
-﻿
-@model NewsPortal.Models.Article
+﻿@model NewsPortal.Models.Article
+@using NewsPortal.Models
+@using System.Collections.Generic
+@using System.Linq
 
 @{
     ViewBag.Title = "Chi tiết bài viết";
+    var comments = ViewBag.Comments as IEnumerable<Comments> ?? new List<Comments>();
 }
 
 <style>
@@ -12,53 +15,169 @@
     }
 
     .detail-container {
-        max-width: 900px;
+        max-width: 760px;
+        width: calc(100% - 32px);
+        box-sizing: border-box;
+        overflow: hidden;
         margin: 35px auto;
-        padding: 30px 15px;
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        box-shadow: none;
+        padding: 30px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 13px;
+        box-shadow: 0 5px 20px rgba(15,23,42,.05);
     }
 
     .detail-header {
-        text-align: center;
+        text-align: left;
         margin-bottom: 25px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #e2e8f0;
     }
 
-        .detail-header h2 {
-            color: #1e293b;
-            font-size: 30px;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
+    .detail-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-top: 12px;
+    }
 
     .detail-date {
         color: #64748b;
         font-size: 14px;
+        white-space: nowrap;
+    }
+
+    .article-tools {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin: 0;
+        min-width: 0;
+    }
+
+    .article-stat {
+        padding: 0;
+        background: transparent;
+        color: #64748b;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .article-stat strong {
+        color: #f59e0b;
+    }
+
+    .favorite-form {
+        margin: 0;
+    }
+
+    .favorite-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #fecdd3;
+        border-radius: 50%;
+        background: #fff1f2;
+        color: #e11d48;
+        font-size: 21px;
+        line-height: 1;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .favorite-button:hover {
+        background: #ffe4e6;
+        transform: translateY(-1px);
+    }
+
+    .rating-card {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 16px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .rating-summary {
+        display: none;
+    }
+
+    .rating-feedback {
+        display: block;
+        flex-basis: 100%;
+        order: 3;
+        width: 100%;
+        margin: 4px 0 0;
+        text-align: right;
+    }
+
+    .rating-title {
+        margin: 0;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .rating-stars {
+        display: inline-flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 2px;
+        margin: 0;
+        order: 2;
+    }
+
+    .rating-stars input {
+        display: none !important;
+    }
+
+    .rating-stars label {
+        display: inline-block !important;
+        color: #cbd5e1 !important;
+        font-size: 30px;
+        line-height: 1;
+        cursor: pointer;
+        transition: color .15s ease, transform .15s ease;
+    }
+
+    .rating-stars label:hover,
+    .rating-stars label:hover ~ label,
+    .rating-stars input:checked + label,
+    .rating-stars input:checked ~ label {
+        color: #fbbf24 !important;
+    }
+
+    .rating-stars label:hover {
+        transform: scale(1.12);
     }
 
     .detail-image {
+        display: block;
         width: 100%;
+        max-width: 100%;
+        height: auto;
         max-height: 430px;
         object-fit: cover;
+        box-sizing: border-box;
+        overflow: hidden;
         border-radius: 12px;
-        margin-bottom: 25px;
+        margin: 0 0 25px;
     }
 
-    .detail-content {
-        color: #334155;
-        font-size: 16px;
-        line-height: 1.8;
-        white-space: pre-line;
-        margin-bottom: 30px;
-    }
-
-    .detail-actions {
-        display: flex;
-        gap: 10px;
-        border-top: 1px solid #e5e7eb;
-        padding-top: 20px;
+    .rating-submit {
+        padding: 7px 12px;
+        border-radius: 7px;
+        font-size: 13px;
     }
 
     .btn-detail {
@@ -78,10 +197,146 @@
         background: #64748b;
     }
 
+    .view-actions {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0 25px;
+    }
+
+    .btn-edit-article {
+        background: #b91c1c;
+        color: white;
+    }
+
+    .view-actions .btn-back {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
     .btn-detail:hover {
         opacity: 0.85;
         color: white;
         text-decoration: none;
+    }
+
+    .comments-card {
+        margin-top: 30px;
+        padding: 22px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .comments-title {
+        color: #1e293b;
+        margin: 0 0 18px;
+    }
+
+    .comment-form {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .comment-input,
+    .comment-textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 11px 13px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font: inherit;
+    }
+
+    .comment-textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .comment-submit {
+        justify-self: start;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 16px;
+        background: #b91c1c;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .comment-item {
+        padding: 14px 0;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .comment-author {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .comment-date {
+        color: #94a3b8;
+        font-size: 12px;
+        margin-left: 8px;
+    }
+
+    .comment-content {
+        color: #475569;
+        margin: 6px 0 0;
+        white-space: pre-line;
+    }
+
+    .comment-message {
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+
+    .comment-success {
+        color: #166534;
+        background: #dcfce7;
+    }
+
+    .comment-error {
+        color: #991b1b;
+        background: #fee2e2;
+    }
+
+    @@media (max-width: 650px) {
+        .detail-container {
+            margin-top: 22px;
+            padding: 20px;
+            width: calc(100% - 20px);
+        }
+
+        .detail-meta,
+        .rating-card {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .article-tools,
+        .rating-card {
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .rating-card {
+            gap: 8px;
+        }
+
+        .rating-summary,
+        .rating-feedback {
+            text-align: left;
+        }
+
+        .rating-stars label {
+            font-size: 28px;
+        }
+
+        .rating-feedback {
+            text-align: left;
+        }
     }
 </style>
 
@@ -90,15 +345,43 @@
     <div class="detail-header">
         <h2>@Model.Title</h2>
 
-        <div class="detail-date">
-            <i class="glyphicon glyphicon-calendar"></i>
-            Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+        <div class="detail-meta">
+            <div class="detail-date">
+                <i class="glyphicon glyphicon-calendar"></i>
+                Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+            </div>
+
+            @if (ViewBag.CanComment == true)
+            {
+                <div class="article-tools">
+                    <span class="article-stat article-views">
+                        <span aria-hidden="true">👁</span>
+                        @Model.ViewCount lượt xem
+                    </span>
+                    <span class="article-stat">
+                        <strong>★ @(((double)ViewBag.AverageRating).ToString("0.0"))/5</strong>
+                        <span>(@ViewBag.RatingCount lượt đánh giá)</span>
+                    </span>
+
+                    @using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { @class = "favorite-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("articleId", Model.Id)
+                        <button type="submit"
+                                class="favorite-button"
+                                title="@(ViewBag.IsFavorite == true ? "Bỏ yêu thích" : "Thêm vào yêu thích")"
+                                aria-label="@(ViewBag.IsFavorite == true ? "Bỏ yêu thích" : "Thêm vào yêu thích")">
+                            <span aria-hidden="true">@(ViewBag.IsFavorite == true ? "♥" : "♡")</span>
+                        </button>
+                    }
+                </div>
+            }
         </div>
     </div>
 
     @if (!string.IsNullOrEmpty(Model.Image))
     {
-        <img src="@Url.Content("~/Content/Images/" + Model.Image)"
+        <img src="@(Model.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? Model.Image : Url.Content("~/Content/Images/" + Model.Image))"
              class="detail-image"
              alt="Hình ảnh bài viết" />
     }
@@ -107,12 +390,97 @@
         @Model.Content
     </div>
 
-    <div class="detail-actions">
-        @Html.ActionLink("Chỉnh sửa", "Edit", new { id = Model.Id },
-            new { @class = "btn-detail btn-edit" })
+    @if (ViewBag.CanComment != true)
+    {
+        <div class="view-actions">
+            @Html.ActionLink("Chỉnh sửa bài viết", "Edit", "Articles",
+                new { id = Model.Id },
+                new { @class = "btn-detail btn-edit-article" })
 
-        @Html.ActionLink("Quay lại danh sách", "Index", null,
-            new { @class = "btn-detail btn-back" })
-    </div>
+            @Html.ActionLink("Quay lại danh sách", "Index", "Articles",
+                null,
+                new { @class = "btn-detail btn-back" })
+        </div>
+    }
 
+    <section class="comments-card">
+        <h3 class="comments-title">Bình luận (@comments.Count())</h3>
+
+        @if (ViewBag.CanComment == true)
+        {
+            if (TempData["CommentSuccess"] != null)
+            {
+                <div class="comment-message comment-success">@TempData["CommentSuccess"]</div>
+            }
+
+            if (TempData["CommentError"] != null)
+            {
+                <div class="comment-message comment-error">@TempData["CommentError"]</div>
+            }
+
+            using (Html.BeginForm("AddComment", "Articles", FormMethod.Post, new { @class = "comment-form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.Hidden("articleId", Model.Id)
+
+                <input type="text" name="commenterName" class="comment-input"
+                       maxlength="100" placeholder="Tên của bạn" required />
+
+                <textarea name="content" class="comment-textarea"
+                          maxlength="1000" placeholder="Viết bình luận..." required></textarea>
+
+                <button type="submit" class="comment-submit">Gửi bình luận</button>
+            }
+        }
+        else
+        {
+            <p class="comments-readonly">Khu vực bình luận chỉ được gửi tại trang đọc bài viết.</p>
+        }
+
+        @if (comments.Any())
+        {
+            foreach (var comment in comments)
+            {
+                <div class="comment-item">
+                    <span class="comment-author">@comment.CommenterName</span>
+                    <span class="comment-date">@comment.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                    <p class="comment-content">@comment.Content</p>
+                </div>
+            }
+        }
+        else
+        {
+            <p>Chưa có bình luận nào.</p>
+        }
+    </section>
+
+    @if (ViewBag.CanComment == true)
+    {
+        <div class="rating-card">
+            <h3 class="rating-title">Đánh giá bài viết</h3>
+
+            @if (TempData["RatingSuccess"] != null)
+            {
+                <div class="comment-message comment-success">@TempData["RatingSuccess"]</div>
+            }
+            @if (TempData["RatingError"] != null)
+            {
+                <div class="comment-message comment-error">@TempData["RatingError"]</div>
+            }
+
+            @using (Html.BeginForm("Rate", "Articles", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.Hidden("articleId", Model.Id)
+                <div class="rating-stars" role="radiogroup" aria-label="Chọn số sao đánh giá">
+                    @for (var star = 5; star >= 1; star--)
+                    {
+                        <input id="rating-@star" type="radio" name="rating" value="@star" required />
+                        <label for="rating-@star" title="@star sao">★</label>
+                    }
+                </div>
+                <button type="submit" class="rating-submit">Gửi đánh giá</button>
+            }
+        </div>
+    }
 </div>

@@ -28,5 +28,8 @@ namespace NewsPortal.Models
         public virtual DbSet<Articles> Articles { get; set; }
         public virtual DbSet<Author> Authors { get; set; }
         public virtual DbSet<Category> Categories { get; set; }
+        public virtual DbSet<Comments> Comments { get; set; }
+        public virtual DbSet<Users> Users { get; set; }
+        public virtual DbSet<ArticleRatings> ArticleRatings { get; set; }
     }
 }

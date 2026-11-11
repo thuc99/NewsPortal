@@ -1,5 +1,5 @@
-﻿
-@model IEnumerable<NewsPortal.Models.Articles>
+﻿@model IEnumerable<NewsPortal.Models.Articles>
+@using System
 @using System.Linq
 
 @{
@@ -8,376 +8,129 @@
         .Where(a => a.Status == "Published")
         .OrderByDescending(a => a.CreatedDate)
         .ToList();
-
     var featured = articles.FirstOrDefault();
     var remaining = featured == null
-        ? articles
-        : articles.Where(a => a.ArticleID != featured.ArticleID).ToList();
+        ? new System.Collections.Generic.List<NewsPortal.Models.Articles>()
+        : articles.Skip(1).ToList();
+    var currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
+    var totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
 }
 
 <style>
-    .section-heading {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 2px solid #252830;
-        margin-bottom: 22px;
-        padding-bottom: 10px;
-    }
-
-    .section-title {
-        font-size: 21px;
-        font-weight: 850;
-        margin: 0;
-        letter-spacing: -.5px;
-    }
-
-        .section-title:before {
-            content: "";
-            display: inline-block;
-            width: 5px;
-            height: 23px;
-            background: #b91c32;
-            margin-right: 10px;
-            vertical-align: -5px;
-        }
-
-    .section-more {
-        color: #b91c32;
-        font-size: 12px;
-        font-weight: 800;
-    }
-
-    .hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
-        gap: 25px;
-        margin-bottom: 40px;
-    }
-
-    .featured-card {
-        background: #f6f6f8;
-        border: 1px solid #ededf0;
-        overflow: hidden;
-        border-radius: 5px;
-    }
-
-    .featured-visual {
-        min-height: 260px;
-        display: flex;
-        align-items: flex-end;
-        padding: 25px;
-        background: radial-gradient(circle at 80% 20%, #edb6bf 0, transparent 30%), linear-gradient(135deg, #571323, #b91c32 55%, #e16c7b);
-        color: white;
-        position: relative;
-    }
-
-        .featured-visual:after {
-            content: "NEWS";
-            position: absolute;
-            right: 20px;
-            top: 8px;
-            font-size: clamp(50px, 8vw, 100px);
-            line-height: 1;
-            font-weight: 900;
-            letter-spacing: -5px;
-            color: rgba(255,255,255,.13);
-        }
-
-    .featured-label {
-        display: inline-block;
-        position: relative;
-        z-index: 1;
-        padding: 4px 9px;
-        background: white;
-        color: #a51f33;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: 1px;
-    }
-
-    .featured-body {
-        padding: 23px;
-    }
-
-    .featured-title {
-        font-size: clamp(22px, 3vw, 30px);
-        font-weight: 850;
-        line-height: 1.35;
-        letter-spacing: -.7px;
-        margin: 0 0 12px;
-    }
-
-    .featured-summary {
-        color: #656a75;
-        font-size: 14px;
-        margin: 0 0 16px;
-    }
-
-    .article-meta {
-        color: #858995;
-        font-size: 12px;
-    }
-
-    .read-more {
-        display: inline-block;
-        margin-top: 17px;
-        color: #b91c32;
-        font-size: 12px;
-        font-weight: 850;
-    }
-
-    .latest-panel {
-        border: 1px solid #ededf0;
-        padding: 20px;
-        border-radius: 5px;
-        align-self: start;
-    }
-
-    .latest-heading {
-        font-size: 15px;
-        font-weight: 850;
-        border-bottom: 1px solid #e9e9ed;
-        padding-bottom: 12px;
-        margin-bottom: 0;
-    }
-
-    .latest-item {
-        padding: 16px 0;
-        border-bottom: 1px solid #ededf0;
-    }
-
-        .latest-item:last-child {
-            border-bottom: 0;
-        }
-
-    .latest-number {
-        color: #b91c32;
-        font-size: 12px;
-        font-weight: 900;
-    }
-
-    .latest-title {
-        display: block;
-        font-size: 14px;
-        font-weight: 750;
-        line-height: 1.5;
-        margin: 4px 0 6px;
-    }
-
-    .news-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 22px;
-    }
-
-    .news-card {
-        border: 1px solid #e9e9ed;
-        border-radius: 5px;
-        overflow: hidden;
-        background: white;
-        transition: transform .18s ease, box-shadow .18s ease;
-    }
-
-        .news-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 9px 24px rgba(20,20,30,.08);
-        }
-
-    .news-card-visual {
-        height: 145px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #f5dce1, #f7f7f9);
-        color: #b91c32;
-        font-size: 32px;
-        font-weight: 900;
-    }
-
-    .news-card-body {
-        padding: 17px;
-    }
-
-    .news-tag {
-        font-size: 10px;
-        color: #b91c32;
-        font-weight: 900;
-        letter-spacing: .8px;
-        text-transform: uppercase;
-    }
-
-    .news-card-title {
-        font-size: 17px;
-        font-weight: 800;
-        line-height: 1.45;
-        margin: 8px 0;
-    }
-
-    .news-summary {
-        color: #727783;
-        font-size: 13px;
-        line-height: 1.7;
-        margin: 0;
-    }
-
-    .empty-state {
-        padding: 35px;
-        border: 1px dashed #d7d8de;
-        border-radius: 5px;
-        color: #737985;
-        text-align: center;
-    }
-
-    @@media (max-width: 760px) {
-        .hero-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .news-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .featured-visual {
-            min-height: 200px;
-        }
-    }
-
-    @@media (max-width: 480px) {
-        .news-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .featured-body {
-            padding: 17px;
-        }
-    }
+    .home-page { max-width: 1160px; margin: 0 auto; }
+    .section-heading { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #252830; margin-bottom: 22px; padding-bottom: 10px; }
+    .section-title { font-size: 21px; font-weight: 800; margin: 0; }
+    .section-title:before { content: ""; display: inline-block; width: 5px; height: 23px; background: #b91c32; margin-right: 10px; vertical-align: -5px; }
+    .result-count { color: #737985; font-size: 13px; margin-bottom: 18px; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr); gap: 25px; margin-bottom: 40px; }
+    .featured-card, .latest-panel, .news-card { background: white; border: 1px solid #e9e9ed; border-radius: 6px; overflow: hidden; }
+    .featured-visual { min-height: 260px; position: relative; display: flex; align-items: flex-end; padding: 25px; background: #571323; overflow: hidden; }
+    .featured-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .8; }
+    .featured-visual:after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(20,10,15,.8), transparent); }
+    .featured-label { position: relative; z-index: 1; padding: 4px 9px; background: white; color: #a51f33; font-size: 10px; font-weight: 900; }
+    .featured-body { padding: 23px; }
+    .featured-title { font-size: clamp(22px, 3vw, 30px); line-height: 1.35; margin: 0 0 12px; }
+    .featured-summary, .news-summary { color: #656a75; line-height: 1.7; }
+    .read-more { display: inline-block; margin-top: 12px; color: #b91c32; font-weight: 700; }
+    .latest-panel { padding: 20px; align-self: start; }
+    .latest-heading { font-size: 15px; font-weight: 800; border-bottom: 1px solid #e9e9ed; padding-bottom: 12px; }
+    .latest-item { padding: 14px 0; border-bottom: 1px solid #ededf0; }
+    .latest-number { color: #b91c32; font-weight: 900; }
+    .latest-title { display: block; font-weight: 700; margin: 4px 0; }
+    .article-meta { color: #858995; font-size: 12px; }
+    .news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+    .news-card { transition: transform .18s ease, box-shadow .18s ease; }
+    .news-card:hover { transform: translateY(-3px); box-shadow: 0 9px 24px rgba(20,20,30,.08); }
+    .news-card-visual { height: 145px; background: #f5dce1; overflow: hidden; }
+    .news-card-visual img { width: 100%; height: 100%; object-fit: cover; }
+    .news-card-body { padding: 17px; }
+    .news-tag { color: #b91c32; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .news-card-title { font-size: 17px; line-height: 1.45; margin: 8px 0; }
+    .pagination { display: flex; justify-content: center; gap: 6px; margin: 28px 0; }
+    .pagination a { padding: 7px 11px; border-radius: 6px; background: #f1f5f9; color: #334155; text-decoration: none; }
+    .pagination a.active { background: #b91c32; color: white; }
+    .empty-state { padding: 35px; border: 1px dashed #d7d8de; color: #737985; text-align: center; }
+    @@media (max-width: 760px) { .hero-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: repeat(2, 1fr); } }
+    @@media (max-width: 480px) { .news-grid { grid-template-columns: 1fr; } }
 </style>
 
-@if (featured != null)
-{
-    <section class="hero-grid">
-        <article class="featured-card">
-            <div class="featured-visual">
-                <span class="featured-label">TIN NỔI BẬT</span>
-            </div>
-
-            <div class="featured-body">
-                <h1 class="featured-title">
-                    @featured.Title
-                </h1>
-
-                <p class="featured-summary">
-                    @if (!string.IsNullOrWhiteSpace(featured.Summary))
-                    {
-                        @featured.Summary
-                    }
-                    else
-                    {
-                        @:Khám phá nội dung mới nhất từ NewsPortal.
-                    }
-                </p>
-
-                <div class="article-meta">
-                    Ngày đăng: @featured.CreatedDate
-                </div>
-
-                <a class="read-more"
-                   href="@Url.Action("Details", "Articles", new { id = featured.ArticleID })">
-                    ĐỌC CHI TIẾT →
-                </a>
-            </div>
-        </article>
-
-        <aside class="latest-panel">
-            <h2 class="latest-heading">TIN MỚI NHẤT</h2>
-
-            @if (remaining.Any())
-            {
-                var index = 1;
-
-                foreach (var item in remaining.Take(5))
-                {
-                    <div class="latest-item">
-                        <span class="latest-number">
-                            @(index.ToString("00"))
-                        </span>
-
-                        <a class="latest-title"
-                           href="@Url.Action("Details", "Articles", new { id = item.ArticleID })">
-                            @item.Title
-                        </a>
-
-                        <div class="article-meta">
-                            @item.CreatedDate
-                        </div>
-                    </div>
-
-                    index++;
-                }
-            }
-            else
-            {
-                <p class="news-summary">Chưa có thêm bài viết mới.</p>
-            }
-        </aside>
-    </section>
-}
-
-<section>
+<div class="home-page">
     <div class="section-heading">
-        <h2 class="section-title">TIN TỨC MỚI</h2>
-        <a class="section-more"
-           href="@Url.Action("Index", "Articles")">
-            XEM TẤT CẢ →
-        </a>
+        <h2 class="section-title">Tin mới nhất</h2>
     </div>
 
-    @if (remaining.Any())
+    @if (featured != null)
     {
-        <div class="news-grid">
-            @foreach (var item in remaining)
-            {
-                <article class="news-card">
-                    <div class="news-card-visual">NP.</div>
+        <section class="hero-grid">
+            <article class="featured-card">
+                <div class="featured-visual">
+                    @if (!string.IsNullOrWhiteSpace(featured.ImageUrl))
+                    {
+                        <img src="@featured.ImageUrl" alt="@featured.Title" />
+                    }
+                    <span class="featured-label">TIN NỔI BẬT</span>
+                </div>
+                <div class="featured-body">
+                    <h1 class="featured-title">@featured.Title</h1>
+                    <p class="featured-summary">@featured.Summary</p>
+                    <div class="article-meta">@featured.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
+                    @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = featured.ArticleID }, new { @class = "read-more" })
+                </div>
+            </article>
 
-                    <div class="news-card-body">
-                        <div class="news-tag">Tin tức</div>
-
-                        <h3 class="news-card-title">
-                            <a href="@Url.Action("Details", "Articles", new { id = item.ArticleID })">
-                                @item.Title
-                            </a>
-                        </h3>
-
-                        <p class="news-summary">
-                            @if (!string.IsNullOrWhiteSpace(item.Summary))
-                            {
-                                @item.Summary
-                            }
-                            else
-                            {
-                                @:Đọc thêm thông tin chi tiết về bài viết này.
-                            }
-                        </p>
-
-                        <div class="article-meta" style="margin-top:12px">
-                            @item.CreatedDate
-                        </div>
-
-                        <a class="read-more"
-                           href="@Url.Action("Details", "Articles", new { id = item.ArticleID })">
-                            ĐỌC TIẾP →
-                        </a>
+            <aside class="latest-panel">
+                <h3 class="latest-heading">TIN MỚI NHẤT</h3>
+                @foreach (var item in articles.Take(4))
+                {
+                    <div class="latest-item">
+                        <span class="latest-number">@item.CreatedDate.ToString("dd")</span>
+                        @Html.ActionLink(item.Title, "View", "Articles", new { id = item.ArticleID }, new { @class = "latest-title" })
+                        <span class="article-meta">@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
                     </div>
-                </article>
-            }
+                }
+            </aside>
+        </section>
+
+        <div class="section-heading">
+            <h2 class="section-title">Các bài viết khác</h2>
         </div>
+
+        if (remaining.Any())
+        {
+            <section class="news-grid">
+                @foreach (var item in remaining)
+                {
+                    <article class="news-card">
+                        <div class="news-card-visual">
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.Title" />
+                            }
+                        </div>
+                        <div class="news-card-body">
+                            <div class="news-tag">@(item.Categories == null ? "TIN TỨC" : item.Categories.CategoryName)</div>
+                            <h3 class="news-card-title">@item.Title</h3>
+                            <p class="news-summary">@item.Summary</p>
+                            @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = item.ArticleID }, new { @class = "read-more" })
+                        </div>
+                    </article>
+                }
+            </section>
+        }
     }
-    else if (featured == null)
+    else
     {
-        <div class="empty-state">
-            Hiện chưa có bài viết được xuất bản.
-        </div>
+        <div class="empty-state">Chưa có bài viết đã xuất bản.</div>
     }
-</section>
+
+    @if (totalPages > 1)
+    {
+        <nav class="pagination">
+            @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
+            {
+                <a class="@(pageNumber == currentPage ? "active" : "")"
+                   href="@Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, page = pageNumber })">@pageNumber</a>
+            }
+        </nav>
+    }
+</div>

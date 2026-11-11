@@ -19,6 +19,12 @@ namespace NewsPortal.Models
         [Display(Name = "Hình ảnh")]
         public string Image { get; set; } // Thêm thuộc tính lưu đường dẫn ảnh
 
+        public string ImageUrl { get; set; }
+
+        public string Status { get; set; }
+
+        public int ViewCount { get; set; }
+
         [Display(Name = "Ngày đăng")]
         [DataType(DataType.Date)]
         public DateTime CreatedDate { get; set; } = DateTime.Now;

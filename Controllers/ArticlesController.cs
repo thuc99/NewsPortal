@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -10,125 +11,368 @@ namespace NewsPortal.Controllers
 {
     public class ArticlesController : Controller
     {
-        // Danh sách lưu trữ tạm thời trong bộ nhớ
-        private static List<Article> dbArticles = new List<Article>()
-        {
-            new Article { Id = 1, Title = "Giới thiệu trang tin tức NewsPortal", Content = "Nội dung chào mừng...", Image = "default.jpg", CreatedDate = DateTime.Now },
-            new Article { Id = 2, Title = "Cập nhật công nghệ lập trình Web", Content = "ASP.NET MVC...", Image = "default.jpg", CreatedDate = DateTime.Now }
-        };
+        private readonly NewsPortalDBEntities db = new NewsPortalDBEntities();
 
-        // GET: Articles
-        public ActionResult Index()
+        public ActionResult Index(string searchString, int? categoryId, int? authorId,
+            string status, DateTime? fromDate, DateTime? toDate, int page = 1)
         {
-            return View(dbArticles);
+            const int pageSize = 8;
+            page = Math.Max(page, 1);
+
+            var query = db.Articles
+                .Include(a => a.Categories)
+                .Include(a => a.Authors)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                searchString = searchString.Trim();
+                query = query.Where(a =>
+                    a.Title.Contains(searchString) ||
+                    a.Summary.Contains(searchString) ||
+                    a.Content.Contains(searchString));
+            }
+
+            if (categoryId.HasValue)
+                query = query.Where(a => a.CategoryID == categoryId.Value);
+
+            if (authorId.HasValue)
+                query = query.Where(a => a.AuthorID == authorId.Value);
+
+            if (status == "Draft" || status == "Published")
+                query = query.Where(a => a.Status == status);
+
+            if (fromDate.HasValue)
+                query = query.Where(a => a.CreatedDate >= fromDate.Value);
+
+            if (toDate.HasValue)
+            {
+                var endDate = toDate.Value.Date.AddDays(1);
+                query = query.Where(a => a.CreatedDate < endDate);
+            }
+
+            var totalArticles = query.Count();
+            var totalPages = Math.Max((int)Math.Ceiling((double)totalArticles / pageSize), 1);
+            page = Math.Min(page, totalPages);
+
+            var articles = query
+                .OrderByDescending(a => a.CreatedDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList()
+                .Select(ToArticleViewModel)
+                .ToList();
+
+            ViewBag.SearchString = searchString;
+            ViewBag.CategoryId = categoryId;
+            ViewBag.AuthorId = authorId;
+            ViewBag.Status = status;
+            ViewBag.FromDate = fromDate;
+            ViewBag.ToDate = toDate;
+            ViewBag.Categories = db.Categories.OrderBy(c => c.CategoryName).ToList();
+            ViewBag.Authors = db.Authors.OrderBy(a => a.AuthorName).ToList();
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalArticles = totalArticles;
+
+            return View(articles);
         }
 
-        // GET: Articles/Details/5
         public ActionResult Details(int id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
-            if (article == null)
-            {
-                return HttpNotFound();
-            }
-            return View(article);
+            return LoadArticleDetails(id, false);
         }
 
-        // GET: Articles/Create
+        [ActionName("View")]
+        public ActionResult ViewArticle(int id)
+        {
+            return LoadArticleDetails(id, true);
+        }
+
+        private ActionResult LoadArticleDetails(int id, bool canComment)
+        {
+            var article = db.Articles.Find(id);
+            if (article == null)
+                return HttpNotFound();
+
+            if (canComment && !HasViewedRecently(id))
+            {
+                article.ViewCount++;
+                db.SaveChanges();
+                Response.Cookies.Add(new HttpCookie("NewsPortalViewed_" + id, "1")
+                {
+                    Expires = DateTime.Now.AddHours(1),
+                    HttpOnly = true
+                });
+            }
+
+            ViewBag.Comments = db.Comments
+                .Where(c => c.ArticleID == id)
+                .OrderByDescending(c => c.CreatedDate)
+                .ToList();
+            ViewBag.RatingCount = db.ArticleRatings.Count(r => r.ArticleID == id);
+            ViewBag.AverageRating = db.ArticleRatings
+                .Where(r => r.ArticleID == id)
+                .Select(r => (double?)r.Rating)
+                .Average() ?? 0;
+            ViewBag.IsFavorite = GetFavoriteIds().Contains(id);
+            ViewBag.CanComment = canComment;
+
+            return View("Details", ToArticleViewModel(article));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddComment(int articleId, string commenterName, string content)
+        {
+            commenterName = (commenterName ?? string.Empty).Trim();
+            content = (content ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(commenterName))
+            {
+                TempData["CommentError"] = "Vui lòng nhập tên của bạn.";
+                return RedirectToAction("View", new { id = articleId });
+            }
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                TempData["CommentError"] = "Vui lòng nhập nội dung bình luận.";
+                return RedirectToAction("View", new { id = articleId });
+            }
+
+            if (commenterName.Length > 100 || content.Length > 1000)
+            {
+                TempData["CommentError"] = "Tên tối đa 100 ký tự và bình luận tối đa 1000 ký tự.";
+                return RedirectToAction("View", new { id = articleId });
+            }
+
+            if (!db.Articles.Any(a => a.ArticleID == articleId))
+                return HttpNotFound();
+
+            db.Comments.Add(new Comments
+            {
+                ArticleID = articleId,
+                CommenterName = commenterName,
+                Content = content,
+                CreatedDate = DateTime.Now
+            });
+            db.SaveChanges();
+
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
+            return RedirectToAction("View", new { id = articleId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Rate(int articleId, byte rating)
+        {
+            if (rating < 1 || rating > 5)
+            {
+                TempData["RatingError"] = "Vui lòng chọn mức đánh giá từ 1 đến 5 sao.";
+                return RedirectToAction("View", new { id = articleId });
+            }
+
+            if (!db.Articles.Any(a => a.ArticleID == articleId))
+                return HttpNotFound();
+
+            db.ArticleRatings.Add(new ArticleRatings
+            {
+                ArticleID = articleId,
+                RaterName = "Ẩn danh",
+                Rating = rating,
+                CreatedDate = DateTime.Now
+            });
+            db.SaveChanges();
+
+            TempData["RatingSuccess"] = "Cảm ơn bạn đã đánh giá bài viết.";
+            return RedirectToAction("View", new { id = articleId });
+        }
+
+        private bool HasViewedRecently(int articleId)
+        {
+            return Request.Cookies["NewsPortalViewed_" + articleId] != null;
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ToggleFavorite(int articleId)
+        {
+            if (!db.Articles.Any(a => a.ArticleID == articleId))
+                return HttpNotFound();
+
+            var favoriteIds = GetFavoriteIds();
+            if (favoriteIds.Contains(articleId))
+            {
+                favoriteIds.Remove(articleId);
+                TempData["FavoriteMessage"] = "Đã bỏ khỏi bài viết yêu thích.";
+            }
+            else
+            {
+                favoriteIds.Add(articleId);
+                TempData["FavoriteMessage"] = "Đã lưu bài viết yêu thích.";
+            }
+
+            Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", favoriteIds))
+            {
+                Expires = DateTime.Now.AddYears(1),
+                HttpOnly = true
+            });
+
+            return RedirectToAction("View", new { id = articleId });
+        }
+
+        private List<int> GetFavoriteIds()
+        {
+            var cookie = Request.Cookies["NewsPortalFavorites"];
+            if (cookie == null || string.IsNullOrWhiteSpace(cookie.Value))
+                return new List<int>();
+
+            return cookie.Value.Split(',')
+                .Select(value =>
+                {
+                    int id;
+                    return int.TryParse(value, out id) ? (int?)id : null;
+                })
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .Distinct()
+                .ToList();
+        }
+
         public ActionResult Create()
         {
-            return View();
+            return View(new Article());
         }
 
-        // POST: Articles/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(Article article, HttpPostedFileBase imageFile)
         {
-            if (ModelState.IsValid)
-            {
-                // Xử lý upload ảnh
-                if (imageFile != null && imageFile.ContentLength > 0)
-                {
-                    string fileName = Path.GetFileName(imageFile.FileName);
-                    string path = Path.Combine(Server.MapPath("~/Content/Images/"), fileName);
-                    imageFile.SaveAs(path);
-                    article.Image = fileName;
-                }
-                else
-                {
-                    article.Image = "no-image.jpg";
-                }
+            if (!ModelState.IsValid)
+                return View(article);
 
-                article.Id = dbArticles.Count > 0 ? dbArticles.Max(x => x.Id) + 1 : 1;
-                article.CreatedDate = DateTime.Now;
-                dbArticles.Add(article);
-                return RedirectToAction("Index");
+            var category = db.Categories.OrderBy(c => c.CategoryID).FirstOrDefault();
+            var author = db.Authors.OrderBy(a => a.AuthorID).FirstOrDefault();
+            if (category == null || author == null)
+            {
+                ModelState.AddModelError("", "Cần có danh mục và tác giả trước khi thêm bài viết.");
+                return View(article);
             }
 
-            return View(article);
+            db.Articles.Add(new Articles
+            {
+                CategoryID = category.CategoryID,
+                AuthorID = author.AuthorID,
+                Title = article.Title,
+                Summary = CreateSummary(article.Content),
+                Content = article.Content,
+                CreatedDate = DateTime.Now,
+                Status = "Published",
+                ImageUrl = SaveImage(imageFile),
+                ViewCount = 0
+            });
+            db.SaveChanges();
+            return RedirectToAction("Index");
         }
 
-        // GET: Articles/Edit/5
         public ActionResult Edit(int id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
+            var article = db.Articles.Find(id);
             if (article == null)
-            {
                 return HttpNotFound();
-            }
-            return View(article);
+            return View(ToArticleViewModel(article));
         }
 
-        // POST: Articles/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Article article, HttpPostedFileBase imageFile)
         {
-            if (ModelState.IsValid)
-            {
-                var existing = dbArticles.FirstOrDefault(x => x.Id == article.Id);
-                if (existing != null)
-                {
-                    existing.Title = article.Title;
-                    existing.Content = article.Content;
+            if (!ModelState.IsValid)
+                return View(article);
 
-                    // Nếu chọn ảnh mới khi sửa
-                    if (imageFile != null && imageFile.ContentLength > 0)
-                    {
-                        string fileName = Path.GetFileName(imageFile.FileName);
-                        string path = Path.Combine(Server.MapPath("~/Content/Images/"), fileName);
-                        imageFile.SaveAs(path);
-                        existing.Image = fileName;
-                    }
-                }
-                return RedirectToAction("Index");
-            }
-            return View(article);
+            var existing = db.Articles.Find(article.Id);
+            if (existing == null)
+                return HttpNotFound();
+
+            existing.Title = article.Title;
+            existing.Content = article.Content;
+            existing.Summary = CreateSummary(article.Content);
+            existing.UpdatedDate = DateTime.Now;
+
+            if (article.Status == "Draft" || article.Status == "Published")
+                existing.Status = article.Status;
+
+            var imageUrl = SaveImage(imageFile);
+            if (!string.IsNullOrWhiteSpace(imageUrl))
+                existing.ImageUrl = imageUrl;
+
+            db.SaveChanges();
+            return RedirectToAction("Index");
         }
 
-        // GET: Articles/Delete/5
         public ActionResult Delete(int id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
+            var article = db.Articles.Find(id);
             if (article == null)
-            {
                 return HttpNotFound();
-            }
-            return View(article);
+            return View(ToArticleViewModel(article));
         }
 
-        // POST: Articles/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            var article = dbArticles.FirstOrDefault(x => x.Id == id);
-            if (article != null)
-            {
-                dbArticles.Remove(article);
-            }
+            var article = db.Articles.Find(id);
+            if (article == null)
+                return HttpNotFound();
+
+            db.Articles.Remove(article);
+            db.SaveChanges();
             return RedirectToAction("Index");
+        }
+
+        private Article ToArticleViewModel(Articles article)
+        {
+            return new Article
+            {
+                Id = article.ArticleID,
+                Title = article.Title,
+                Content = article.Content,
+                CreatedDate = article.CreatedDate,
+                Image = article.ImageUrl,
+                ImageUrl = article.ImageUrl,
+                Status = article.Status,
+                ViewCount = article.ViewCount
+            };
+        }
+
+        private string CreateSummary(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return string.Empty;
+
+            var text = content.Trim();
+            return text.Length <= 180 ? text : text.Substring(0, 180) + "...";
+        }
+
+        private string SaveImage(HttpPostedFileBase imageFile)
+        {
+            if (imageFile == null || imageFile.ContentLength <= 0)
+                return null;
+
+            var extension = Path.GetExtension(imageFile.FileName);
+            var fileName = Guid.NewGuid().ToString("N") + extension;
+            var folder = Server.MapPath("~/Content/Images/");
+            Directory.CreateDirectory(folder);
+            imageFile.SaveAs(Path.Combine(folder, fileName));
+            return Url.Content("~/Content/Images/" + fileName);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                db.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

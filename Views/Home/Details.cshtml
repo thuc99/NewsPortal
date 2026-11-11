@@ -1,0 +1,253 @@
+@model NewsPortal.Models.Articles
+@using NewsPortal.Models
+@using System.Collections.Generic
+@using System.Linq
+
+@{
+    ViewBag.Title = Model.Title;
+    var comments = ViewBag.Comments as IEnumerable<Comments> ?? new List<Comments>();
+}
+
+<style>
+    .article-detail {
+        max-width: 900px;
+        margin: 35px auto;
+        padding: 0 20px 50px;
+    }
+
+    .article-detail-card,
+    .comments-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .04);
+    }
+
+    .article-detail-card {
+        margin-bottom: 25px;
+    }
+
+    .article-detail-image {
+        width: 100%;
+        max-height: 430px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 22px;
+    }
+
+    .article-detail h1 {
+        color: #1e293b;
+        font-size: 32px;
+        line-height: 1.3;
+        margin: 0 0 12px;
+    }
+
+    .article-meta {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 22px;
+    }
+
+    .article-summary {
+        color: #64748b;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.7;
+        margin-bottom: 20px;
+    }
+
+    .article-content {
+        color: #334155;
+        font-size: 16px;
+        line-height: 1.9;
+        white-space: pre-line;
+    }
+
+    .comments-title {
+        color: #1e293b;
+        font-size: 23px;
+        margin: 0 0 20px;
+    }
+
+    .comment-form {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+
+    .comment-input,
+    .comment-textarea {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 11px 13px;
+        font: inherit;
+        outline: none;
+    }
+
+    .comment-input:focus,
+    .comment-textarea:focus {
+        border-color: #b91c1c;
+        box-shadow: 0 0 0 3px rgba(185, 28, 28, .1);
+    }
+
+    .comment-textarea {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .comment-submit {
+        justify-self: start;
+        border: 0;
+        border-radius: 8px;
+        padding: 11px 17px;
+        background: #b91c1c;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .comment-submit:hover {
+        background: #991b1b;
+    }
+
+    .comment-message {
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+
+    .comment-success {
+        color: #166534;
+        background: #dcfce7;
+    }
+
+    .comment-error {
+        color: #991b1b;
+        background: #fee2e2;
+    }
+
+    .comment-item {
+        padding: 16px 0;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .comment-item:first-of-type {
+        border-top: 0;
+    }
+
+    .comment-author {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .comment-date {
+        color: #94a3b8;
+        font-size: 12px;
+        margin-left: 8px;
+    }
+
+    .comment-content {
+        color: #475569;
+        margin: 7px 0 0;
+        white-space: pre-line;
+    }
+
+    .no-comments {
+        color: #64748b;
+        margin: 0;
+    }
+
+    @@media (max-width: 650px) {
+        .article-detail {
+            margin-top: 22px;
+            padding: 0 10px 35px;
+        }
+
+        .article-detail-card,
+        .comments-card {
+            padding: 20px;
+        }
+
+        .article-detail h1 {
+            font-size: 26px;
+        }
+    }
+</style>
+
+<div class="article-detail">
+    <article class="article-detail-card">
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl"
+                 class="article-detail-image"
+                 alt="@Model.Title" />
+        }
+
+        <h1>@Model.Title</h1>
+
+        <div class="article-meta">
+            Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Summary))
+        {
+            <div class="article-summary">@Model.Summary</div>
+        }
+
+        <div class="article-content">@Model.Content</div>
+    </article>
+
+    <section class="comments-card">
+        <h2 class="comments-title">Bình luận (@comments.Count())</h2>
+
+        @if (TempData["CommentSuccess"] != null)
+        {
+            <div class="comment-message comment-success">@TempData["CommentSuccess"]</div>
+        }
+
+        @if (TempData["CommentError"] != null)
+        {
+            <div class="comment-message comment-error">@TempData["CommentError"]</div>
+        }
+
+        @using (Html.BeginForm("AddComment", "Home", FormMethod.Post, new { @class = "comment-form" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.Hidden("articleId", Model.ArticleID)
+
+            <input type="text"
+                   name="commenterName"
+                   class="comment-input"
+                   maxlength="100"
+                   placeholder="Tên của bạn"
+                   required />
+
+            <textarea name="content"
+                      class="comment-textarea"
+                      maxlength="1000"
+                      placeholder="Viết bình luận..."
+                      required></textarea>
+
+            <button type="submit" class="comment-submit">Gửi bình luận</button>
+        }
+
+        @if (comments.Any())
+        {
+            foreach (var comment in comments)
+            {
+                <div class="comment-item">
+                    <span class="comment-author">@comment.CommenterName</span>
+                    <span class="comment-date">@comment.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                    <p class="comment-content">@comment.Content</p>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="no-comments">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</p>
+        }
+    </section>
+</div>

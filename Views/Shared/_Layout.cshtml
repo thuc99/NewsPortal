@@ -1,5 +1,4 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -175,6 +174,33 @@
                 background: var(--red-dark);
             }
 
+        .search-reset {
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+            .search-reset:hover {
+                color: var(--red);
+            }
+
+        .search-reset {
+            display: inline-block;
+            padding: 0 8px;
+            height: 36px;
+            line-height: 36px;
+            color: var(--red);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+            .search-reset:hover {
+                color: var(--red-dark);
+            }
+
         main {
             min-height: 60vh;
         }
@@ -335,19 +361,18 @@
             </a>
 
             <!-- Form tìm kiếm -->
-            <form action="@Url.Action("Index", "Articles")"
-                  method="get"
-                  class="search-form">
-
-                <input type="text"
+            <form action="@Url.Action("Index", "Articles")" method="get" class="search-form">
+                <input type="search"
                        name="searchString"
                        value="@(ViewBag.SearchString ?? "")"
-                       placeholder="Tìm kiếm tin tức..."
-                       class="search-input" />
-
-                <button type="submit" class="search-button">
-                    Tìm kiếm
-                </button>
+                       class="search-input"
+                       placeholder="Tìm kiếm bài viết..."
+                       aria-label="Tìm kiếm bài viết" />
+                <button type="submit" class="search-button">Tìm kiếm</button>
+                @if (!string.IsNullOrWhiteSpace(ViewBag.SearchString as string))
+                {
+                    @Html.ActionLink("Xóa", "Index", "Articles", null, new { @class = "search-reset" })
+                }
             </form>
 
         </div>
