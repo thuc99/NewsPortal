@@ -1,7 +1,8 @@
 ﻿@model NewsPortal.Models.Articles
-
+@using NewsPortal.Helpers
 @{
-    ViewBag.Title = "Chi tiết bài viết";
+    ViewBag.Title = Model.Title ?? "Chi tiết bài viết";
+    bool isAdmin = AdminSessionHelper.IsAdminLoggedIn(Context);
 }
 
 <h2>@Model.Title</h2>
@@ -9,8 +10,11 @@
 <div style="margin-bottom:16px; color:#555; font-size:14px;">
     <strong>Danh mục:</strong> @(Model.Categories != null ? Model.Categories.CategoryName : "—") |
     <strong>Tác giả:</strong> @(Model.Authors != null ? Model.Authors.AuthorName : "—") |
-    <strong>Trạng thái:</strong> @Model.Status |
-    <strong>Ngày tạo:</strong> @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+    @if (isAdmin)
+    {
+        <span><strong>Trạng thái:</strong> @Model.Status | </span>
+    }
+    <strong>Ngày đăng:</strong> @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
     @if (Model.UpdatedDate.HasValue)
     {
         <span> | <strong>Cập nhật:</strong> @Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")</span>
@@ -29,6 +33,14 @@
 </div>
 
 <p>
-    @Html.ActionLink("Sửa bài viết", "Edit", new { id = Model.ArticleID }, new { @class = "btn btn-warning" }) |
-    @Html.ActionLink("Quay lại danh sách", "Index", null, new { @class = "btn btn-default" })
+    @if (isAdmin)
+    {
+        @Html.ActionLink("Sửa bài viết", "Edit", new { id = Model.ArticleID }, new { @class = "btn btn-warning" })
+        <span> | </span>
+        @Html.ActionLink("Quay lại quản lý bài viết", "Index", null, new { @class = "btn btn-default" })
+    }
+    else
+    {
+        <a class="btn btn-default" href="@Url.Action("Index", "Home")">← Quay lại trang chủ</a>
+    }
 </p>

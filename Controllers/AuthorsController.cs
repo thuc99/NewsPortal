@@ -1,4 +1,5 @@
-﻿using NewsPortal.Models;
+﻿using NewsPortal.Filters;
+using NewsPortal.Models;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -8,6 +9,7 @@ using System.Web.Mvc;
 
 namespace NewsPortal.Controllers
 {
+    [AdminAuthorize]
     public class AuthorsController : Controller
     {
         private NewsPortalDBEntities db = new NewsPortalDBEntities();

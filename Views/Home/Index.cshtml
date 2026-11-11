@@ -324,13 +324,22 @@
     </section>
 }
 
-<section>
+<section id="tin-tuc-moi">
     <div class="section-heading">
         <h2 class="section-title">TIN TỨC MỚI</h2>
-        <a class="section-more"
-           href="@Url.Action("Index", "Articles")">
-            XEM TẤT CẢ →
-        </a>
+        @if (NewsPortal.Helpers.AdminSessionHelper.IsAdminLoggedIn(Context))
+        {
+            <a class="section-more"
+               href="@Url.Action("Index", "Articles")">
+                QUẢN LÝ TẤT CẢ →
+            </a>
+        }
+        else
+        {
+            <a class="section-more" href="#tin-tuc-moi">
+                MỚI CẬP NHẬT
+            </a>
+        }
     </div>
 
     @if (remaining.Any())

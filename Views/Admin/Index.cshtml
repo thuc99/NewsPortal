@@ -1,0 +1,302 @@
+﻿@model NewsPortal.Models.AdminDashboardViewModel
+
+@{
+    ViewBag.Title = "Bảng điều khiển Quản trị";
+}
+
+<style>
+    .admin-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 22px 24px;
+        background: linear-gradient(135deg, #20232a, #323744);
+        color: #ffffff;
+        border-radius: 8px;
+        margin-bottom: 24px;
+    }
+
+    .admin-welcome-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 850;
+    }
+
+    .admin-welcome-sub {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: #d1d5db;
+    }
+
+    .admin-quick-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .admin-btn {
+        display: inline-block;
+        padding: 9px 15px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+
+    .admin-btn-red {
+        background: #b91c32;
+        color: #ffffff;
+    }
+
+    .admin-btn-red:hover {
+        background: #861b2b;
+        color: #ffffff;
+    }
+
+    .admin-btn-outline {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .admin-btn-outline:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .kpi-card {
+        background: #ffffff;
+        border: 1px solid #e6e7ec;
+        border-radius: 8px;
+        padding: 18px;
+    }
+
+    .kpi-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+    }
+
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 900;
+        margin: 6px 0 4px;
+        color: #20232a;
+    }
+
+    .kpi-link {
+        font-size: 12px;
+        font-weight: 700;
+        color: #b91c32;
+    }
+
+    .dashboard-cols {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 22px;
+    }
+
+    .dash-panel {
+        background: #ffffff;
+        border: 1px solid #e6e7ec;
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .dash-panel-title {
+        margin: 0 0 14px;
+        font-size: 17px;
+        font-weight: 800;
+        border-bottom: 2px solid #f1f2f6;
+        padding-bottom: 10px;
+    }
+
+    .dash-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .dash-table th,
+    .dash-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #eff0f4;
+        text-align: left;
+    }
+
+    .dash-table th {
+        color: #6b7280;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .status-published {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-draft {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    @@media (max-width: 900px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dashboard-cols {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@if (TempData["Success"] != null)
+{
+    <div style="padding:11px 15px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:6px; margin-bottom:16px;">
+        @TempData["Success"]
+    </div>
+}
+
+<div class="admin-header-bar">
+    <div>
+        <h1 class="admin-welcome-title">Bảng điều khiển Quản trị (Admin)</h1>
+        <p class="admin-welcome-sub">
+            Xin chào <strong>@Model.AdminFullName</strong> (@Model.AdminUsername) · Quản lý toàn bộ nội dung NewsPortal
+        </p>
+    </div>
+    <div class="admin-quick-actions">
+        <a class="admin-btn admin-btn-red" href="@Url.Action("Create", "Articles")">+ Viết bài mới</a>
+        <a class="admin-btn admin-btn-outline" href="@Url.Action("Index", "Articles")">Quản lý Bài viết</a>
+        <a class="admin-btn admin-btn-outline" href="@Url.Action("Index", "Categories")">Quản lý Danh mục</a>
+        <a class="admin-btn admin-btn-outline" href="@Url.Action("Index", "Authors")">Quản lý Tác giả</a>
+        <a class="admin-btn admin-btn-outline" href="@Url.Action("ChangePassword", "Admin")">Đổi mật khẩu</a>
+    </div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Tổng bài viết</div>
+        <div class="kpi-value">@Model.TotalArticles</div>
+        <a class="kpi-link" href="@Url.Action("Index", "Articles")">Xem tất cả →</a>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Đã xuất bản</div>
+        <div class="kpi-value" style="color:#166534;">@Model.PublishedArticles</div>
+        <a class="kpi-link" href="@Url.Action("Index", "Articles", new { status = "Published" })">Lọc Published →</a>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Bản nháp (Draft)</div>
+        <div class="kpi-value" style="color:#b45309;">@Model.DraftArticles</div>
+        <a class="kpi-link" href="@Url.Action("Index", "Articles", new { status = "Draft" })">Duyệt bài nháp →</a>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Danh mục</div>
+        <div class="kpi-value">@Model.TotalCategories</div>
+        <a class="kpi-link" href="@Url.Action("Index", "Categories")">Quản lý →</a>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Tác giả</div>
+        <div class="kpi-value">@Model.TotalAuthors</div>
+        <a class="kpi-link" href="@Url.Action("Index", "Authors")">Quản lý →</a>
+    </div>
+</div>
+
+<div class="dashboard-cols">
+    <div class="dash-panel">
+        <h2 class="dash-panel-title">Thống kê bài viết theo Danh mục</h2>
+        @if (Model.CategoryStats != null && Model.CategoryStats.Any())
+        {
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Danh mục</th>
+                        <th>Published</th>
+                        <th>Draft</th>
+                        <th>Tổng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cat in Model.CategoryStats)
+                    {
+                        <tr>
+                            <td><strong>@cat.CategoryName</strong></td>
+                            <td>@cat.PublishedCount</td>
+                            <td>@cat.DraftCount</td>
+                            <td><strong>@cat.TotalCount</strong></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p style="color:#6b7280; font-size:13px;">Chưa có danh mục nào. <a href="@Url.Action("Create", "Categories")" style="color:#b91c32; font-weight:700;">Thêm danh mục mới →</a></p>
+        }
+    </div>
+
+    <div class="dash-panel">
+        <h2 class="dash-panel-title">Bài viết cập nhật gần đây</h2>
+        @if (Model.RecentArticles != null && Model.RecentArticles.Any())
+        {
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Danh mục</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.RecentArticles)
+                    {
+                        <tr>
+                            <td><strong>@item.Title</strong></td>
+                            <td>@(item.Categories != null ? item.Categories.CategoryName : "—")</td>
+                            <td>
+                                @if (item.Status == "Published")
+                                {
+                                    <span class="status-pill status-published">Published</span>
+                                }
+                                else
+                                {
+                                    <span class="status-pill status-draft">Draft</span>
+                                }
+                            </td>
+                            <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a href="@Url.Action("Edit", "Articles", new { id = item.ArticleID })" style="color:#b91c32; font-weight:700;">Sửa</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p style="color:#6b7280; font-size:13px;">Chưa có bài viết nào trong hệ thống.</p>
+        }
+    </div>
+</div>

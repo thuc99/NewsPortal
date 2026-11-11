@@ -5,10 +5,13 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using NewsPortal.Filters;
+using NewsPortal.Helpers;
 using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
 {
+    [AdminAuthorize]
     public class ArticlesController : Controller
     {
         private NewsPortalDBEntities db = new NewsPortalDBEntities();
@@ -86,7 +89,8 @@ namespace NewsPortal.Controllers
             return View(articles);
         }
 
-        // GET: Articles/Details/5
+        // GET: Articles/Details/5 (Cho phép độc giả xem bài viết Published; bài Draft chỉ Admin mới xem được)
+        [AllowAnonymous]
         public ActionResult Details(int? id)
         {
             if (id == null)
@@ -104,6 +108,13 @@ namespace NewsPortal.Controllers
                 return HttpNotFound();
             }
 
+            bool isAdmin = AdminSessionHelper.IsAdminLoggedIn(HttpContext);
+            if (!isAdmin && article.Status != "Published")
+            {
+                return HttpNotFound();
+            }
+
+            ViewBag.IsAdmin = isAdmin;
             return View(article);
         }
 

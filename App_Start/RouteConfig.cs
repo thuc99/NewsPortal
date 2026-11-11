@@ -13,6 +13,13 @@ namespace NewsPortal
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
+            // Hỗ trợ cả đường dẫn /Account/Login chuyển về AdminController
+            routes.MapRoute(
+                name: "AccountLoginAlias",
+                url: "Account/{action}/{id}",
+                defaults: new { controller = "Admin", action = "Login", id = UrlParameter.Optional }
+            );
+
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
