@@ -5,15 +5,15 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="f1728136d5564b349e949f5fa88f8b6f" Name="Diagram1" ZoomLevel="94" >
-        <EntityTypeShape EntityType="NewsPortalDBModel.Articles" Width="1.5" PointX="3" PointY="1" />
-        <EntityTypeShape EntityType="NewsPortalDBModel.Author" Width="1.5" PointX="0.75" PointY="1.625" />
-        <EntityTypeShape EntityType="NewsPortalDBModel.Category" Width="1.5" PointX="0.75" PointY="5.625" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.Articles" Width="1.5" PointX="2.875" PointY="0.5" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.Author" Width="1.5" PointX="0.5" PointY="0.5" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.Category" Width="1.5" PointX="0.625" PointY="2.75" />
         <AssociationConnector Association="NewsPortalDBModel.FK_Articles_Authors" />
         <AssociationConnector Association="NewsPortalDBModel.FK_Articles_Categories" />
-        <EntityTypeShape EntityType="NewsPortalDBModel.Comments" Width="1.5" PointX="5.25" PointY="1.625" />
-        <EntityTypeShape EntityType="NewsPortalDBModel.Users" Width="1.5" PointX="3.375" PointY="5.75" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.Comments" Width="1.5" PointX="5.125" PointY="0.5" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.Users" Width="1.5" PointX="8.25" PointY="0.5" />
         <AssociationConnector Association="NewsPortalDBModel.FK_Comments_Articles" />
-        <EntityTypeShape EntityType="NewsPortalDBModel.ArticleRatings" Width="1.5" PointX="5.25" PointY="9.875" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.ArticleRatings" Width="1.5" PointX="6.25" PointY="2.875" />
         <AssociationConnector Association="NewsPortalDBModel.FK_ArticleRatings_Articles" />
       </Diagram>
     </edmx:Diagrams>

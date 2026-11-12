@@ -290,6 +290,28 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Create(Article article, HttpPostedFileBase imageFile)
         {
+            if (article.Title != null) article.Title = article.Title.Trim();
+            if (article.Content != null) article.Content = article.Content.Trim();
+
+            if (string.IsNullOrWhiteSpace(article.Title))
+                ModelState.AddModelError("Title", "Tiêu đề không được để trống");
+            if (string.IsNullOrWhiteSpace(article.Content))
+                ModelState.AddModelError("Content", "Nội dung không được để trống");
+
+            // Kiểm tra ảnh tải lên (không bắt buộc có ảnh)
+            if (imageFile != null && imageFile.ContentLength > 0)
+            {
+                var ext = System.IO.Path.GetExtension(imageFile.FileName).ToLower();
+                var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                if (!allowed.Contains(ext))
+                    ModelState.AddModelError("", "Chỉ chấp nhận ảnh .jpg, .png, .gif, .webp");
+                else if (imageFile.ContentLength > 2 * 1024 * 1024)
+                    ModelState.AddModelError("", "Ảnh tối đa 2MB");
+            }
+
+            if (!ModelState.IsValid)
+                return View(article);
+
             if (!ModelState.IsValid)
                 return View(article);
 
@@ -300,8 +322,9 @@ namespace NewsPortal.Controllers
                 ModelState.AddModelError("", "Cần có danh mục và tác giả trước khi thêm bài viết.");
                 return View(article);
             }
-            
-            db.Articles.Add(new Articles
+    
+
+                db.Articles.Add(new Articles
             {
                 CategoryID = category.CategoryID,
                 AuthorID = author.AuthorID,
@@ -364,14 +387,26 @@ namespace NewsPortal.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize]
         public ActionResult DeleteConfirmed(int id)
         {
             var article = db.Articles.Find(id);
             if (article == null)
-                return HttpNotFound();
+            {
+                TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa";
+                return RedirectToAction("Index");
+            }
 
-            db.Articles.Remove(article);
-            db.SaveChanges();
+            try
+            {
+                db.Articles.Remove(article);
+                db.SaveChanges();
+                TempData["Success"] = "Đã xóa bài viết";
+            }
+            catch (System.Data.Entity.Infrastructure.DbUpdateException)
+            {
+                TempData["Error"] = "Không thể xóa: bài viết còn bình luận hoặc đánh giá liên quan";
+            }
             return RedirectToAction("Index");
         }
 
