@@ -1,93 +1,20 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>@ViewBag.Title - TinNhanh</title>
+    <title>@ViewBag.Title - TinNhanh</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     @{
-		string currentController = Convert.ToString(ViewContext.RouteData.Values["controller"]);
-		string currentAction = Convert.ToString(ViewContext.RouteData.Values["action"]);
+        string currentController = Convert.ToString(ViewContext.RouteData.Values["controller"]);
+        string currentAction = Convert.ToString(ViewContext.RouteData.Values["action"]);
+        bool isFavoritesPage = currentController == "Articles" && currentAction == "Favorites";
     }
 
     <style>
-        .search-form {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin-left: auto;
-        }
-
-        .admin-area {
-            margin-left: 0;
-            flex-shrink: 0;
-        }
-
-        .account-area {
-            position: relative;
-            margin-left: 4px;
-            flex-shrink: 0;
-        }
-
-        .user-toggle {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border: 0;
-            border-radius: 50%;
-            background: #f1f5f9;
-            color: #20232a;
-            cursor: pointer;
-            transition: .2s ease;
-        }
-
-        .user-toggle:hover,
-        .account-area.open .user-toggle {
-            background: var(--red);
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .user-toggle svg {
-            width: 21px;
-            height: 21px;
-        }
-
-        .account-menu {
-            position: absolute;
-            top: calc(100% + 9px);
-            right: 0;
-            z-index: 20;
-            display: none;
-            min-width: 170px;
-            padding: 8px;
-            border: 1px solid var(--line);
-            border-radius: 9px;
-            background: white;
-            box-shadow: 0 12px 28px rgba(30, 41, 59, .15);
-        }
-
-        .account-area.open .account-menu {
-            display: block;
-        }
-
-        .account-menu-link {
-            display: block;
-            padding: 9px 11px;
-            border-radius: 6px;
-            color: #475569 !important;
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .account-menu-link:hover,
-        .account-menu-link.favorite-active {
-            background: #fff1f2;
-            color: var(--red) !important;
-        }
         :root {
             --red: #b91c32;
             --red-dark: #861b2b;
@@ -127,7 +54,7 @@
         }
 
         .container {
-			width: min(1160px, calc(100% - 32px));
+            width: min(1160px, calc(100% - 32px));
             margin: auto;
         }
 
@@ -161,9 +88,9 @@
             animation: brand-pop .8s ease-out both;
         }
 
-        .brand::first-letter {
-            color: #20232a;
-        }
+            .brand::first-letter {
+                color: #20232a;
+            }
 
         .brand-red {
             color: #a51f33;
@@ -183,13 +110,25 @@
         }
 
         @@keyframes brand-pop {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @@keyframes brand-underline {
-            from { transform: scaleX(0); }
-            to { transform: scaleX(1); }
+            from {
+                transform: scaleX(0);
+            }
+
+            to {
+                transform: scaleX(1);
+            }
         }
 
         .brand-caption {
@@ -204,7 +143,8 @@
             text-align: right;
         }
 
-        /* Thanh điều hướng */
+        /* THANH ĐIỀU HƯỚNG */
+
         .navbar {
             background: white;
             border-bottom: 1px solid var(--line);
@@ -212,10 +152,7 @@
             z-index: 2;
         }
 
-        .nav-inner 
-           
-
-        {
+        .nav-inner {
             display: flex;
             align-items: center;
             gap: 18px;
@@ -224,7 +161,6 @@
             margin: auto;
             flex-wrap: nowrap;
         }
-        
 
         .nav-link {
             display: inline-flex;
@@ -248,7 +184,8 @@
                 border-bottom-color: var(--red);
             }
 
-        /* Thanh tìm kiếm trên Layout */
+        /* TÌM KIẾM */
+
         .search-form {
             display: flex;
             align-items: center;
@@ -264,7 +201,7 @@
             border-radius: 6px;
             outline: none;
             font-size: 13px;
-            transition: border-color 0.2s;
+            transition: border-color .2s;
         }
 
             .search-input:focus {
@@ -281,22 +218,12 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background .2s;
             white-space: nowrap;
         }
 
             .search-button:hover {
                 background: var(--red-dark);
-            }
-
-        .search-reset {
-            color: var(--muted);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-            .search-reset:hover {
-                color: var(--red);
             }
 
         .search-reset {
@@ -309,11 +236,85 @@
             font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
-            transition: color 0.2s;
+            transition: color .2s;
         }
 
             .search-reset:hover {
                 color: var(--red-dark);
+            }
+
+        /* TÀI KHOẢN */
+
+        .admin-area {
+            margin-left: 0;
+            flex-shrink: 0;
+        }
+
+        .account-area {
+            position: relative;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        .user-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 0;
+            border-radius: 50%;
+            background: #f1f5f9;
+            color: #20232a;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+            .user-toggle:hover,
+            .account-area.open .user-toggle {
+                background: var(--red);
+                color: white;
+                transform: translateY(-1px);
+            }
+
+            .user-toggle svg {
+                width: 21px;
+                height: 21px;
+            }
+
+        .account-menu {
+            position: absolute;
+            top: calc(100% + 9px);
+            right: 0;
+            z-index: 20;
+            display: none;
+            min-width: 170px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: white;
+            box-shadow: 0 12px 28px rgba(30, 41, 59, .15);
+        }
+
+        .account-area.open .account-menu {
+            display: block;
+        }
+
+        .account-menu-link {
+            display: block;
+            padding: 9px 11px;
+            border-radius: 6px;
+            color: #475569 !important;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+            .account-menu-link:hover,
+            .account-menu-link.favorite-active {
+                background: #fff1f2;
+                color: var(--red) !important;
             }
 
         main {
@@ -324,7 +325,8 @@
             padding: 32px 0 55px;
         }
 
-        /* Footer */
+        /* FOOTER */
+
         .site-footer {
             background: #1d2027;
             color: #d8d9de;
@@ -376,6 +378,174 @@
             font-size: 12px;
         }
 
+        /* CỬA SỔ ĐĂNG NHẬP */
+
+        .login-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(15, 23, 42, .35);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+            .login-overlay.show {
+                display: flex;
+            }
+
+        .login-modal {
+            position: relative;
+            width: 100%;
+            max-width: 850px;
+            display: grid;
+            grid-template-columns: .9fr 1.1fr;
+            overflow: hidden;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+            animation: loginAppear .25s ease;
+        }
+
+        @@keyframes loginAppear {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-close {
+            position: absolute;
+            z-index: 2;
+            right: 15px;
+            top: 10px;
+            width: 35px;
+            height: 35px;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .8);
+            color: #475569;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+            .login-close:hover {
+                background: #fee2e2;
+                color: #b91c1c;
+            }
+
+        .login-banner {
+            padding: 45px 35px;
+            color: white;
+            background: linear-gradient(145deg, #991b1b, #450a0a);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-brand {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 55px;
+        }
+
+            .login-brand i {
+                margin-right: 8px;
+            }
+
+        .login-banner h2 {
+            font-size: 30px;
+            line-height: 1.3;
+            margin: 0 0 15px;
+        }
+
+        .login-banner p {
+            color: rgba(255, 255, 255, .8);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .login-form-section {
+            padding: 55px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+            .login-form-section h2 {
+                font-size: 28px;
+                color: #0f172a;
+                margin: 0 0 8px;
+            }
+
+            .login-form-section > p {
+                color: #64748b;
+                font-size: 14px;
+                margin: 0 0 28px;
+            }
+
+        .login-group {
+            margin-bottom: 20px;
+        }
+
+            .login-group label {
+                display: block;
+                margin-bottom: 8px;
+                color: #334155;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .login-group input {
+                width: 100%;
+                height: 48px;
+                padding: 0 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 9px;
+                outline: none;
+                background: #f8fafc;
+            }
+
+                .login-group input:focus {
+                    border-color: #b91c1c;
+                    box-shadow: 0 0 0 3px rgba(185, 28, 28, .1);
+                }
+
+        .login-submit {
+            width: 100%;
+            height: 49px;
+            border: 0;
+            border-radius: 9px;
+            background: #b91c1c;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+            .login-submit:hover {
+                background: #991b1b;
+            }
+
+        .login-error {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 13px;
+        }
+
+        /* RESPONSIVE */
+
         @@media (max-width: 1100px) {
             .nav-inner {
                 gap: 14px;
@@ -391,76 +561,44 @@
         }
 
         @@media (max-width: 900px) {
-			.nav-inner {
-				gap: 18px;
+            .nav-inner {
+                gap: 18px;
                 flex-wrap: wrap;
                 padding-top: 8px;
-			}
+            }
 
-			.search-form {
-				width: 100%;
-				margin-left: 0;
-				padding-bottom: 12px;
+            .search-form {
+                width: 100%;
+                margin-left: 0;
+                padding-bottom: 12px;
                 order: 3;
-			}
+            }
 
-			.search-input {
-				width: 100%;
+            .search-input {
+                width: 100%;
                 flex: 1;
-			}
+            }
 
             .account-area {
                 margin-left: auto;
             }
-		}
+        }
 
-        /* Responsive */
         @@media (max-width: 650px) {
+            .container {
+                width: calc(100% - 24px);
+            }
 
-			.container {
-				width: calc(100% - 24px);
-			}
+            .masthead {
+                padding: 18px 0;
+            }
 
-			.masthead {
-				padding: 18px 0;
-			}
+            .brand-row,
+            .top-inner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
 
-			.brand-row,
-			.top-inner {
-				align-items: flex-start;
-				flex-direction: column;
-			}
-
-			.brand {
-				font-size: 30px;
-			}
-
-			.brand-note {
-				text-align: left;
-			}
-
-			.nav-inner {
-				gap: 8px 16px;
-			}
-
-			.nav-link {
-				min-height: 44px;
-				font-size: 12px;
-			}
-
-			.search-form {
-				flex-wrap: wrap;
-			}
-
-			.search-button,
-			.search-reset {
-				flex: 0 0 auto;
-			}
-
-			.footer-grid {
-				grid-template-columns: 1fr;
-				gap: 22px;
-			}
             .brand {
                 font-size: 27px;
             }
@@ -482,12 +620,18 @@
             .search-form {
                 width: 100%;
                 margin: 5px 0 12px;
+                flex-wrap: wrap;
             }
 
             .search-input {
                 flex: 1;
                 width: auto;
                 min-width: 0;
+            }
+
+            .search-button,
+            .search-reset {
+                flex: 0 0 auto;
             }
 
             .footer-grid {
@@ -499,6 +643,29 @@
                 flex-direction: column;
                 gap: 0;
             }
+
+            .login-modal {
+                max-width: 420px;
+                grid-template-columns: 1fr;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .login-banner {
+                padding: 25px;
+            }
+
+            .login-brand {
+                margin-bottom: 20px;
+            }
+
+            .login-banner h2 {
+                font-size: 24px;
+            }
+
+            .login-form-section {
+                padding: 30px 25px;
+            }
         }
     </style>
 
@@ -506,7 +673,7 @@
 </head>
 
 <body>
-    <!-- Thanh thông tin phía trên -->
+    <!-- THANH THÔNG TIN PHÍA TRÊN -->
     <div class="top-strip">
         <div class="container top-inner">
             <span>TIN TỨC • CÔNG NGHỆ • ĐỜI SỐNG</span>
@@ -514,7 +681,7 @@
         </div>
     </div>
 
-    <!-- Logo -->
+    <!-- LOGO -->
     <header class="masthead">
         <div class="container brand-row">
             <div>
@@ -534,63 +701,168 @@
         </div>
     </header>
 
-    <!-- Thanh điều hướng và tìm kiếm -->
+    <!-- THANH ĐIỀU HƯỚNG -->
     <nav class="navbar">
-        
-
         <div class="container nav-inner">
 
-            <!-- Các mục menu -->
-            @{ var isFavoritesPage = currentController == "Articles" && currentAction == "Favorites"; }
-            <a class="nav-link @(currentController == "Home" && !isFavoritesPage ? "active" : "")" href="@Url.Action("Index", "Home")">Trang chủ</a>
-            <a class="nav-link @(currentController == "Articles" && !isFavoritesPage ? "active" : "")" href="@Url.Action("Index", "Articles")">Tin tức</a>
-            <a class="nav-link @(currentController == "Categories" ? "active" : "")" href="@Url.Action("Index", "Categories")">Danh mục</a>
-            <a class="nav-link @(currentController == "Authors" ? "active" : "")" href="@Url.Action("Index", "Authors")">Tác giả</a>
+            <a class="nav-link @(currentController == "Home" && !isFavoritesPage ? "active" : "")"
+               href="@Url.Action("Index", "Home")">
+                Trang chủ
+            </a>
 
-            <!-- Tìm kiếm -->
-            <form action="@Url.Action("Index", "Articles")" method="get" class="search-form">
-                <input type="search" name="searchString"
+            <a class="nav-link @(currentController == "Articles" && !isFavoritesPage ? "active" : "")"
+               href="@Url.Action("Index", "Articles")">
+                Tin tức
+            </a>
+
+            <a class="nav-link @(currentController == "Categories" ? "active" : "")"
+               href="@Url.Action("Index", "Categories")">
+                Danh mục
+            </a>
+
+            <a class="nav-link @(currentController == "Authors" ? "active" : "")"
+               href="@Url.Action("Index", "Authors")">
+                Tác giả
+            </a>
+
+            <!-- TÌM KIẾM -->
+            <form action="@Url.Action("Index", "Articles")"
+                  method="get"
+                  class="search-form">
+
+                <input type="search"
+                       name="searchString"
                        class="search-input"
                        placeholder="Tìm kiếm bài viết..." />
-                <button type="submit" class="search-button">Tìm kiếm</button>
+
+                <button type="submit" class="search-button">
+                    Tìm kiếm
+                </button>
             </form>
 
-            <!-- Tài khoản -->
+            <!-- TÀI KHOẢN -->
             <div class="account-area" id="account-area">
-                <button type="button" class="user-toggle" id="user-toggle"
-                        aria-label="Mở menu tài khoản" aria-expanded="false">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+                <button type="button"
+                        class="user-toggle"
+                        id="user-toggle"
+                        aria-label="Mở menu tài khoản"
+                        aria-expanded="false">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         aria-hidden="true">
+
                         <circle cx="12" cy="8" r="3.5"></circle>
                         <path d="M5 20c.8-3.1 3.2-5 7-5s6.2 1.9 7 5"></path>
                     </svg>
                 </button>
+
                 <div class="account-menu" id="account-menu">
-                @if (Session["Admin"] == null)
-                {
-                    <a href="@Url.Action("Login", "Account")" class="account-menu-link">Đăng nhập</a>
-                }
-                else
-                {
-                    <a href="@Url.Action("Logout", "Account")" class="account-menu-link">Đăng xuất</a>
-                }
-                <a href="@Url.Action("Favorites", "Articles")"
-                   class="account-menu-link @(isFavoritesPage ? "favorite-active" : "")">
-                    ♡ Yêu thích
-                </a>
+
+                    @if (Session["Admin"] == null)
+                    {
+                        <a href="#"
+                           class="account-menu-link"
+                           onclick="openLogin(); return false;">
+                            Đăng nhập
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Logout", "Account")"
+                           class="account-menu-link">
+                            Đăng xuất
+                        </a>
+                    }
+
+                    <a href="@Url.Action("Favorites", "Articles")"
+                       class="account-menu-link @(isFavoritesPage ? "favorite-active" : "")">
+                        ♡ Yêu thích
+                    </a>
+
                 </div>
             </div>
-
         </div>
     </nav>
 
-    <!-- Nội dung trang -->
+    <!-- NỘI DUNG TRANG -->
     <main>
         <div class="container page-content">
             @RenderBody()
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- CỬA SỔ ĐĂNG NHẬP DÙNG CHUNG -->
+    @if (Session["Admin"] == null)
+    {
+        <div id="loginModal" class="login-overlay">
+            <div class="login-modal">
+
+                <button type="button"
+                        class="login-close"
+                        onclick="closeLogin()">
+                    &times;
+                </button>
+
+                <div class="login-banner">
+                    <div class="login-brand">
+                        <i class="fa-solid fa-newspaper"></i>
+                        TinNhanh
+                    </div>
+
+                    <h2>Chào mừng<br />quay trở lại!</h2>
+
+                    <p>
+                        Đăng nhập để quản lý bài viết, tác giả
+                        và danh mục tin tức.
+                    </p>
+                </div>
+
+                <div class="login-form-section">
+                    <h2>Đăng nhập</h2>
+                    <p>Vui lòng nhập thông tin tài khoản.</p>
+
+                    @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="login-group">
+                            <label for="loginUsername">Tên đăng nhập</label>
+
+                            <input type="text"
+                                   id="loginUsername"
+                                   name="username"
+                                   placeholder="Nhập tên đăng nhập"
+                                   autocomplete="username"
+                                   required />
+                        </div>
+
+                        <div class="login-group">
+                            <label for="loginPassword">Mật khẩu</label>
+
+                            <input type="password"
+                                   id="loginPassword"
+                                   name="password"
+                                   placeholder="Nhập mật khẩu"
+                                   autocomplete="current-password"
+                                   required />
+                        </div>
+
+                        <button type="submit" class="login-submit">
+                            ĐĂNG NHẬP
+                            <i class="fa-solid fa-arrow-right-to-bracket"
+                               style="margin-left:7px;"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- FOOTER -->
     <footer class="site-footer">
         <div class="container">
             <div class="footer-grid">
@@ -625,16 +897,23 @@
         </div>
     </footer>
 
+    <!-- JAVASCRIPT TÀI KHOẢN -->
     <script>
         (function () {
             var accountArea = document.getElementById('account-area');
             var userToggle = document.getElementById('user-toggle');
+
             if (!accountArea || !userToggle) return;
 
             userToggle.addEventListener('click', function (event) {
                 event.stopPropagation();
+
                 var isOpen = accountArea.classList.toggle('open');
-                userToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                userToggle.setAttribute(
+                    'aria-expanded',
+                    isOpen ? 'true' : 'false'
+                );
             });
 
             document.addEventListener('click', function (event) {
@@ -644,6 +923,57 @@
                 }
             });
         }());
+
+        // MỞ CỬA SỔ ĐĂNG NHẬP
+        function openLogin() {
+            var modal = document.getElementById("loginModal");
+
+            if (modal) {
+                var accountArea = document.getElementById("account-area");
+
+                if (accountArea) {
+                    accountArea.classList.remove("open");
+
+                    var toggle = document.getElementById("user-toggle");
+
+                    if (toggle) {
+                        toggle.setAttribute("aria-expanded", "false");
+                    }
+                }
+
+                modal.classList.add("show");
+                document.body.style.overflow = "hidden";
+            }
+        }
+
+        // ĐÓNG CỬA SỔ ĐĂNG NHẬP
+        function closeLogin() {
+            var modal = document.getElementById("loginModal");
+
+            if (modal) {
+                modal.classList.remove("show");
+                document.body.style.overflow = "";
+            }
+        }
+
+        // ĐÓNG KHI NHẤN BÊN NGOÀI HOẶC PHÍM ESC
+        document.addEventListener("DOMContentLoaded", function () {
+            var modal = document.getElementById("loginModal");
+
+            if (modal) {
+                modal.addEventListener("click", function (event) {
+                    if (event.target === modal) {
+                        closeLogin();
+                    }
+                });
+
+                document.addEventListener("keydown", function (event) {
+                    if (event.key === "Escape") {
+                        closeLogin();
+                    }
+                });
+            }
+        });
     </script>
 
     @RenderSection("scripts", required: false)

@@ -49,11 +49,13 @@
     .btn-add {
         display: inline-block;
         padding: 11px 17px;
+        border: none;
         border-radius: 8px;
         background: #b91c1c;
         color: white !important;
         text-decoration: none !important;
         font-weight: 600;
+        cursor: pointer;
     }
 
         .btn-add:hover {
@@ -351,6 +353,7 @@
 
                 <select name="categoryId">
                     <option value="">Tất cả danh mục</option>
+
                     @foreach (var category in categories)
                     {
                         <option value="@category.CategoryID"
@@ -362,6 +365,7 @@
 
                 <select name="authorId">
                     <option value="">Tất cả tác giả</option>
+
                     @foreach (var author in authors)
                     {
                         <option value="@author.AuthorID"
@@ -373,10 +377,12 @@
 
                 <select name="status">
                     <option value="">Mọi trạng thái</option>
+
                     <option value="Published"
                             @(ViewBag.Status as string == "Published" ? "selected" : "")>
                         Published
                     </option>
+
                     <option value="Draft"
                             @(ViewBag.Status as string == "Draft" ? "selected" : "")>
                         Draft
@@ -391,7 +397,9 @@
                        name="toDate"
                        value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
 
-                <button type="submit" class="filter-submit">Lọc</button>
+                <button type="submit" class="filter-submit">
+                    Lọc
+                </button>
 
                 @Html.ActionLink("Xóa lọc", "Index", "Articles",
                          null, new { @class = "filter-reset" })
@@ -462,7 +470,6 @@
 
                             <td>
                                 <div class="action-group">
-
                                     @Html.ActionLink("Chi tiết", "Details",
                                              new { id = item.Id },
                                              new { @class = "action-btn btn-detail" })
@@ -477,7 +484,6 @@
                                                  new { id = item.Id },
                                                  new { @class = "action-btn btn-delete" })
                                     }
-
                                 </div>
                             </td>
                         </tr>
