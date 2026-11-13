@@ -1,5 +1,4 @@
-﻿
-@model IEnumerable<NewsPortal.Models.Article>
+﻿@model IEnumerable<NewsPortal.Models.Article>
 @using System
 @using System.Linq
 @using NewsPortal.Models
@@ -21,8 +20,38 @@
 {<div class="alert alert-success">@TempData["Success"]</div>}
 @if (TempData["Error"] != null)
 {<div class="alert alert-danger">@TempData["Error"]</div>}
+@if (ViewBag.WarningMessage != null)
+{<div class="alert alert-warning">@ViewBag.WarningMessage</div>}
 
 <style>
+    .alert {
+        width: min(1150px, calc(100% - 32px));
+        max-width: 1150px;
+        margin: 20px auto 0;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .alert-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .alert-danger {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
     .management-page {
         width: min(1150px, calc(100% - 32px));
         max-width: 1150px;
@@ -341,79 +370,79 @@
         }
     </div>
 
-  
-        <div class="filter-toolbar">
-            <button type="button" id="filterToggle" class="filter-toggle">
-                Bộ lọc nâng cao
-            </button>
-        </div>
 
-        <div id="advancedFilter" class="advanced-filter is-hidden">
-            @using (Html.BeginForm("Index", "Articles", FormMethod.Get))
-            {
-                <input type="search"
-                       name="searchString"
-                       value="@(ViewBag.SearchString ?? "")"
-                       placeholder="Tìm tiêu đề, tóm tắt, nội dung..." />
+    <div class="filter-toolbar">
+        <button type="button" id="filterToggle" class="filter-toggle">
+            Bộ lọc nâng cao
+        </button>
+    </div>
 
-                <select name="categoryId">
-                    <option value="">Tất cả danh mục</option>
+    <div id="advancedFilter" class="advanced-filter is-hidden">
+        @using (Html.BeginForm("Index", "Articles", FormMethod.Get))
+        {
+            <input type="search"
+                   name="searchString"
+                   value="@(ViewBag.SearchString ?? "")"
+                   placeholder="Tìm tiêu đề, tóm tắt, nội dung..." />
 
-                    @foreach (var category in categories)
-                    {
-                        <option value="@category.CategoryID"
-                                @(ViewBag.CategoryId != null && ViewBag.CategoryId == category.CategoryID ? "selected" : "")>
-                            @category.CategoryName
-                        </option>
-                    }
-                </select>
+            <select name="categoryId">
+                <option value="">Tất cả danh mục</option>
 
-                <select name="authorId">
-                    <option value="">Tất cả tác giả</option>
-
-                    @foreach (var author in authors)
-                    {
-                        <option value="@author.AuthorID"
-                                @(ViewBag.AuthorId != null && ViewBag.AuthorId == author.AuthorID ? "selected" : "")>
-                            @author.AuthorName
-                        </option>
-                    }
-                </select>
-
-                if (isAdmin)
+                @foreach (var category in categories)
                 {
-                    <select name="status">
-                        <option value="">Mọi trạng thái</option>
-
-                        <option value="Published"
-                                @(ViewBag.Status as string == "Published" ? "selected" : "")>
-                            Published
-                        </option>
-
-                        <option value="Draft"
-                                @(ViewBag.Status as string == "Draft" ? "selected" : "")>
-                            Draft
-                        </option>
-                    </select>
+                    <option value="@category.CategoryID"
+                            @(ViewBag.CategoryId != null && ViewBag.CategoryId == category.CategoryID ? "selected" : "")>
+                        @category.CategoryName
+                    </option>
                 }
+            </select>
 
-                <input type="date"
-                       name="fromDate"
-                       value="@(ViewBag.FromDate == null ? "" : ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd"))" />
+            <select name="authorId">
+                <option value="">Tất cả tác giả</option>
 
-                <input type="date"
-                       name="toDate"
-                       value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
+                @foreach (var author in authors)
+                {
+                    <option value="@author.AuthorID"
+                            @(ViewBag.AuthorId != null && ViewBag.AuthorId == author.AuthorID ? "selected" : "")>
+                        @author.AuthorName
+                    </option>
+                }
+            </select>
 
-                <button type="submit" class="filter-submit">
-                    Lọc
-                </button>
+            if (isAdmin)
+            {
+                <select name="status">
+                    <option value="">Mọi trạng thái</option>
 
-                @Html.ActionLink("Xóa lọc", "Index", "Articles",
-                         null, new { @class = "filter-reset" })
+                    <option value="Published"
+                            @(ViewBag.Status as string == "Published" ? "selected" : "")>
+                        Published
+                    </option>
+
+                    <option value="Draft"
+                            @(ViewBag.Status as string == "Draft" ? "selected" : "")>
+                        Draft
+                    </option>
+                </select>
             }
-        </div>
-    
+
+            <input type="date"
+                   name="fromDate"
+                   value="@(ViewBag.FromDate == null ? "" : ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd"))" />
+
+            <input type="date"
+                   name="toDate"
+                   value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
+
+            <button type="submit" class="filter-submit">
+                Lọc
+            </button>
+
+            @Html.ActionLink("Xóa lọc", "Index", "Articles",
+                     null, new { @class = "filter-reset" })
+        }
+    </div>
+
 
     <p class="result-count">
         Tìm thấy <strong>@totalArticles</strong> bài viết
@@ -434,7 +463,7 @@
 
 
                 </tr>
-                
+
             </thead>
 
             <tbody>
@@ -483,8 +512,10 @@
                 else
                 {
                     <tr>
-                        <td colspan="@(isAdmin ? 5 : 4)" class="empty-message">
-                            Không tìm thấy bài viết phù hợp.
+                        <td colspan="@(isAdmin ? 4 : 3)" class="empty-message">
+                            @(string.IsNullOrWhiteSpace(ViewBag.SearchString as string)
+                                ? "Không tìm thấy bài viết phù hợp."
+                                : "Không tìm thấy bài viết nào phù hợp với từ khóa '" + ViewBag.SearchString + "'.")
                         </td>
                     </tr>
                 }
@@ -516,21 +547,21 @@
 </div>
 
 
-    <script>
-        (function () {
-            var toggle = document.getElementById("filterToggle");
-            var filter = document.getElementById("advancedFilter");
+<script>
+            (function () {
+                var toggle = document.getElementById("filterToggle");
+                var filter = document.getElementById("advancedFilter");
 
-            if (toggle && filter) {
-                toggle.addEventListener("click", function () {
-                    filter.classList.toggle("is-hidden");
+                if (toggle && filter) {
+                    toggle.addEventListener("click", function () {
+                        if (!toggle || !filter) return;
+                        filter.classList.toggle("is-hidden");
 
-                    toggle.textContent =
-                        filter.classList.contains("is-hidden")
-                            ? "Bộ lọc nâng cao"
-                            : "Ẩn bộ lọc";
-                });
-            }
-        })();
-    </script>
-
+                        toggle.textContent =
+                            filter.classList.contains("is-hidden")
+                                ? "Bộ lọc nâng cao"
+                                : "Ẩn bộ lọc";
+                    });
+                }
+            })();
+</script>

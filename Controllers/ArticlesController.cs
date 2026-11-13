@@ -13,11 +13,68 @@ namespace NewsPortal.Controllers
     {
         private readonly NewsPortalDBEntities db = new NewsPortalDBEntities();
 
+        private ActionResult CheckAdminPermission(string actionLabel)
+        {
+            if (Session["Admin"] != null)
+                return null;
+
+            if (Session["User"] != null)
+            {
+                TempData["Error"] = "Bạn không có quyền " + actionLabel + " bài viết. Chức năng này chỉ dành cho Quản trị viên.";
+                return RedirectToAction("Index");
+            }
+
+            TempData["Error"] = "Vui lòng đăng nhập tài khoản Quản trị viên trước khi truy cập trang này.";
+            return RedirectToAction("Login", "Account");
+        }
+
+        private void ValidateArticleInput(Article article, HttpPostedFileBase imageFile, bool checkStatus = false)
+        {
+            if (article == null)
+            {
+                ModelState.AddModelError("", "Dữ liệu bài viết không hợp lệ.");
+                return;
+            }
+
+            article.Title = (article.Title ?? string.Empty).Trim();
+            article.Content = (article.Content ?? string.Empty).Trim();
+
+            ModelState.Remove("Title");
+            ModelState.Remove("Content");
+
+            if (string.IsNullOrWhiteSpace(article.Title))
+                ModelState.AddModelError("Title", "Tiêu đề không được để trống.");
+            else if (article.Title.Length < 10 || article.Title.Length > 250)
+                ModelState.AddModelError("Title", "Tiêu đề phải từ 10 đến 250 ký tự.");
+
+            if (string.IsNullOrWhiteSpace(article.Content))
+                ModelState.AddModelError("Content", "Nội dung bài viết không được để trống.");
+            else if (article.Content.Length < 50 || article.Content.Length > 20000)
+                ModelState.AddModelError("Content", "Nội dung bài viết phải từ 50 đến 20000 ký tự.");
+
+            if (checkStatus && !string.IsNullOrEmpty(article.Status) &&
+                article.Status != "Draft" && article.Status != "Published")
+            {
+                ModelState.AddModelError("Status", "Trạng thái bài viết không hợp lệ.");
+            }
+
+            // Kiểm tra ảnh tải lên (không bắt buộc có ảnh)
+            if (imageFile != null && imageFile.ContentLength > 0)
+            {
+                var ext = (Path.GetExtension(imageFile.FileName) ?? string.Empty).ToLowerInvariant();
+                var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                if (!allowed.Contains(ext))
+                    ModelState.AddModelError("", "Chỉ chấp nhận định dạng ảnh .jpg, .jpeg, .png, .gif, .webp.");
+                else if (imageFile.ContentLength > 2 * 1024 * 1024)
+                    ModelState.AddModelError("", "Dung lượng ảnh tối đa là 2MB.");
+            }
+        }
+
         public ActionResult Index(string searchString, int? categoryId, int? authorId,
-            string status, DateTime? fromDate, DateTime? toDate, int page = 1)
+            string status, DateTime? fromDate, DateTime? toDate, int? page)
         {
             const int pageSize = 8;
-            page = Math.Max(page, 1);
+            int requestedPage = page ?? 1;
 
             var query = db.Articles
                 .Include(a => a.Categories)
@@ -28,13 +85,31 @@ namespace NewsPortal.Controllers
             {
                 query = query.Where(a => a.Status == "Published");
             }
+
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 searchString = searchString.Trim();
+                if (searchString.Length > 200)
+                {
+                    searchString = searchString.Substring(0, 200);
+                }
+
                 query = query.Where(a =>
                     a.Title.Contains(searchString) ||
                     a.Summary.Contains(searchString) ||
                     a.Content.Contains(searchString));
+            }
+            else
+            {
+                searchString = null;
+            }
+
+            if (fromDate.HasValue && toDate.HasValue && fromDate.Value.Date > toDate.Value.Date)
+            {
+                var tempDate = fromDate;
+                fromDate = toDate;
+                toDate = tempDate;
+                ViewBag.WarningMessage = "Ngày bắt đầu lớn hơn ngày kết thúc nên hệ thống đã tự động điều chỉnh lại khoảng ngày.";
             }
 
             if (categoryId.HasValue)
@@ -43,7 +118,7 @@ namespace NewsPortal.Controllers
             if (authorId.HasValue)
                 query = query.Where(a => a.AuthorID == authorId.Value);
 
-            if (status == "Draft" || status == "Published")
+            if (Session["Admin"] != null && (status == "Draft" || status == "Published"))
                 query = query.Where(a => a.Status == status);
 
             if (fromDate.HasValue)
@@ -57,11 +132,29 @@ namespace NewsPortal.Controllers
 
             var totalArticles = query.Count();
             var totalPages = Math.Max((int)Math.Ceiling((double)totalArticles / pageSize), 1);
-            page = Math.Min(page, totalPages);
+
+            int currentPage = requestedPage;
+            if (requestedPage < 1)
+            {
+                currentPage = 1;
+                ViewBag.WarningMessage = "Số trang không hợp lệ, hệ thống đã chuyển về trang đầu tiên.";
+            }
+            else if (requestedPage > totalPages)
+            {
+                currentPage = totalPages;
+                if (totalArticles > 0)
+                {
+                    ViewBag.WarningMessage = "Số trang bạn nhập (" + requestedPage + ") vượt quá tổng số trang hiện có (" + totalPages + " trang), hệ thống đã chuyển về trang cuối.";
+                }
+                else if (requestedPage > 1)
+                {
+                    ViewBag.WarningMessage = "Trang số " + requestedPage + " không tồn tại.";
+                }
+            }
 
             var articles = query
                 .OrderByDescending(a => a.CreatedDate)
-                .Skip((page - 1) * pageSize)
+                .Skip((currentPage - 1) * pageSize)
                 .Take(pageSize)
                 .ToList()
                 .Select(ToArticleViewModel)
@@ -75,37 +168,48 @@ namespace NewsPortal.Controllers
             ViewBag.ToDate = toDate;
             ViewBag.Categories = db.Categories.OrderBy(c => c.CategoryName).ToList();
             ViewBag.Authors = db.Authors.OrderBy(a => a.AuthorName).ToList();
-            ViewBag.CurrentPage = page;
+            ViewBag.CurrentPage = currentPage;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalArticles = totalArticles;
 
             return View(articles);
         }
 
-        public ActionResult Details(int id)
+        public ActionResult Details(int? id)
         {
             return LoadArticleDetails(id, false);
         }
 
         [ActionName("View")]
-        public ActionResult ViewArticle(int id)
+        public ActionResult ViewArticle(int? id)
         {
             return LoadArticleDetails(id, true);
         }
 
-        private ActionResult LoadArticleDetails(int id, bool canComment)
+        private ActionResult LoadArticleDetails(int? id, bool canComment)
         {
+            if (!id.HasValue || id.Value <= 0)
+            {
+                TempData["Error"] = "Mã bài viết không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            int articleId = id.Value;
             var article = db.Articles
                 .Include(a => a.Categories)
-                .FirstOrDefault(a => a.ArticleID == id);
-            if (article == null)
-                return HttpNotFound();
+                .FirstOrDefault(a => a.ArticleID == articleId);
 
-            if (canComment && !HasViewedRecently(id))
+            if (article == null || (article.Status != "Published" && Session["Admin"] == null))
+            {
+                TempData["Error"] = "Bài viết bạn tìm không tồn tại hoặc đã bị gỡ.";
+                return RedirectToAction("Index");
+            }
+
+            if (canComment && !HasViewedRecently(articleId))
             {
                 article.ViewCount++;
                 db.SaveChanges();
-                Response.Cookies.Add(new HttpCookie("NewsPortalViewed_" + id, "1")
+                Response.Cookies.Add(new HttpCookie("NewsPortalViewed_" + articleId, "1")
                 {
                     Expires = DateTime.Now.AddHours(1),
                     HttpOnly = true
@@ -113,27 +217,27 @@ namespace NewsPortal.Controllers
             }
 
             ViewBag.Comments = db.Comments
-                .Where(c => c.ArticleID == id)
+                .Where(c => c.ArticleID == articleId)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToList();
-            ViewBag.RatingCount = db.ArticleRatings.Count(r => r.ArticleID == id);
+            ViewBag.RatingCount = db.ArticleRatings.Count(r => r.ArticleID == articleId);
             ViewBag.AverageRating = db.ArticleRatings
-                .Where(r => r.ArticleID == id)
+                .Where(r => r.ArticleID == articleId)
                 .Select(r => (double?)r.Rating)
                 .Average() ?? 0;
-            ViewBag.IsFavorite = GetFavoriteIds().Contains(id);
+            ViewBag.IsFavorite = GetFavoriteIds().Contains(articleId);
             ViewBag.CanComment = canComment;
 
             var recommendations = db.Articles
                 .Include(a => a.Categories)
-                .Where(a => a.ArticleID != id && a.Status == "Published" && a.CategoryID == article.CategoryID)
+                .Where(a => a.ArticleID != articleId && a.Status == "Published" && a.CategoryID == article.CategoryID)
                 .OrderByDescending(a => a.CreatedDate)
                 .Take(4)
                 .ToList();
 
             if (recommendations.Count < 4)
             {
-                var existingIds = recommendations.Select(a => a.ArticleID).Concat(new[] { id }).ToList();
+                var existingIds = recommendations.Select(a => a.ArticleID).Concat(new[] { articleId }).ToList();
                 recommendations.AddRange(db.Articles
                     .Include(a => a.Categories)
                     .Where(a => a.Status == "Published" && !existingIds.Contains(a.ArticleID))
@@ -149,35 +253,38 @@ namespace NewsPortal.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult AddComment(int articleId, string commenterName, string content)
+        public ActionResult AddComment(int? articleId, string commenterName, string content)
         {
+            if (!articleId.HasValue || articleId.Value <= 0 || !db.Articles.Any(a => a.ArticleID == articleId.Value))
+            {
+                TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa.";
+                return RedirectToAction("Index");
+            }
+
             commenterName = (commenterName ?? string.Empty).Trim();
             content = (content ?? string.Empty).Trim();
 
             if (string.IsNullOrWhiteSpace(commenterName))
             {
                 TempData["CommentError"] = "Vui lòng nhập tên của bạn.";
-                return RedirectToAction("View", new { id = articleId });
+                return RedirectToAction("View", new { id = articleId.Value });
             }
 
             if (string.IsNullOrWhiteSpace(content))
             {
                 TempData["CommentError"] = "Vui lòng nhập nội dung bình luận.";
-                return RedirectToAction("View", new { id = articleId });
+                return RedirectToAction("View", new { id = articleId.Value });
             }
 
             if (commenterName.Length > 100 || content.Length > 1000)
             {
                 TempData["CommentError"] = "Tên tối đa 100 ký tự và bình luận tối đa 1000 ký tự.";
-                return RedirectToAction("View", new { id = articleId });
+                return RedirectToAction("View", new { id = articleId.Value });
             }
-
-            if (!db.Articles.Any(a => a.ArticleID == articleId))
-                return HttpNotFound();
 
             db.Comments.Add(new Comments
             {
-                ArticleID = articleId,
+                ArticleID = articleId.Value,
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now
@@ -185,33 +292,36 @@ namespace NewsPortal.Controllers
             db.SaveChanges();
 
             TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
-            return RedirectToAction("View", new { id = articleId });
+            return RedirectToAction("View", new { id = articleId.Value });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Rate(int articleId, byte rating)
+        public ActionResult Rate(int? articleId, int? rating)
         {
-            if (rating < 1 || rating > 5)
+            if (!articleId.HasValue || articleId.Value <= 0 || !db.Articles.Any(a => a.ArticleID == articleId.Value))
             {
-                TempData["RatingError"] = "Vui lòng chọn mức đánh giá từ 1 đến 5 sao.";
-                return RedirectToAction("View", new { id = articleId });
+                TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa.";
+                return RedirectToAction("Index");
             }
 
-            if (!db.Articles.Any(a => a.ArticleID == articleId))
-                return HttpNotFound();
+            if (!rating.HasValue || rating.Value < 1 || rating.Value > 5)
+            {
+                TempData["RatingError"] = "Vui lòng chọn mức đánh giá từ 1 đến 5 sao.";
+                return RedirectToAction("View", new { id = articleId.Value });
+            }
 
             db.ArticleRatings.Add(new ArticleRatings
             {
-                ArticleID = articleId,
+                ArticleID = articleId.Value,
                 RaterName = "Ẩn danh",
-                Rating = rating,
+                Rating = (byte)rating.Value,
                 CreatedDate = DateTime.Now
             });
             db.SaveChanges();
 
             TempData["RatingSuccess"] = "Cảm ơn bạn đã đánh giá bài viết.";
-            return RedirectToAction("View", new { id = articleId });
+            return RedirectToAction("View", new { id = articleId.Value });
         }
 
         private bool HasViewedRecently(int articleId)
@@ -221,20 +331,23 @@ namespace NewsPortal.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ToggleFavorite(int articleId)
+        public ActionResult ToggleFavorite(int? articleId)
         {
-            if (!db.Articles.Any(a => a.ArticleID == articleId))
-                return HttpNotFound();
+            if (!articleId.HasValue || articleId.Value <= 0 || !db.Articles.Any(a => a.ArticleID == articleId.Value))
+            {
+                TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa.";
+                return RedirectToAction("Index");
+            }
 
             var favoriteIds = GetFavoriteIds();
-            if (favoriteIds.Contains(articleId))
+            if (favoriteIds.Contains(articleId.Value))
             {
-                favoriteIds.Remove(articleId);
+                favoriteIds.Remove(articleId.Value);
                 TempData["FavoriteMessage"] = "Đã bỏ khỏi bài viết yêu thích.";
             }
             else
             {
-                favoriteIds.Add(articleId);
+                favoriteIds.Add(articleId.Value);
                 TempData["FavoriteMessage"] = "Đã lưu bài viết yêu thích.";
             }
 
@@ -244,7 +357,7 @@ namespace NewsPortal.Controllers
                 HttpOnly = true
             });
 
-            return RedirectToAction("View", new { id = articleId });
+            return RedirectToAction("View", new { id = articleId.Value });
         }
 
         private List<int> GetFavoriteIds()
@@ -279,38 +392,22 @@ namespace NewsPortal.Controllers
             return View(articles);
         }
 
-        [AdminAuthorize]
         public ActionResult Create()
         {
+            var denied = CheckAdminPermission("thêm");
+            if (denied != null) return denied;
+
             return View(new Article());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize]
         public ActionResult Create(Article article, HttpPostedFileBase imageFile)
         {
-            if (article.Title != null) article.Title = article.Title.Trim();
-            if (article.Content != null) article.Content = article.Content.Trim();
+            var denied = CheckAdminPermission("thêm");
+            if (denied != null) return denied;
 
-            if (string.IsNullOrWhiteSpace(article.Title))
-                ModelState.AddModelError("Title", "Tiêu đề không được để trống");
-            if (string.IsNullOrWhiteSpace(article.Content))
-                ModelState.AddModelError("Content", "Nội dung không được để trống");
-
-            // Kiểm tra ảnh tải lên (không bắt buộc có ảnh)
-            if (imageFile != null && imageFile.ContentLength > 0)
-            {
-                var ext = System.IO.Path.GetExtension(imageFile.FileName).ToLower();
-                var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                if (!allowed.Contains(ext))
-                    ModelState.AddModelError("", "Chỉ chấp nhận ảnh .jpg, .png, .gif, .webp");
-                else if (imageFile.ContentLength > 2 * 1024 * 1024)
-                    ModelState.AddModelError("", "Ảnh tối đa 2MB");
-            }
-
-            if (!ModelState.IsValid)
-                return View(article);
+            ValidateArticleInput(article, imageFile);
 
             if (!ModelState.IsValid)
                 return View(article);
@@ -322,9 +419,8 @@ namespace NewsPortal.Controllers
                 ModelState.AddModelError("", "Cần có danh mục và tác giả trước khi thêm bài viết.");
                 return View(article);
             }
-    
 
-                db.Articles.Add(new Articles
+            db.Articles.Add(new Articles
             {
                 CategoryID = category.CategoryID,
                 AuthorID = author.AuthorID,
@@ -337,29 +433,50 @@ namespace NewsPortal.Controllers
                 ViewCount = 0
             });
             db.SaveChanges();
+
+            TempData["Success"] = "Đã đăng bài viết mới thành công.";
             return RedirectToAction("Index");
         }
-        [AdminAuthorize]
-        
-        public ActionResult Edit(int id)
+
+        public ActionResult Edit(int? id)
         {
-            var article = db.Articles.Find(id);
+            var denied = CheckAdminPermission("chỉnh sửa");
+            if (denied != null) return denied;
+
+            if (!id.HasValue || id.Value <= 0)
+            {
+                TempData["Error"] = "Mã bài viết cần chỉnh sửa không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            var article = db.Articles.Find(id.Value);
             if (article == null)
-                return HttpNotFound();
+            {
+                TempData["Error"] = "Bài viết cần chỉnh sửa không tồn tại hoặc đã bị xóa.";
+                return RedirectToAction("Index");
+            }
+
             return View(ToArticleViewModel(article));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize]
         public ActionResult Edit(Article article, HttpPostedFileBase imageFile)
         {
+            var denied = CheckAdminPermission("chỉnh sửa");
+            if (denied != null) return denied;
+
+            ValidateArticleInput(article, imageFile, true);
+
             if (!ModelState.IsValid)
                 return View(article);
 
             var existing = db.Articles.Find(article.Id);
             if (existing == null)
-                return HttpNotFound();
+            {
+                TempData["Error"] = "Bài viết cần chỉnh sửa không tồn tại hoặc đã bị xóa trước đó.";
+                return RedirectToAction("Index");
+            }
 
             existing.Title = article.Title;
             existing.Content = article.Content;
@@ -374,26 +491,48 @@ namespace NewsPortal.Controllers
                 existing.ImageUrl = imageUrl;
 
             db.SaveChanges();
+            TempData["Success"] = "Đã cập nhật bài viết thành công.";
             return RedirectToAction("Index");
         }
-        [AdminAuthorize]
-        public ActionResult Delete(int id)
+
+        public ActionResult Delete(int? id)
         {
-            var article = db.Articles.Find(id);
+            var denied = CheckAdminPermission("xóa");
+            if (denied != null) return denied;
+
+            if (!id.HasValue || id.Value <= 0)
+            {
+                TempData["Error"] = "Mã bài viết cần xóa không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            var article = db.Articles.Find(id.Value);
             if (article == null)
-                return HttpNotFound();
+            {
+                TempData["Error"] = "Bài viết cần xóa không tồn tại hoặc đã bị xóa trước đó.";
+                return RedirectToAction("Index");
+            }
+
             return View(ToArticleViewModel(article));
         }
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize]
-        public ActionResult DeleteConfirmed(int id)
+        public ActionResult DeleteConfirmed(int? id)
         {
-            var article = db.Articles.Find(id);
+            var denied = CheckAdminPermission("xóa");
+            if (denied != null) return denied;
+
+            if (!id.HasValue || id.Value <= 0)
+            {
+                TempData["Error"] = "Mã bài viết cần xóa không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            var article = db.Articles.Find(id.Value);
             if (article == null)
             {
-                TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa";
+                TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa trước đó.";
                 return RedirectToAction("Index");
             }
 
@@ -401,11 +540,11 @@ namespace NewsPortal.Controllers
             {
                 db.Articles.Remove(article);
                 db.SaveChanges();
-                TempData["Success"] = "Đã xóa bài viết";
+                TempData["Success"] = "Đã xóa bài viết thành công.";
             }
             catch (System.Data.Entity.Infrastructure.DbUpdateException)
             {
-                TempData["Error"] = "Không thể xóa: bài viết còn bình luận hoặc đánh giá liên quan";
+                TempData["Error"] = "Không thể xóa: bài viết còn bình luận hoặc đánh giá liên quan.";
             }
             return RedirectToAction("Index");
         }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
+using System.Text.RegularExpressions;
 using System.Web.Mvc;
 using NewsPortal.Models;
 
@@ -11,11 +13,34 @@ namespace NewsPortal.Controllers
         // Lưu danh sách tài khoản User đã đăng ký trong bộ nhớ ứng dụng
         private static List<UserAccount> _registeredUsers = new List<UserAccount>();
 
+        private static bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email) || email.Length > 100)
+                return false;
+
+            if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$"))
+                return false;
+
+            try
+            {
+                var addr = new MailAddress(email);
+                return string.Equals(addr.Address, email, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public ActionResult Login()
         {
             if (Session["Admin"] != null)
             {
                 return RedirectToAction("Index", "Admin");
+            }
+            if (TempData["Error"] != null && ViewBag.Error == null)
+            {
+                ViewBag.Error = TempData["Error"];
             }
             return View();
         }
@@ -33,9 +58,15 @@ namespace NewsPortal.Controllers
             }
 
             username = (username ?? "").Trim();
-            if (username.Length == 0 || string.IsNullOrEmpty(password))
+            if (username.Length == 0 || string.IsNullOrWhiteSpace(password))
             {
-                ViewBag.Error = "Vui lòng nhập đủ tài khoản và mật khẩu";
+                ViewBag.Error = "Vui lòng nhập đầy đủ tài khoản và mật khẩu.";
+                return View();
+            }
+
+            if (username.Length > 50 || password.Length > 64)
+            {
+                ViewBag.Error = "Tài khoản hoặc mật khẩu vượt quá độ dài cho phép.";
                 return View();
             }
 
@@ -93,9 +124,34 @@ namespace NewsPortal.Controllers
             username = (username ?? "").Trim();
             email = (email ?? "").Trim();
 
-            if (string.IsNullOrEmpty(fullName) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(username) ||
+                string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(password))
             {
-                ViewBag.Error = "Vui lòng nhập đầy đủ họ tên, tài khoản và mật khẩu.";
+                ViewBag.Error = "Vui lòng nhập đầy đủ họ tên, tài khoản, email và mật khẩu.";
+                return View();
+            }
+
+            if (fullName.Length < 2 || fullName.Length > 100)
+            {
+                ViewBag.Error = "Họ tên phải từ 2 đến 100 ký tự.";
+                return View();
+            }
+
+            if (username.Length < 3 || username.Length > 30 || Regex.IsMatch(username, @"\s"))
+            {
+                ViewBag.Error = "Tên đăng nhập phải từ 3 đến 30 ký tự và không chứa khoảng trắng.";
+                return View();
+            }
+
+            if (!IsValidEmail(email))
+            {
+                ViewBag.Error = "Email không đúng định dạng (ví dụ: tenban@gmail.com).";
+                return View();
+            }
+
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 6 || password.Length > 64)
+            {
+                ViewBag.Error = "Mật khẩu phải từ 6 đến 64 ký tự và không chỉ chứa khoảng trắng.";
                 return View();
             }
 
@@ -109,6 +165,13 @@ namespace NewsPortal.Controllers
                 _registeredUsers.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
             {
                 ViewBag.Error = "Tên đăng nhập này đã tồn tại. Vui lòng chọn tên khác.";
+                return View();
+            }
+
+            if (_registeredUsers.Any(u => !string.IsNullOrEmpty(u.Email) &&
+                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            {
+                ViewBag.Error = "Email này đã được sử dụng cho tài khoản khác.";
                 return View();
             }
 
