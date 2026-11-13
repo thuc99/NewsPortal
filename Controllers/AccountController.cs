@@ -13,6 +13,10 @@ namespace NewsPortal.Controllers
 
         public ActionResult Login()
         {
+            if (Session["Admin"] != null)
+            {
+                return RedirectToAction("Index", "Admin");
+            }
             return View();
         }
 
@@ -35,12 +39,14 @@ namespace NewsPortal.Controllers
                 return View();
             }
 
-            // 1. Đăng nhập quyền Admin (giữ nguyên của bạn)
-            if (username == "admin" && password == "123456")
+            // 1. Đăng nhập quyền Admin -> chuyển thẳng về Dashboard Admin
+            if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) && password == "123456")
             {
-                Session["Admin"] = username;
+                Session.Remove("User");
+                Session.Remove("UserFullName");
+                Session["Admin"] = "admin";
                 Session["FailCount"] = 0;
-                return RedirectToAction("Index", "Articles");
+                return RedirectToAction("Index", "Admin");
             }
 
             // 2. Đăng nhập quyền User thường
@@ -49,6 +55,7 @@ namespace NewsPortal.Controllers
 
             if (user != null)
             {
+                Session.Remove("Admin");
                 Session["User"] = user.Username;
                 Session["UserFullName"] = user.FullName;
                 Session["FailCount"] = 0;

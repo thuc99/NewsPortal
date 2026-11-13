@@ -1,5 +1,4 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -766,7 +765,7 @@
                     {
                         <a href="@Url.Action("Login", "Account")"
                            class="account-menu-link">
-                                 Đăng nhập
+                            Đăng nhập
                         </a>
                         <a href="@Url.Action("Register", "Account")"
                            class="account-menu-link">
@@ -778,6 +777,13 @@
                         <div style="padding: 8px 14px; font-size: 13px; font-weight: 700; color: #b91c1c;">
                             Xin chào, @(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])
                         </div>
+                        if (Session["Admin"] != null)
+                        {
+                            <a href="@Url.Action("Index", "Admin")"
+                               class="account-menu-link">
+                                Bảng điều khiển Admin
+                            </a>
+                        }
                         <a href="@Url.Action("Logout", "Account")"
                            class="account-menu-link">
                             Đăng xuất
@@ -905,83 +911,83 @@
 
     <!-- JAVASCRIPT TÀI KHOẢN -->
     <script>
-        (function () {
-            var accountArea = document.getElementById('account-area');
-            var userToggle = document.getElementById('user-toggle');
+                (function () {
+                    var accountArea = document.getElementById('account-area');
+                    var userToggle = document.getElementById('user-toggle');
 
-            if (!accountArea || !userToggle) return;
+                    if (!accountArea || !userToggle) return;
 
-            userToggle.addEventListener('click', function (event) {
-                event.stopPropagation();
+                    userToggle.addEventListener('click', function (event) {
+                        event.stopPropagation();
 
-                var isOpen = accountArea.classList.toggle('open');
+                        var isOpen = accountArea.classList.toggle('open');
 
-                userToggle.setAttribute(
-                    'aria-expanded',
-                    isOpen ? 'true' : 'false'
-                );
-            });
+                        userToggle.setAttribute(
+                            'aria-expanded',
+                            isOpen ? 'true' : 'false'
+                        );
+                    });
 
-            document.addEventListener('click', function (event) {
-                if (!accountArea.contains(event.target)) {
-                    accountArea.classList.remove('open');
-                    userToggle.setAttribute('aria-expanded', 'false');
-                }
-            });
-        }());
+                    document.addEventListener('click', function (event) {
+                        if (!accountArea.contains(event.target)) {
+                            accountArea.classList.remove('open');
+                            userToggle.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                }());
 
-        // MỞ CỬA SỔ ĐĂNG NHẬP
-        function openLogin() {
-            var modal = document.getElementById("loginModal");
+                // MỞ CỬA SỔ ĐĂNG NHẬP
+                function openLogin() {
+                    var modal = document.getElementById("loginModal");
 
-            if (modal) {
-                var accountArea = document.getElementById("account-area");
+                    if (modal) {
+                        var accountArea = document.getElementById("account-area");
 
-                if (accountArea) {
-                    accountArea.classList.remove("open");
+                        if (accountArea) {
+                            accountArea.classList.remove("open");
 
-                    var toggle = document.getElementById("user-toggle");
+                            var toggle = document.getElementById("user-toggle");
 
-                    if (toggle) {
-                        toggle.setAttribute("aria-expanded", "false");
+                            if (toggle) {
+                                toggle.setAttribute("aria-expanded", "false");
+                            }
+                        }
+
+                        modal.classList.add("show");
+                        document.body.style.overflow = "hidden";
                     }
                 }
 
-                modal.classList.add("show");
-                document.body.style.overflow = "hidden";
-            }
-        }
+                // ĐÓNG CỬA SỔ ĐĂNG NHẬP
+                function closeLogin() {
+                    var modal = document.getElementById("loginModal");
 
-        // ĐÓNG CỬA SỔ ĐĂNG NHẬP
-        function closeLogin() {
-            var modal = document.getElementById("loginModal");
-
-            if (modal) {
-                modal.classList.remove("show");
-                document.body.style.overflow = "";
-            }
-        }
+                    if (modal) {
+                        modal.classList.remove("show");
+                        document.body.style.overflow = "";
+                    }
+                }
 
 
 
-        // ĐÓNG KHI NHẤN BÊN NGOÀI HOẶC PHÍM ESC
-        document.addEventListener("DOMContentLoaded", function () {
-            var modal = document.getElementById("loginModal");
+                // ĐÓNG KHI NHẤN BÊN NGOÀI HOẶC PHÍM ESC
+                document.addEventListener("DOMContentLoaded", function () {
+                    var modal = document.getElementById("loginModal");
 
-            if (modal) {
-                modal.addEventListener("click", function (event) {
-                    if (event.target === modal) {
-                        closeLogin();
+                    if (modal) {
+                        modal.addEventListener("click", function (event) {
+                            if (event.target === modal) {
+                                closeLogin();
+                            }
+                        });
+
+                        document.addEventListener("keydown", function (event) {
+                            if (event.key === "Escape") {
+                                closeLogin();
+                            }
+                        });
                     }
                 });
-
-                document.addEventListener("keydown", function (event) {
-                    if (event.key === "Escape") {
-                        closeLogin();
-                    }
-                });
-            }
-        });
     </script>
 
     <style>
