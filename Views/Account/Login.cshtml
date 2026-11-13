@@ -352,6 +352,13 @@
                 </div>
             }
 
+            @if (TempData["Success"] != null)
+            {
+                <div style="padding: 10px 14px; margin-bottom: 16px; border-radius: 8px; background: #dcfce7; color: #166534; font-size: 14px; font-weight: 600;">
+                    @TempData["Success"]
+                </div>
+            }
+
             @using (Html.BeginForm("Login", "Account", FormMethod.Post))
             {
                 @Html.AntiForgeryToken()
@@ -394,6 +401,13 @@
                     <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 7px;"></i>
                 </button>
             }
+
+            <div style="margin-top: 18px; text-align: center; font-size: 14px; color: #64748b;">
+                Chưa có tài khoản?
+                <a href="@Url.Action("Register", "Account")" style="color: #b91c1c; font-weight: 700; text-decoration: none;">
+                    Đăng ký ngay
+                </a>
+            </div>
 
             <a href="@Url.Action("Index", "Articles")" class="back-home">
                 <i class="fa-solid fa-arrow-left"></i>

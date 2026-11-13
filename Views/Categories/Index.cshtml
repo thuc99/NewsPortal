@@ -207,7 +207,7 @@
                                         : item.CategoryName.Trim().Substring(0, 1).ToUpper())
                                 </span>
 
-                                <strong>@item.CategoryName</strong>
+                                <strong><a href="@Url.Action("Details", "Categories", new { id = item.CategoryID })" class="name-link">@item.CategoryName</a></strong>
                             </td>
 
                             <td>

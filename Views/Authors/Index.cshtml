@@ -212,7 +212,7 @@
                                         : item.AuthorName.Trim().Substring(0, 1).ToUpper())
                                 </span>
 
-                                <strong>@item.AuthorName</strong>
+                                <strong><a href="@Url.Action("Details", "Authors", new { id = item.AuthorID })" class="name-link">@item.AuthorName</a></strong>
                             </td>
 
                             <td>

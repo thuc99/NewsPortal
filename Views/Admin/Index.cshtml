@@ -1,0 +1,384 @@
+﻿@model NewsPortal.Models.AdminDashboardViewModel
+@{
+    ViewBag.Title = "Bảng điều khiển Admin";
+}
+
+@section styles {
+    <style>
+        .adm-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 24px 28px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--red-dark), var(--red));
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+            .adm-banner h1 {
+                margin: 4px 0 0;
+                font-size: 24px;
+            }
+
+        .adm-sub {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: .85;
+        }
+
+        .adm-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .adm-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .adm-btn-white {
+            background: #fff;
+            color: var(--red-dark) !important;
+        }
+
+            .adm-btn-white:hover {
+                background: #ffe4e6;
+            }
+
+        .adm-btn-ghost {
+            background: rgba(255, 255, 255, .15);
+            color: #fff !important;
+            border-color: rgba(255, 255, 255, .3);
+        }
+
+            .adm-btn-ghost:hover {
+                background: rgba(255, 255, 255, .25);
+            }
+
+        .adm-menu {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .adm-tab {
+            padding: 9px 16px;
+            border-radius: 8px;
+            background: var(--soft);
+            border: 1px solid var(--line);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+            .adm-tab.active, .adm-tab:hover {
+                background: #fff1f2;
+                border-color: var(--red);
+                color: var(--red);
+            }
+
+        .adm-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .adm-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--red);
+            border-radius: 12px;
+            padding: 18px 20px;
+        }
+
+        .adm-card-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .adm-card-val {
+            font-size: 30px;
+            font-weight: 800;
+            margin: 4px 0;
+            color: var(--ink);
+        }
+
+        .adm-card-foot {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .adm-panel {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .adm-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .adm-filter {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+            .adm-filter input, .adm-filter select {
+                height: 38px;
+                padding: 0 12px;
+                border: 1px solid var(--line);
+                border-radius: 7px;
+                font-size: 13px;
+            }
+
+        .adm-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+            .adm-table th {
+                text-align: left;
+                padding: 11px 10px;
+                background: var(--soft);
+                border-bottom: 2px solid var(--line);
+                font-size: 12px;
+                text-transform: uppercase;
+                color: var(--muted);
+            }
+
+            .adm-table td {
+                padding: 12px 10px;
+                border-bottom: 1px solid var(--line);
+                vertical-align: middle;
+            }
+
+        .badge-pub {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-draft {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .btn-mini {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+            .btn-mini:hover {
+                border-color: var(--red);
+                color: var(--red);
+            }
+
+        .adm-alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+}
+
+<div class="adm-banner">
+    <div>
+        <div class="adm-sub"><i class="fa-solid fa-shield-halved"></i> Hệ thống Quản trị TinNhanh</div>
+        <h1>Xin chào, @Session["Admin"]!</h1>
+    </div>
+    <div class="adm-actions">
+        <a class="adm-btn adm-btn-white" href="@Url.Action("Create", "Articles")">
+            <i class="fa-solid fa-plus"></i> Viết bài mới
+        </a>
+        <a class="adm-btn adm-btn-ghost" href="@Url.Action("Logout", "Account")">
+            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+        </a>
+    </div>
+</div>
+
+<div class="adm-menu">
+    <a class="adm-tab active" href="@Url.Action("Index", "Admin")">
+        <i class="fa-solid fa-gauge-high"></i> Tổng quan
+    </a>
+    <a class="adm-tab" href="@Url.Action("Index", "Articles")">
+        <i class="fa-solid fa-newspaper"></i> Quản lý Bài viết
+    </a>
+    <a class="adm-tab" href="@Url.Action("Index", "Categories")">
+        <i class="fa-solid fa-folder-tree"></i> Quản lý Danh mục
+    </a>
+    <a class="adm-tab" href="@Url.Action("Index", "Authors")">
+        <i class="fa-solid fa-pen-nib"></i> Quản lý Tác giả
+    </a>
+    <a class="adm-tab" href="@Url.Action("Users", "Admin")">
+        <i class="fa-solid fa-users-gear"></i> Tài khoản Hệ thống
+    </a>
+</div>
+
+@if (TempData["AdminMessage"] != null)
+{
+    <div class="adm-alert">
+        <i class="fa-solid fa-circle-check"></i> @TempData["AdminMessage"]
+    </div>
+}
+
+<div class="adm-stats">
+    <div class="adm-card">
+        <div class="adm-card-label">Tổng số bài viết</div>
+        <div class="adm-card-val">@Model.TotalArticles</div>
+        <div class="adm-card-foot">Đã đăng: <strong>@Model.PublishedArticles</strong> &bull; Nháp: <strong>@Model.DraftArticles</strong></div>
+    </div>
+
+    <div class="adm-card">
+        <div class="adm-card-label">Tổng lượt đọc</div>
+        <div class="adm-card-val">@Model.TotalViews</div>
+        <div class="adm-card-foot">Thống kê toàn trang</div>
+    </div>
+
+    <div class="adm-card">
+        <div class="adm-card-label">Danh mục &amp; Tác giả</div>
+        <div class="adm-card-val">@Model.TotalCategories / @Model.TotalAuthors</div>
+        <div class="adm-card-foot">
+            <a href="@Url.Action("Index", "Categories")">Danh mục</a> &bull;
+            <a href="@Url.Action("Index", "Authors")">Tác giả</a>
+        </div>
+    </div>
+
+    <div class="adm-card">
+        <div class="adm-card-label">Tài khoản quản trị</div>
+        <div class="adm-card-val">@Model.TotalUsers</div>
+        <div class="adm-card-foot">
+            <a href="@Url.Action("Users", "Admin")">Quản lý tài khoản &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-toolbar">
+        <h3 style="margin:0;"><i class="fa-solid fa-list-check" style="color:var(--red);"></i> Kiểm duyệt &amp; Quản lý nhanh bài viết</h3>
+
+        <form method="get" action="@Url.Action("Index", "Admin")" class="adm-filter">
+            <input type="text" name="search" value="@Model.SearchQuery" placeholder="Tìm theo tiêu đề..." />
+            <select name="status">
+                <option value="" @(Model.StatusFilter == "" ? "selected" : "")>Tất cả trạng thái</option>
+                <option value="Published" @(Model.StatusFilter == "Published" ? "selected" : "")>Đã xuất bản</option>
+                <option value="Draft" @(Model.StatusFilter == "Draft" ? "selected" : "")>Bản nháp</option>
+            </select>
+            <button type="submit" class="search-button">Lọc</button>
+            @if (!string.IsNullOrEmpty(Model.SearchQuery) || !string.IsNullOrEmpty(Model.StatusFilter))
+            {
+                <a href="@Url.Action("Index", "Admin")" class="search-reset">Xóa lọc</a>
+            }
+        </form>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="adm-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tiêu đề</th>
+                    <th>Danh mục</th>
+                    <th>Tác giả</th>
+                    <th>Lượt xem</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày đăng</th>
+                    <th style="text-align:right;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Articles.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" style="text-align:center; color:var(--muted); padding:28px;">
+                            Không tìm thấy bài viết nào phù hợp.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Articles)
+                    {
+                        <tr>
+                            <td>#@item.ArticleID</td>
+                            <td style="font-weight:700; max-width:310px;">
+                                <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">@item.Title</a>
+                            </td>
+                            <td>@item.CategoryName</td>
+                            <td>@item.AuthorName</td>
+                            <td>@item.ViewCount</td>
+                            <td>
+                                @if (item.Status == "Published")
+                                {
+                                    <span class="badge-pub">Đã đăng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-draft">Bản nháp</span>
+                                }
+                            </td>
+                            <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
+                            <td style="text-align:right; white-space:nowrap;">
+                                @using (Html.BeginForm("ToggleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.ArticleID" />
+                                    <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                    <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                    <button type="submit" class="btn-mini">
+                                        @(item.Status == "Published" ? "Hạ nháp" : "Duyệt đăng")
+                                    </button>
+                                }
+                                <a class="btn-mini" href="@Url.Action("Edit", "Articles", new { id = item.ArticleID })">Sửa</a>
+                                <a class="btn-mini" style="color:var(--red);" href="@Url.Action("Delete", "Articles", new { id = item.ArticleID })">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

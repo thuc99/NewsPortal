@@ -1,0 +1,164 @@
+﻿@model NewsPortal.Models.Category
+
+@{
+    ViewBag.Title = Model.CategoryName;
+    bool isAdmin = Session["Admin"] != null;
+    var articles = ViewBag.Articles as List<NewsPortal.Models.Articles>
+                   ?? new List<NewsPortal.Models.Articles>();
+    var authorNames = ViewBag.AuthorNames as Dictionary<int, string>
+                      ?? new Dictionary<int, string>();
+}
+
+@section styles {
+    <style>
+        .dt-back {
+            display: inline-block;
+            margin-bottom: 14px;
+            color: #64748b;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+            .dt-back:hover {
+                color: var(--red, #c0192f);
+            }
+
+        .dt-title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .dt-sub {
+            color: #64748b;
+            margin: 6px 0 24px;
+        }
+
+        .dt-edit {
+            margin-left: 10px;
+            font-size: 13px;
+            color: var(--red, #c0192f);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .dt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .dt-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .dt-card img {
+                width: 100%;
+                aspect-ratio: 4 / 3;
+                object-fit: cover;
+                background: #fee2e2;
+                display: block;
+            }
+
+        .dt-noimg {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: #fee2e2;
+        }
+
+        .dt-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .dt-card h3 {
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.4;
+        }
+
+            .dt-card h3 a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+                .dt-card h3 a:hover {
+                    color: var(--red, #c0192f);
+                }
+
+        .dt-sum {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .dt-meta {
+            margin-top: auto;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .dt-more {
+            color: var(--red, #c0192f);
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .dt-empty {
+            color: #94a3b8;
+            padding: 30px 0;
+        }
+    </style>
+}
+
+<a class="dt-back" href="@Url.Action("Index", "Categories")">« Tất cả danh mục</a>
+
+<h1 class="dt-title">
+    @Model.CategoryName
+    @if (isAdmin)
+    {
+        <a class="dt-edit" href="@Url.Action("Edit", "Categories", new { id = Model.CategoryID })">Sửa</a>
+    }
+</h1>
+<p class="dt-sub">
+    @(string.IsNullOrWhiteSpace(Model.Description) ? "" : Model.Description + " · ")@articles.Count bài viết
+</p>
+
+@if (!articles.Any())
+{
+    <div class="dt-empty">Danh mục này chưa có bài viết nào.</div>
+}
+else
+{
+    <div class="dt-grid">
+        @foreach (var a in articles)
+        {
+            <div class="dt-card">
+                @if (!string.IsNullOrWhiteSpace(a.ImageUrl))
+                {
+                    <img src="@a.ImageUrl" alt="" />
+                }
+                else
+                {
+                    <div class="dt-noimg"></div>
+                }
+                <div class="dt-body">
+                    <h3><a href="@Url.Action("Details", "Articles", new { id = a.ArticleID })">@a.Title</a></h3>
+                    <div class="dt-sum">@a.Summary</div>
+                    <div class="dt-meta">
+                        @(authorNames.ContainsKey(a.AuthorID) ? authorNames[a.AuthorID] + " · " : "")@a.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+                    <a class="dt-more" href="@Url.Action("Details", "Articles", new { id = a.ArticleID })">Đọc tiếp</a>
+                </div>
+            </div>
+        }
+    </div>
+}

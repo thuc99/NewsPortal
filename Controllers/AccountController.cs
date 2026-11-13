@@ -1,14 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Web.Mvc;
+using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
 {
     public class AccountController : Controller
     {
+        // Lưu danh sách tài khoản User đã đăng ký trong bộ nhớ ứng dụng
+        private static List<UserAccount> _registeredUsers = new List<UserAccount>();
+
         public ActionResult Login()
         {
             return View();
         }
+
         [HttpPost]
         public ActionResult Login(string username, string password)
         {
@@ -28,9 +35,22 @@ namespace NewsPortal.Controllers
                 return View();
             }
 
+            // 1. Đăng nhập quyền Admin (giữ nguyên của bạn)
             if (username == "admin" && password == "123456")
             {
                 Session["Admin"] = username;
+                Session["FailCount"] = 0;
+                return RedirectToAction("Index", "Articles");
+            }
+
+            // 2. Đăng nhập quyền User thường
+            var user = _registeredUsers.FirstOrDefault(u =>
+                u.Username.Equals(username, StringComparison.OrdinalIgnoreCase) && u.Password == password);
+
+            if (user != null)
+            {
+                Session["User"] = user.Username;
+                Session["UserFullName"] = user.FullName;
                 Session["FailCount"] = 0;
                 return RedirectToAction("Index", "Articles");
             }
@@ -45,14 +65,63 @@ namespace NewsPortal.Controllers
             else
             {
                 Session["FailCount"] = fails;
-                ViewBag.Error = "Sai tài khoản hoặc mật khẩu! (lần " + fails + "/5)";
+                ViewBag.Error = "Sai tài khoản hoặc mật khẩu! (Lần " + fails + "/5)";
             }
             return View();
+        }
+
+        // GET: /Account/Register
+        [HttpGet]
+        public ActionResult Register()
+        {
+            return View();
+        }
+
+        // POST: /Account/Register
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Register(string fullName, string username, string email, string password, string confirmPassword)
+        {
+            fullName = (fullName ?? "").Trim();
+            username = (username ?? "").Trim();
+            email = (email ?? "").Trim();
+
+            if (string.IsNullOrEmpty(fullName) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                ViewBag.Error = "Vui lòng nhập đầy đủ họ tên, tài khoản và mật khẩu.";
+                return View();
+            }
+
+            if (password != confirmPassword)
+            {
+                ViewBag.Error = "Mật khẩu xác nhận không khớp.";
+                return View();
+            }
+
+            if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+                _registeredUsers.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
+            {
+                ViewBag.Error = "Tên đăng nhập này đã tồn tại. Vui lòng chọn tên khác.";
+                return View();
+            }
+
+            _registeredUsers.Add(new UserAccount
+            {
+                FullName = fullName,
+                Username = username,
+                Email = email,
+                Password = password
+            });
+
+            TempData["Success"] = "Đăng ký thành công! Mời bạn đăng nhập.";
+            return RedirectToAction("Login");
         }
 
         public ActionResult Logout()
         {
             Session.Remove("Admin");
+            Session.Remove("User");
+            Session.Remove("UserFullName");
             return RedirectToAction("Index", "Articles");
         }
     }

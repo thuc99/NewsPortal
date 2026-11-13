@@ -155,6 +155,22 @@ namespace NewsPortal.Controllers
             return RedirectToAction("Index");
         }
 
+        public ActionResult Details(int? id)
+        {
+            if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            var category = db.Categories.Find(id);
+            if (category == null) return HttpNotFound();
+
+            ViewBag.Articles = db.Articles
+                .Where(a => a.CategoryID == id && a.Status == "Published")
+                .OrderByDescending(a => a.CreatedDate)
+                .ToList();
+
+            // Tên tác giả để hiện trên thẻ bài
+            ViewBag.AuthorNames = db.Authors.ToDictionary(x => x.AuthorID, x => x.AuthorName);
+            return View(category);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

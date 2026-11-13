@@ -762,16 +762,23 @@
 
                 <div class="account-menu" id="account-menu">
 
-                    @if (Session["Admin"] == null)
+                    @if (Session["Admin"] == null && Session["User"] == null)
                     {
                         <a href="#"
                            class="account-menu-link"
                            onclick="openLogin(); return false;">
                             Đăng nhập
                         </a>
+                        <a href="@Url.Action("Register", "Account")"
+                           class="account-menu-link">
+                            Đăng ký tài khoản
+                        </a>
                     }
                     else
                     {
+                        <div style="padding: 8px 14px; font-size: 13px; font-weight: 700; color: #b91c1c;">
+                            Xin chào, @(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])
+                        </div>
                         <a href="@Url.Action("Logout", "Account")"
                            class="account-menu-link">
                             Đăng xuất
@@ -956,6 +963,8 @@
             }
         }
 
+
+
         // ĐÓNG KHI NHẤN BÊN NGOÀI HOẶC PHÍM ESC
         document.addEventListener("DOMContentLoaded", function () {
             var modal = document.getElementById("loginModal");
@@ -975,6 +984,27 @@
             }
         });
     </script>
+
+    <style>
+        /* ===== CÁCH A: góc vuông hơn trên toàn trang ===== */
+        img,
+        .card, .article-card, .news-card,
+        .article-image, .sr-item img,
+        .search-input, .search-button,
+        button, .btn, input[type="text"], input[type="password"], textarea, select {
+            border-radius: 2px !important;
+        }
+
+            /* ===== CÁCH B: ảnh bớt dẹt (tỉ lệ 4:3), cắt gọn không méo ===== */
+            .article-image,
+            .article-card img, .news-card img, .card img,
+            .article-info img, .sr-item img {
+                width: 100% !important;
+                aspect-ratio: 4 / 3 !important;
+                height: auto !important;
+                object-fit: cover !important;
+            }
+    </style>
 
     @RenderSection("scripts", required: false)
 </body>

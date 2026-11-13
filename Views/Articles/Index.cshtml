@@ -341,8 +341,7 @@
         }
     </div>
 
-    @if (isAdmin)
-    {
+  
         <div class="filter-toolbar">
             <button type="button" id="filterToggle" class="filter-toggle">
                 Bộ lọc nâng cao
@@ -381,19 +380,22 @@
                     }
                 </select>
 
-                <select name="status">
-                    <option value="">Mọi trạng thái</option>
+                if (isAdmin)
+                {
+                    <select name="status">
+                        <option value="">Mọi trạng thái</option>
 
-                    <option value="Published"
-                            @(ViewBag.Status as string == "Published" ? "selected" : "")>
-                        Published
-                    </option>
+                        <option value="Published"
+                                @(ViewBag.Status as string == "Published" ? "selected" : "")>
+                            Published
+                        </option>
 
-                    <option value="Draft"
-                            @(ViewBag.Status as string == "Draft" ? "selected" : "")>
-                        Draft
-                    </option>
-                </select>
+                        <option value="Draft"
+                                @(ViewBag.Status as string == "Draft" ? "selected" : "")>
+                            Draft
+                        </option>
+                    </select>
+                }
 
                 <input type="date"
                        name="fromDate"
@@ -411,7 +413,7 @@
                          null, new { @class = "filter-reset" })
             }
         </div>
-    }
+    
 
     <p class="result-count">
         Tìm thấy <strong>@totalArticles</strong> bài viết
@@ -430,10 +432,9 @@
                         <th>Trạng thái</th>
                     }
 
-                    <th style="width: @(isAdmin ? "220px" : "120px");">
-                        Thao tác
-                    </th>
+
                 </tr>
+                
             </thead>
 
             <tbody>
@@ -474,27 +475,11 @@
                                 </td>
                             }
 
-                            <td>
-                                <div class="action-group">
-                                    @Html.ActionLink("Chi tiết", "Details",
-                                             new { id = item.Id },
-                                             new { @class = "action-btn btn-detail" })
-
-                                    @if (isAdmin)
-                                    {
-                                        @Html.ActionLink("Sửa", "Edit",
-                                                 new { id = item.Id },
-                                                 new { @class = "action-btn btn-edit" })
-
-                                        @Html.ActionLink("Xóa", "Delete",
-                                                 new { id = item.Id },
-                                                 new { @class = "action-btn btn-delete" })
-                                    }
-                                </div>
-                            </td>
                         </tr>
                     }
+
                 }
+
                 else
                 {
                     <tr>
@@ -530,8 +515,7 @@
 
 </div>
 
-@if (isAdmin)
-{
+
     <script>
         (function () {
             var toggle = document.getElementById("filterToggle");
@@ -549,4 +533,4 @@
             }
         })();
     </script>
-}
+

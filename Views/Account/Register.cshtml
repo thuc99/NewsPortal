@@ -1,0 +1,194 @@
+﻿@{
+    ViewBag.Title = "Đăng ký tài khoản";
+}
+
+<style>
+    .register-wrapper {
+        width: min(460px, calc(100% - 32px));
+        margin: 45px auto;
+        padding: 36px 32px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        color: #1e293b;
+    }
+
+    .register-heading {
+        text-align: center;
+        margin-bottom: 26px;
+    }
+
+        .register-heading h2 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .register-heading p {
+            margin: 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+    .reg-group {
+        margin-bottom: 18px;
+    }
+
+        .reg-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 7px;
+        }
+
+    .reg-input-wrap {
+        position: relative;
+    }
+
+        .reg-input-wrap i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .reg-input-wrap input {
+            width: 100%;
+            height: 46px;
+            padding: 0 15px 0 42px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #1e293b;
+            background: #f8fafc;
+            outline: none;
+            box-sizing: border-box;
+            transition: .2s;
+        }
+
+            .reg-input-wrap input:focus {
+                border-color: #b91c1c;
+                background: #ffffff;
+                box-shadow: 0 0 0 3px rgba(185, 28, 28, .1);
+            }
+
+    .btn-register {
+        width: 100%;
+        height: 48px;
+        margin-top: 6px;
+        border: none;
+        border-radius: 10px;
+        background: #b91c1c;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+        .btn-register:hover {
+            background: #991b1b;
+        }
+
+    .reg-error {
+        padding: 10px 14px;
+        margin-bottom: 18px;
+        border-radius: 8px;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .reg-footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 14px;
+        color: #64748b;
+    }
+
+        .reg-footer a {
+            color: #b91c1c;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+            .reg-footer a:hover {
+                text-decoration: underline;
+            }
+</style>
+
+<div class="register-wrapper">
+    <div class="register-heading">
+        <h2>Đăng ký tài khoản</h2>
+        <p>Tạo tài khoản thành viên mới trên NewsPortal</p>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="reg-error">
+            <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
+            @ViewBag.Error
+        </div>
+    }
+
+    @using (Html.BeginForm("Register", "Account", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="reg-group">
+            <label for="fullName">Họ và tên</label>
+            <div class="reg-input-wrap">
+                <i class="fa-solid fa-id-card"></i>
+                <input type="text" id="fullName" name="fullName" placeholder="Nhập họ và tên của bạn" required />
+            </div>
+        </div>
+
+        <div class="reg-group">
+            <label for="username">Tên đăng nhập</label>
+            <div class="reg-input-wrap">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="username" name="username" placeholder="Nhập tên đăng nhập" required />
+            </div>
+        </div>
+
+        <div class="reg-group">
+            <label for="email">Email</label>
+            <div class="reg-input-wrap">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="email" name="email" placeholder="Nhập địa chỉ email" required />
+            </div>
+        </div>
+
+        <div class="reg-group">
+            <label for="password">Mật khẩu</label>
+            <div class="reg-input-wrap">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="password" name="password" placeholder="Tạo mật khẩu" required />
+            </div>
+        </div>
+
+        <div class="reg-group">
+            <label for="confirmPassword">Xác nhận mật khẩu</label>
+            <div class="reg-input-wrap">
+                <i class="fa-solid fa-shield-halved"></i>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" required />
+            </div>
+        </div>
+
+        <button type="submit" class="btn-register">
+            ĐĂNG KÝ TÀI KHOẢN
+            <i class="fa-solid fa-user-plus" style="margin-left: 7px;"></i>
+        </button>
+    }
+
+    <div class="reg-footer">
+        Đã có tài khoản?
+        <a href="@Url.Action("Login", "Account")">Đăng nhập ngay</a>
+    </div>
+</div>
