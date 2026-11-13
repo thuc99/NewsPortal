@@ -1,441 +1,240 @@
 ﻿
 @{
     ViewBag.Title = "Đăng nhập";
-    Layout = null;
 }
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Đăng nhập | NewsPortal</title>
+<style>
+    .login-wrapper {
+        width: min(460px, calc(100% - 32px));
+        margin: 45px auto;
+        padding: 36px 32px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        color: #1e293b;
+    }
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    .login-heading {
+        text-align: center;
+        margin-bottom: 26px;
+    }
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            font-family: 'Inter', Arial, sans-serif;
-            background: radial-gradient(circle at 15% 20%, rgba(185, 28, 28, .25), transparent 30%), radial-gradient(circle at 85% 80%, rgba(37, 99, 235, .18), transparent 30%), #0f172a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 25px;
-        }
-
-        .login-wrapper {
-            width: 100%;
-            max-width: 1000px;
-            min-height: 580px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            background: #fff;
-            border-radius: 22px;
-            overflow: hidden;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
-            animation: appear .7s ease;
-        }
-
-        @@keyframes appear {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .login-banner {
-            position: relative;
-            background: linear-gradient(145deg, #991b1b, #450a0a);
-            padding: 55px 45px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-        }
-
-            .login-banner::before,
-            .login-banner::after {
-                content: "";
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, .06);
-            }
-
-            .login-banner::before {
-                width: 350px;
-                height: 350px;
-                right: -140px;
-                top: -100px;
-            }
-
-            .login-banner::after {
-                width: 280px;
-                height: 280px;
-                left: -130px;
-                bottom: -100px;
-            }
-
-        .brand {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 23px;
+        .login-heading h2 {
+            margin: 0 0 8px;
+            font-size: 26px;
             font-weight: 800;
+            color: #0f172a;
         }
 
-        .brand-icon {
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            color: #991b1b;
-            border-radius: 12px;
-            font-size: 21px;
-        }
-
-        .banner-content {
-            position: relative;
-            z-index: 1;
-            margin: 45px 0;
-        }
-
-            .banner-content h1 {
-                font-size: 36px;
-                line-height: 1.3;
-                font-weight: 800;
-                margin-bottom: 20px;
-            }
-
-            .banner-content p {
-                color: rgba(255, 255, 255, .78);
-                font-size: 15px;
-                line-height: 1.8;
-            }
-
-        .banner-footer {
-            position: relative;
-            z-index: 1;
-            color: rgba(255, 255, 255, .65);
-            font-size: 12px;
-        }
-
-        .login-form-section {
-            padding: 65px 55px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .form-heading {
-            margin-bottom: 35px;
-        }
-
-            .form-heading h2 {
-                font-size: 30px;
-                color: #0f172a;
-                font-weight: 800;
-                margin-bottom: 10px;
-            }
-
-            .form-heading p {
-                color: #64748b;
-                font-size: 14px;
-            }
-
-        .form-group {
-            margin-bottom: 22px;
-        }
-
-            .form-group label {
-                display: block;
-                font-size: 13px;
-                font-weight: 700;
-                color: #334155;
-                margin-bottom: 9px;
-            }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-            .input-wrapper input {
-                width: 100%;
-                height: 52px;
-                padding: 0 45px;
-                border: 1px solid #e2e8f0;
-                border-radius: 10px;
-                outline: none;
-                font-size: 14px;
-                color: #1e293b;
-                transition: .2s;
-                background: #f8fafc;
-            }
-
-                .input-wrapper input:focus {
-                    border-color: #b91c1c;
-                    background: white;
-                    box-shadow: 0 0 0 3px rgba(185, 28, 28, .1);
-                }
-
-        .input-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-size: 15px;
-        }
-
-        .btn-login {
-            width: 100%;
-            height: 52px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #b91c1c, #991b1b);
-            color: white;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: .25s;
-            margin-top: 8px;
-        }
-
-            .btn-login:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 22px rgba(185, 28, 28, .25);
-                background: #991b1b;
-            }
-
-        .error-message {
-            padding: 12px 14px;
-            border-radius: 9px;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-
-        .back-home {
-            display: block;
-            text-align: center;
-            margin-top: 25px;
+        .login-heading p {
+            margin: 0;
+            font-size: 14px;
             color: #64748b;
+        }
+
+    .login-group {
+        margin-bottom: 18px;
+    }
+
+        .login-group label {
+            display: block;
             font-size: 13px;
-            text-decoration: none;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 7px;
+        }
+
+    .login-input-wrap {
+        position: relative;
+    }
+
+        .login-input-wrap .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .login-input-wrap input {
+            width: 100%;
+            height: 46px;
+            padding: 0 42px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #1e293b;
+            background: #f8fafc;
+            outline: none;
+            box-sizing: border-box;
             transition: .2s;
         }
 
-            .back-home:hover {
-                color: #b91c1c;
+            .login-input-wrap input:focus {
+                border-color: #b91c1c;
+                background: #ffffff;
+                box-shadow: 0 0 0 3px rgba(185, 28, 28, .1);
             }
 
-            .back-home i {
-                margin-right: 6px;
-            }
+    .toggle-password {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px;
+        font-size: 14px;
+    }
 
-        .secure-note {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            color: #94a3b8;
-            font-size: 12px;
-            margin-top: 30px;
+        .toggle-password:hover {
+            color: #475569;
         }
 
-        @@media (max-width: 750px) {
-            .login-wrapper {
-                max-width: 450px;
-                grid-template-columns: 1fr;
-            }
+    .btn-login {
+        width: 100%;
+        height: 48px;
+        margin-top: 6px;
+        border: none;
+        border-radius: 10px;
+        background: #b91c1c;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .2s;
+    }
 
-            .login-banner {
-                min-height: 220px;
-                padding: 28px;
-            }
-
-            .banner-content {
-                margin: 30px 0 10px;
-            }
-
-                .banner-content h1 {
-                    font-size: 26px;
-                    margin-bottom: 10px;
-                }
-
-                .banner-content p {
-                    font-size: 13px;
-                }
-
-            .banner-footer {
-                display: none;
-            }
-
-            .login-form-section {
-                padding: 40px 28px;
-            }
-
-            .form-heading h2 {
-                font-size: 26px;
-            }
+        .btn-login:hover {
+            background: #991b1b;
         }
-    </style>
-</head>
 
-<body>
+    .login-error {
+        padding: 10px 14px;
+        margin-bottom: 18px;
+        border-radius: 8px;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-size: 13px;
+        font-weight: 600;
+    }
 
-    <div class="login-wrapper">
+    .login-success {
+        padding: 10px 14px;
+        margin-bottom: 18px;
+        border-radius: 8px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 13px;
+        font-weight: 600;
+    }
 
-        <div class="login-banner">
-            <div class="brand">
-                <div class="brand-icon">
-                    <i class="fa-solid fa-newspaper"></i>
-                </div>
-                <span>NewsPortal</span>
-            </div>
+    .login-footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 14px;
+        color: #64748b;
+    }
 
-            <div class="banner-content">
-                <h1>Chào mừng<br />quay trở lại!</h1>
-                <p>
-                    Đăng nhập vào hệ thống quản trị NewsPortal
-                    để quản lý bài viết, tác giả và danh mục tin tức.
-                </p>
-            </div>
+        .login-footer a {
+            color: #b91c1c;
+            font-weight: 700;
+            text-decoration: none;
+        }
 
-            <div class="banner-footer">
-                © @DateTime.Now.Year NewsPortal. All rights reserved.
-            </div>
-        </div>
-
-        <div class="login-form-section">
-
-            <div class="form-heading">
-                <h2>Đăng nhập</h2>
-                <p>Vui lòng nhập thông tin tài khoản của bạn.</p>
-            </div>
-
-            @if (ViewBag.Error != null)
-            {
-                <div class="error-message">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    @ViewBag.Error
-                </div>
+            .login-footer a:hover {
+                text-decoration: underline;
             }
+</style>
 
-            @if (TempData["Success"] != null)
-            {
-                <div style="padding: 10px 14px; margin-bottom: 16px; border-radius: 8px; background: #dcfce7; color: #166534; font-size: 14px; font-weight: 600;">
-                    @TempData["Success"]
-                </div>
-            }
-
-            @using (Html.BeginForm("Login", "Account", FormMethod.Post))
-            {
-                @Html.AntiForgeryToken()
-
-                <div class="form-group">
-                    <label for="username">Tên đăng nhập</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-user input-icon"></i>
-                        <input type="text"
-                               id="username"
-                               name="username"
-                               placeholder="Nhập tên đăng nhập"
-                               autocomplete="username"
-                               required />
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Mật khẩu</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-lock input-icon"></i>
-                        <input type="password"
-                               id="password"
-                               name="password"
-                               placeholder="Nhập mật khẩu"
-                               autocomplete="current-password"
-                               required />
-
-                        <button type="button"
-                                class="toggle-password"
-                                onclick="togglePassword()"
-                                aria-label="Hiện hoặc ẩn mật khẩu">
-                            <i class="fa-solid fa-eye" id="eyeIcon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-login">
-                    ĐĂNG NHẬP
-                    <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 7px;"></i>
-                </button>
-            }
-
-            <div style="margin-top: 18px; text-align: center; font-size: 14px; color: #64748b;">
-                Chưa có tài khoản?
-                <a href="@Url.Action("Register", "Account")" style="color: #b91c1c; font-weight: 700; text-decoration: none;">
-                    Đăng ký ngay
-                </a>
-            </div>
-
-            <a href="@Url.Action("Index", "Articles")" class="back-home">
-                <i class="fa-solid fa-arrow-left"></i>
-                Quay về trang chủ
-            </a>
-
-            <div class="secure-note">
-                <i class="fa-solid fa-shield-halved"></i>
-                Hệ thống đăng nhập quản trị an toàn
-            </div>
-
-        </div>
+<div class="login-wrapper">
+    <div class="login-heading">
+        <h2>Đăng nhập</h2>
+        <p>Vui lòng nhập thông tin tài khoản của bạn</p>
     </div>
 
-    <script>function togglePassword() {
-            var password = document.getElementById("password");
-            var icon = document.getElementById("eyeIcon");
+    @if (TempData["Success"] != null)
+    {
+        <div class="login-success">
+            <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i>
+            @TempData["Success"]
+        </div>
+    }
 
-            if (password.type === "password") {
-                password.type = "text";
-                icon.classList.remove("fa-eye");
-                icon.classList.add("fa-eye-slash");
-            } else {
-                password.type = "password";
-                icon.classList.remove("fa-eye-slash");
-                icon.classList.add("fa-eye");
-            }
-        }</script>
+    @if (ViewBag.Error != null)
+    {
+        <div class="login-error">
+            <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
+            @ViewBag.Error
+        </div>
+    }
 
-</body>
-</html>
+    @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="login-group">
+            <label for="username">Tên đăng nhập</label>
+            <div class="login-input-wrap">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input type="text"
+                       id="username"
+                       name="username"
+                       placeholder="Nhập tên đăng nhập"
+                       autocomplete="username"
+                       required />
+            </div>
+        </div>
+
+        <div class="login-group">
+            <label for="password">Mật khẩu</label>
+            <div class="login-input-wrap">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password"
+                       id="password"
+                       name="password"
+                       placeholder="Nhập mật khẩu"
+                       autocomplete="current-password"
+                       required />
+
+                <button type="button"
+                        class="toggle-password"
+                        onclick="togglePassword()"
+                        aria-label="Hiện hoặc ẩn mật khẩu">
+                    <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-login">
+            ĐĂNG NHẬP
+            <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 7px;"></i>
+        </button>
+    }
+
+    <div class="login-footer">
+        Chưa có tài khoản?
+        <a href="@Url.Action("Register", "Account")">Đăng ký ngay</a>
+    </div>
+</div>
+
+<script>
+    function togglePassword() {
+        var password = document.getElementById("password");
+        var icon = document.getElementById("eyeIcon");
+
+        if (password.type === "password") {
+            password.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            password.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>

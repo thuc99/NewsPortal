@@ -764,10 +764,9 @@
 
                     @if (Session["Admin"] == null && Session["User"] == null)
                     {
-                        <a href="#"
-                           class="account-menu-link"
-                           onclick="openLogin(); return false;">
-                            Đăng nhập
+                        <a href="@Url.Action("Login", "Account")"
+                           class="account-menu-link">
+                                 Đăng nhập
                         </a>
                         <a href="@Url.Action("Register", "Account")"
                            class="account-menu-link">
