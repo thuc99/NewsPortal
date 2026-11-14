@@ -188,9 +188,8 @@
     .management-card {
         overflow-x: auto;
         border: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
+        border-radius: 10px;
+        background: #fff;
     }
 
     .management-table {
@@ -228,11 +227,48 @@
         border: 1px solid #e2e8f0;
     }
 
+    .public-articles-page .management-table {
+        table-layout: fixed;
+    }
+
+    .public-articles-page .management-table th:first-child,
+    .public-articles-page .management-table td:first-child {
+        width: 220px;
+    }
+
+    .public-articles-page .article-image {
+        display: block;
+        width: 190px;
+        height: 125px;
+        object-fit: cover;
+    }
+
     .article-title {
         min-width: 240px;
         color: #1e293b;
-        font-weight: 700;
-        line-height: 1.45;
+        font-size: 18px;
+        font-weight: 750;
+        line-height: 1.5;
+    }
+
+    .article-title a {
+        color: #1e293b;
+    }
+
+    .article-title a:hover {
+        color: #b91c1c;
+    }
+
+    .article-excerpt {
+        display: -webkit-box;
+        margin: 5px 0 0;
+        overflow: hidden;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.6;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
     }
 
     .article-date {
@@ -354,7 +390,7 @@
     }
 </style>
 
-<div class="management-page">
+<div class="management-page @(isAdminManagement ? "admin-articles-page" : "public-articles-page")">
 
     <div class="management-header">
         <div>
@@ -473,6 +509,12 @@
                 {
                     foreach (var item in Model)
                     {
+                        var excerpt = (item.Content ?? string.Empty).Trim();
+                        if (excerpt.Length > 180)
+                        {
+                            excerpt = excerpt.Substring(0, 180).TrimEnd() + "…";
+                        }
+
                         <tr>
                             <td>
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
@@ -491,6 +533,10 @@
 
                             <td class="article-title">
                                 <a href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = item.Id }) : Url.Action("Details", "Articles", new { id = item.Id }))">@item.Title</a>
+                                @if (!string.IsNullOrWhiteSpace(excerpt))
+                                {
+                                    <p class="article-excerpt">@excerpt</p>
+                                }
                             </td>
 
                             <td class="article-date">

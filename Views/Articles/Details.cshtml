@@ -77,21 +77,30 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
+        gap: 7px;
+        min-height: 36px;
+        padding: 0 12px;
         height: 36px;
-        border: 1px solid #fecdd3;
-        border-radius: 50%;
-        background: #fff1f2;
-        color: #e11d48;
-        font-size: 21px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 600;
         line-height: 1;
         cursor: pointer;
         transition: .2s ease;
     }
 
     .favorite-button:hover {
-        background: #ffe4e6;
+        border-color: #b91c32;
+        background: #fff1f2;
+        color: #b91c32;
         transform: translateY(-1px);
+    }
+
+    .favorite-button i {
+        font-size: 15px;
     }
 
     .rating-card {
@@ -220,8 +229,9 @@
     }
 
     .comments-card {
-        margin-top: 30px;
-        padding: 22px;
+        max-width: 900px;
+        margin: 30px auto 0;
+        padding: 18px;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
         background: #fff;
@@ -229,37 +239,40 @@
 
     .comments-title {
         color: #1e293b;
-        margin: 0 0 18px;
+        margin: 0 0 14px;
+        font-size: 20px;
     }
 
     .comment-form {
         display: grid;
-        gap: 10px;
-        margin-bottom: 25px;
+        gap: 8px;
+        margin-bottom: 18px;
     }
 
     .comment-input,
     .comment-textarea {
         width: 100%;
         box-sizing: border-box;
-        padding: 11px 13px;
+        padding: 8px 11px;
         border: 1px solid #cbd5e1;
-        border-radius: 8px;
+        border-radius: 6px;
         font: inherit;
+        font-size: 14px;
     }
 
     .comment-textarea {
-        min-height: 100px;
+        min-height: 82px;
         resize: vertical;
     }
 
     .comment-submit {
         justify-self: start;
         border: 0;
-        border-radius: 8px;
-        padding: 10px 16px;
+        border-radius: 6px;
+        padding: 8px 13px;
         background: #b91c1c;
         color: white;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
     }
@@ -284,6 +297,33 @@
         color: #475569;
         margin: 6px 0 0;
         white-space: pre-line;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .comments-empty {
+        margin: 0;
+        padding: 16px;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #64748b;
+        text-align: center;
+    }
+
+    .article-author {
+        margin-top: 8px;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .article-author a {
+        color: #b91c1c;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .article-author a:hover {
+        text-decoration: underline;
     }
 
     .comment-message {
@@ -415,6 +455,13 @@
 
     <div class="detail-header">
         <h2>@Model.Title</h2>
+        @if (ViewBag.AuthorId != null && !string.IsNullOrWhiteSpace(ViewBag.AuthorName as string))
+        {
+            <div class="article-author">
+                Tác giả:
+                <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index", id = ViewBag.AuthorId })">@ViewBag.AuthorName</a>
+            </div>
+        }
 
         <div class="detail-meta">
             <div class="detail-date">
@@ -439,10 +486,11 @@
                         @Html.AntiForgeryToken()
                         @Html.Hidden("articleId", Model.Id)
                         <button type="submit"
-                                class="favorite-button"
-                                title="@(ViewBag.IsFavorite == true ? "Bỏ yêu thích" : "Thêm vào yêu thích")"
-                                aria-label="@(ViewBag.IsFavorite == true ? "Bỏ yêu thích" : "Thêm vào yêu thích")">
-                            <span aria-hidden="true">@(ViewBag.IsFavorite == true ? "♥" : "♡")</span>
+                                class="favorite-button @(ViewBag.IsFavorite == true ? "is-saved" : "")"
+                                title="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")"
+                                aria-label="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")">
+                            <i class="@(ViewBag.IsFavorite == true ? "fa-solid" : "fa-regular") fa-bookmark" aria-hidden="true"></i>
+                            <span>@(ViewBag.IsFavorite == true ? "Đã lưu" : "Lưu bài viết")</span>
                         </button>
                     }
                 </div>
@@ -525,7 +573,7 @@
         }
         else
         {
-            <p>Chưa có bình luận nào.</p>
+            <p class="comments-empty">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ ý kiến.</p>
         }
     </section>
 

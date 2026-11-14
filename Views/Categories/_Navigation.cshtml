@@ -1,0 +1,13 @@
+@model IEnumerable<NewsPortal.Models.Category>
+
+@{
+    string activeCategoryId = Convert.ToString(ViewBag.ActiveCategoryId);
+}
+
+@foreach (var category in Model)
+{
+    <a class="nav-link category-nav-link @(activeCategoryId == category.CategoryID.ToString() ? "active" : "")"
+       href="@Url.Action("Details", "Categories", new { id = category.CategoryID })">
+        @category.CategoryName
+    </a>
+}

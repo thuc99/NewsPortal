@@ -2,7 +2,7 @@
 @using System.Linq
 
 @{
-    ViewBag.Title = "Bài viết yêu thích";
+    ViewBag.Title = "Bài viết đã lưu";
 }
 
 <style>
@@ -24,7 +24,7 @@
 
 <div class="favorites-page">
     <div class="favorites-heading">
-        <h1>♡ Bài viết yêu thích</h1>
+        <h1><i class="fa-regular fa-bookmark" aria-hidden="true"></i> Bài viết đã lưu</h1>
     </div>
 
     @if (Model != null && Model.Any())
@@ -50,6 +50,6 @@
     }
     else
     {
-        <div class="favorites-empty">Bạn chưa lưu bài viết nào. Hãy bấm biểu tượng ♡ khi đọc bài viết.</div>
+        <div class="favorites-empty">Bạn chưa lưu bài viết nào. Hãy chọn “Lưu bài viết” khi đọc bài viết.</div>
     }
 </div>

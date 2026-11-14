@@ -11,6 +11,9 @@
         string currentController = Convert.ToString(ViewContext.RouteData.Values["controller"]);
         string currentAction = Convert.ToString(ViewContext.RouteData.Values["action"]);
         bool isFavoritesPage = currentController == "Articles" && currentAction == "Favorites";
+        bool isArticlesPage = currentController == "Articles" && !isFavoritesPage;
+        bool isCategoriesPage = currentController == "Categories";
+        bool isAuthorsPage = currentController == "Authors";
     }
 
     <style>
@@ -59,8 +62,145 @@
 
         .top-inner {
             display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .weather-strip {
+            position: relative;
+            background: transparent;
+            margin-right: auto;
+        }
+
+        .weather-strip-inner {
+            position: relative;
+            display: flex;
+            min-height: 34px;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .weather-summary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 2px 0;
+            border: 0;
+            background: transparent;
+            color: #fff;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .weather-summary:hover,
+        .weather-summary[aria-expanded="true"] {
+            color: #fff;
+        }
+
+        .weather-summary-date {
+            padding-right: 12px;
+            border-right: 1px solid rgba(255, 255, 255, .45);
+            color: rgba(255, 255, 255, .9);
+        }
+
+        .weather-summary-city {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .weather-summary-temp {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .weather-summary-icon {
+            color: rgba(255, 255, 255, .9);
+            font-size: 20px;
+        }
+
+        .weather-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            z-index: 50;
+            display: none;
+            width: min(390px, calc(100vw - 28px));
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, .16);
+        }
+
+        .weather-strip.is-open .weather-panel {
+            display: block;
+        }
+
+        .weather-city-select {
+            width: 100%;
+            min-height: 44px;
+            padding: 0 12px;
+            border: 1px solid #d7dce3;
+            border-radius: 8px;
+            background: #fff;
+            color: #334155;
+            font: inherit;
+        }
+
+        .weather-current {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0 12px;
+        }
+
+        .weather-temperature {
+            color: #079bd3;
+            font-size: 62px;
+            font-weight: 300;
+            letter-spacing: -3px;
+            line-height: 1;
+        }
+
+        .weather-condition-icon {
+            color: #079bd3;
+            font-size: 42px;
+        }
+
+        .weather-condition-row {
+            display: flex;
             justify-content: space-between;
             gap: 12px;
+            padding: 8px 0 10px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #334155;
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        .weather-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid #e5e7eb;
+            color: #64748b;
+        }
+
+        .weather-detail-row:last-child {
+            border-bottom: 0;
+        }
+
+        .weather-detail-row strong {
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .weather-status {
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 12px;
         }
 
         .masthead {
@@ -179,6 +319,11 @@
             }
 
             .nav-link.active {
+                color: var(--red);
+                border-bottom-color: var(--red);
+            }
+
+            .nav-link.active:hover {
                 color: var(--red);
                 border-bottom-color: var(--red);
             }
@@ -310,6 +455,12 @@
             cursor: pointer;
         }
 
+        .account-menu-divider {
+            height: 1px;
+            margin: 6px 4px;
+            background: var(--line);
+        }
+
             .account-menu-link:hover,
             .account-menu-link.favorite-active {
                 background: #fff1f2;
@@ -323,6 +474,41 @@
         .page-content {
             padding: 32px 0 55px;
         }
+
+        .back-to-top {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            z-index: 1000;
+            display: flex;
+            width: 68px;
+            height: 66px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #bdbdbd;
+            border-radius: 4px;
+            background: #fff;
+            color: #777;
+            cursor: pointer;
+            line-height: 1.1;
+            transition: color .2s, border-color .2s, box-shadow .2s;
+        }
+
+            .back-to-top:hover {
+                border-color: var(--red);
+                color: var(--red);
+                box-shadow: 0 3px 12px rgba(0, 0, 0, .12);
+            }
+
+            .back-to-top svg {
+                width: 28px;
+                height: 28px;
+            }
+
+            .back-to-top span {
+                font-size: 13px;
+            }
 
         /* FOOTER */
 
@@ -643,6 +829,30 @@
                 gap: 0;
             }
 
+            .weather-strip-inner { min-height: 38px; }
+
+            .top-inner {
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-end;
+            }
+
+            .weather-summary {
+                gap: 7px;
+                padding: 5px 0;
+                font-size: 13px;
+            }
+
+            .weather-summary-date {
+                padding-right: 8px;
+            }
+
+            .weather-panel {
+                right: 50%;
+                transform: translateX(50%);
+                padding: 16px;
+            }
+
             .login-modal {
                 max-width: 420px;
                 grid-template-columns: 1fr;
@@ -675,7 +885,38 @@
     <!-- THANH THÔNG TIN PHÍA TRÊN -->
     <div class="top-strip">
         <div class="container top-inner">
-            <span>TIN TỨC • CÔNG NGHỆ • ĐỜI SỐNG</span>
+            <div class="weather-strip" id="weather-strip">
+                <div class="weather-strip-inner">
+                    <button type="button" class="weather-summary" id="weather-toggle" aria-expanded="false" aria-controls="weather-panel">
+                        <span class="weather-summary-date" id="weather-date">Đang tải ngày…</span>
+                        <span class="weather-summary-city"><span id="weather-city-summary">Hồ Chí Minh</span><i class="fa-solid fa-chevron-down" style="font-size:10px" aria-hidden="true"></i></span>
+                        <span class="weather-summary-temp" id="weather-temp-summary">--°C</span>
+                        <i class="weather-summary-icon fa-solid fa-cloud" id="weather-icon-summary" aria-hidden="true"></i>
+                    </button>
+
+                    <section class="weather-panel" id="weather-panel" aria-label="Thông tin thời tiết" aria-hidden="true">
+                        <select class="weather-city-select" id="weather-city-select" aria-label="Chọn thành phố">
+                            <option value="Ho Chi Minh City">Hồ Chí Minh</option>
+                            <option value="Da Nang">Đà Nẵng</option>
+                            <option value="Hanoi">Hà Nội</option>
+                            <option value="Can Tho">Cần Thơ</option>
+                            <option value="Hai Phong">Hải Phòng</option>
+                            <option value="Nha Trang">Nha Trang</option>
+                        </select>
+                        <div class="weather-current">
+                            <span class="weather-temperature" id="weather-temp">--°</span>
+                            <i class="weather-condition-icon fa-solid fa-cloud" id="weather-icon" aria-hidden="true"></i>
+                        </div>
+                        <div class="weather-condition-row">
+                            <span id="weather-date-full">Đang cập nhật…</span>
+                            <span id="weather-condition">Thời tiết</span>
+                        </div>
+                        <div class="weather-detail-row"><span>Nhiệt độ</span><strong id="weather-range">--° - --°</strong></div>
+                        <div class="weather-detail-row"><span>Độ ẩm</span><strong id="weather-humidity">--%</strong></div>
+                        <p class="weather-status" id="weather-status" role="status" aria-live="polite">Đang tải dữ liệu thời tiết…</p>
+                    </section>
+                </div>
+            </div>
             <span>Cập nhật thông tin mỗi ngày</span>
         </div>
     </div>
@@ -709,20 +950,12 @@
                 Trang chủ
             </a>
 
-            <a class="nav-link @(currentController == "Articles" && !isFavoritesPage ? "active" : "")"
-               href="@Url.Action("Index", "Articles")">
-                Tin tức
-            </a>
-
-            <a class="nav-link @(currentController == "Categories" ? "active" : "")"
-               href="@Url.Action("Index", "Categories")">
-                Danh mục
-            </a>
-
-            <a class="nav-link @(currentController == "Authors" ? "active" : "")"
-               href="@Url.Action("Index", "Authors")">
-                Tác giả
-            </a>
+            @Html.Action("Navigation", "Categories", new
+            {
+                activeCategoryId = currentController == "Categories" && currentAction == "Details"
+                    ? Convert.ToString(ViewContext.RouteData.Values["id"])
+                    : string.Empty
+            })
 
             <!-- TÌM KIẾM -->
             <form action="@Url.Action("Index", "Articles")" 
@@ -771,6 +1004,7 @@
                            class="account-menu-link">
                             Đăng ký tài khoản
                         </a>
+                        <div class="account-menu-divider"></div>
                     }
                     else
                     {
@@ -798,9 +1032,22 @@
                         </a>
                     }
 
+                    <a href="@Url.Action("Index", "Articles")"
+                       class="account-menu-link @(isArticlesPage ? "favorite-active" : "")">
+                        Tin tức
+                    </a>
+                    <a href="@Url.Action("Index", "Categories")"
+                       class="account-menu-link @(isCategoriesPage ? "favorite-active" : "")">
+                        Danh mục
+                    </a>
+                    <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index" })"
+                       class="account-menu-link @(isAuthorsPage ? "favorite-active" : "")">
+                        Tác giả
+                    </a>
+
                     <a href="@Url.Action("Favorites", "Articles")"
                        class="account-menu-link @(isFavoritesPage ? "favorite-active" : "")">
-                        ♡ Yêu thích
+                        Bài viết đã lưu
                     </a>
 
                 </div>
@@ -905,7 +1152,7 @@
                         <a href="@Url.Action("Index", "Home")">Trang chủ</a>
                         <a href="@Url.Action("Index", "Articles")">Tin tức</a>
                         <a href="@Url.Action("Index", "Categories")">Danh mục</a>
-                        <a href="@Url.Action("Index", "Authors")">Tác giả</a>
+                        <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index" })">Tác giả</a>
                     </div>
                 </div>
 
@@ -917,8 +1164,140 @@
         </div>
     </footer>
 
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="Cuộn lên đầu trang">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7"></path>
+        </svg>
+        <span>TOP</span>
+    </button>
+
     <!-- JAVASCRIPT TÀI KHOẢN -->
     <script>
+                var backToTop = document.getElementById('back-to-top');
+                if (backToTop) {
+                    backToTop.addEventListener('click', function () {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+
+                (function () {
+                    var strip = document.getElementById('weather-strip');
+                    var toggle = document.getElementById('weather-toggle');
+                    var panel = document.getElementById('weather-panel');
+                    var citySelect = document.getElementById('weather-city-select');
+                    var status = document.getElementById('weather-status');
+                    if (!strip || !toggle || !panel || !citySelect || !status) return;
+
+                    var cities = {
+                        'Ho Chi Minh City': { name: 'Hồ Chí Minh', latitude: 10.8231, longitude: 106.6297 },
+                        'Da Nang': { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022 },
+                        'Hanoi': { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342 },
+                        'Can Tho': { name: 'Cần Thơ', latitude: 10.0452, longitude: 105.7469 },
+                        'Hai Phong': { name: 'Hải Phòng', latitude: 20.8449, longitude: 106.6881 },
+                        'Nha Trang': { name: 'Nha Trang', latitude: 12.2388, longitude: 109.1967 }
+                    };
+
+                    var weatherLabels = function (code) {
+                        if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
+                        if (code === 1 || code === 2) return { text: 'Ít mây', icon: 'fa-cloud-sun' };
+                        if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
+                        if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
+                        if (code >= 51 && code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
+                        if (code >= 61 && code <= 67) return { text: 'Mưa', icon: 'fa-cloud-showers-heavy' };
+                        if (code >= 71 && code <= 77) return { text: 'Tuyết', icon: 'fa-snowflake' };
+                        if (code >= 80 && code <= 82) return { text: 'Mưa rào', icon: 'fa-cloud-showers-heavy' };
+                        if (code >= 85 && code <= 86) return { text: 'Mưa tuyết', icon: 'fa-snowflake' };
+                        if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
+                        return { text: 'Chưa rõ', icon: 'fa-cloud' };
+                    };
+
+                    var formatDate = function (date, options) {
+                        return new Intl.DateTimeFormat('vi-VN', options).format(date);
+                    };
+
+                    document.getElementById('weather-date').textContent = formatDate(new Date(), {
+                        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+                    });
+
+                    try {
+                        var savedCity = localStorage.getItem('newsPortalWeatherCity');
+                        if (savedCity && cities[savedCity]) citySelect.value = savedCity;
+                    } catch (ignore) { }
+
+                    var loadWeather = function () {
+                        var city = cities[citySelect.value];
+                        if (!city) return;
+                        status.textContent = 'Đang tải dữ liệu thời tiết…';
+                        document.getElementById('weather-city-summary').textContent = city.name;
+
+                        var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
+                            '&longitude=' + city.longitude +
+                            '&current=temperature_2m,relative_humidity_2m,weather_code' +
+                            '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
+                            '&timezone=auto&forecast_days=1';
+
+                        fetch(url)
+                            .then(function (response) {
+                                if (!response.ok) throw new Error('Weather request failed');
+                                return response.json();
+                            })
+                            .then(function (data) {
+                                if (!data.current || !data.daily) throw new Error('Weather data unavailable');
+                                var current = data.current;
+                                var daily = data.daily;
+                                var condition = weatherLabels(current.weather_code);
+                                var temperature = Math.round(current.temperature_2m);
+                                var iconClass = 'fa-solid ' + condition.icon;
+
+                                document.getElementById('weather-temp-summary').textContent = temperature + '°C';
+                                document.getElementById('weather-temp').textContent = temperature + '°';
+                                document.getElementById('weather-condition').textContent = condition.text;
+                                document.getElementById('weather-range').textContent =
+                                    Math.round(daily.temperature_2m_min[0]) + '° - ' + Math.round(daily.temperature_2m_max[0]) + '°';
+                                document.getElementById('weather-humidity').textContent = Math.round(current.relative_humidity_2m) + '%';
+                                document.getElementById('weather-date-full').textContent = formatDate(new Date(daily.time[0] + 'T12:00:00'), {
+                                    weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+                                });
+                                document.getElementById('weather-icon').className = 'weather-condition-icon ' + iconClass;
+                                document.getElementById('weather-icon-summary').className = 'weather-summary-icon ' + iconClass;
+                                status.textContent = 'Dữ liệu thời tiết trực tiếp từ Open-Meteo.';
+                            })
+                            .catch(function () {
+                                status.textContent = 'Không thể tải thời tiết. Vui lòng kiểm tra kết nối mạng.';
+                                document.getElementById('weather-condition').textContent = 'Chưa có dữ liệu';
+                            });
+                    };
+
+                    toggle.addEventListener('click', function () {
+                        var isOpen = strip.classList.toggle('is-open');
+                        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                        panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+                    });
+
+                    citySelect.addEventListener('change', function () {
+                        try { localStorage.setItem('newsPortalWeatherCity', citySelect.value); } catch (ignore) { }
+                        loadWeather();
+                    });
+
+                    document.addEventListener('click', function (event) {
+                        if (!strip.contains(event.target)) {
+                            strip.classList.remove('is-open');
+                            toggle.setAttribute('aria-expanded', 'false');
+                            panel.setAttribute('aria-hidden', 'true');
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape') {
+                            strip.classList.remove('is-open');
+                            toggle.setAttribute('aria-expanded', 'false');
+                            panel.setAttribute('aria-hidden', 'true');
+                        }
+                    });
+
+                    loadWeather();
+                }());
+
                 (function () {
                     var accountArea = document.getElementById('account-area');
                     var userToggle = document.getElementById('user-toggle');

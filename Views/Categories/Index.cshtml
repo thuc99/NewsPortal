@@ -102,6 +102,49 @@
             background: #991b1b;
         }
 
+    .admin-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 18px;
+        max-width: 620px;
+    }
+
+    .admin-search input {
+        flex: 1 1 320px;
+        width: 320px;
+        max-width: 100%;
+        min-width: 0;
+        height: 40px;
+        padding: 0 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font: inherit;
+    }
+
+    .admin-search button,
+    .admin-search a {
+        height: 40px;
+        flex: 0 0 auto;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .admin-search button,
+    .admin-search a {
+        display: inline-flex;
+        align-items: center;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 8px;
+        background: #e2e8f0;
+        color: #334155;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
     .action-link {
         display: inline-block;
         padding: 7px 10px;
@@ -153,6 +196,15 @@
             width: 100%;
             text-align: center;
         }
+
+        .admin-search {
+            flex-wrap: wrap;
+        }
+
+        .admin-search input {
+            flex-basis: 100%;
+            width: 100%;
+        }
     }
 </style>
 
@@ -173,6 +225,18 @@
             </div>
         }
     </div>
+
+    @if (isAdminManagement)
+    {
+        <form method="get" action="@Url.RouteUrl("AdminCategories", new { action = "Index" })" class="admin-search">
+            <input type="search" name="search" value="@(ViewBag.Search ?? "")" placeholder="Tìm theo tên hoặc mô tả danh mục..." />
+            <button type="submit">Tìm kiếm</button>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
+            {
+                <a href="@Url.RouteUrl("AdminCategories", new { action = "Index" })">Xóa</a>
+            }
+        </form>
+    }
 
     <div class="management-card">
         <table class="management-table">

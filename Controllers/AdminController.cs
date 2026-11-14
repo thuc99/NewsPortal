@@ -162,9 +162,11 @@ namespace NewsPortal.Controllers
 
         // GET: /Admin/Users
         [AdminAuthorize]
-        public ActionResult Users()
+        public ActionResult Users(string search)
         {
+            search = (search ?? string.Empty).Trim();
             var users = new List<AdminUserRow>();
+            int activeAdminCount;
 
             using (var conn = CreateConnection())
             {
@@ -172,29 +174,39 @@ namespace NewsPortal.Controllers
                 string sql = @"
                     SELECT UserId, Username, FullName, Email, Role, IsActive, CreatedAt AS CreatedDate
                     FROM dbo.Users
+                    WHERE (@search = N''
+                        OR Username LIKE N'%' + @search + N'%'
+                        OR FullName LIKE N'%' + @search + N'%'
+                        OR Email LIKE N'%' + @search + N'%'
+                        OR Role LIKE N'%' + @search + N'%')
                     ORDER BY UserId ASC;";
 
                 using (var cmd = new SqlCommand(sql, conn))
-                using (var reader = cmd.ExecuteReader())
                 {
-                    while (reader.Read())
+                    cmd.Parameters.AddWithValue("@search", search);
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        users.Add(new AdminUserRow
+                        while (reader.Read())
                         {
-                            UserID = Convert.ToInt32(reader["UserId"]),
-                            Username = Convert.ToString(reader["Username"]),
-                            FullName = Convert.ToString(reader["FullName"]),
-                            Email = reader["Email"] == DBNull.Value ? "" : Convert.ToString(reader["Email"]),
-                            Role = Convert.ToString(reader["Role"]),
-                            IsActive = Convert.ToBoolean(reader["IsActive"]),
-                            CreatedDate = Convert.ToDateTime(reader["CreatedDate"])
-                        });
+                            users.Add(new AdminUserRow
+                            {
+                                UserID = Convert.ToInt32(reader["UserId"]),
+                                Username = Convert.ToString(reader["Username"]),
+                                FullName = Convert.ToString(reader["FullName"]),
+                                Email = reader["Email"] == DBNull.Value ? "" : Convert.ToString(reader["Email"]),
+                                Role = Convert.ToString(reader["Role"]),
+                                IsActive = Convert.ToBoolean(reader["IsActive"]),
+                                CreatedDate = Convert.ToDateTime(reader["CreatedDate"])
+                            });
+                        }
+                    }
+
+                    using (var countCmd = new SqlCommand("SELECT COUNT(*) FROM dbo.Users WHERE IsActive = 1 AND Role = N'Admin';", conn))
+                    {
+                        activeAdminCount = Convert.ToInt32(countCmd.ExecuteScalar());
                     }
                 }
             }
-
-            int activeAdminCount = users.Count(u =>
-                u.IsActive && string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase));
 
             foreach (var user in users)
             {
@@ -206,6 +218,7 @@ namespace NewsPortal.Controllers
                 user.CanChangeRole = !isRootAdmin && !isLastActiveAdmin;
             }
 
+            ViewBag.Search = search;
             return View(users);
         }
 

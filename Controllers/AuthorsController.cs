@@ -38,12 +38,13 @@ namespace NewsPortal.Controllers
         }
 
         // Danh sách tác giả - mọi người đều được xem
-        public ActionResult Index(string search)
+        public ActionResult Index(string search, int? id)
         {
             var denied = CheckAdminManagementAccess();
             if (denied != null) return denied;
 
-            ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            bool isAdminManagement = IsAdminManagementRequest();
+            ViewBag.IsAdminManagement = isAdminManagement;
             var query = db.Authors.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -56,6 +57,44 @@ namespace NewsPortal.Controllers
             }
 
             ViewBag.Search = search;
+
+            int? selectedAuthorId = id;
+            if (!selectedAuthorId.HasValue && !isAdminManagement && string.IsNullOrWhiteSpace(search))
+            {
+                var mostPublishedArticles = db.Articles
+                    .Where(a => a.Status == "Published")
+                    .GroupBy(a => a.AuthorID)
+                    .Select(group => new { AuthorID = group.Key, ArticleCount = group.Count() })
+                    .OrderByDescending(group => group.ArticleCount)
+                    .ThenBy(group => group.AuthorID)
+                    .FirstOrDefault();
+
+                selectedAuthorId = mostPublishedArticles != null
+                    ? (int?)mostPublishedArticles.AuthorID
+                    : db.Authors.OrderBy(a => a.AuthorName).Select(a => (int?)a.AuthorID).FirstOrDefault();
+            }
+
+            if (selectedAuthorId.HasValue && !isAdminManagement)
+            {
+                var selectedAuthor = db.Authors.Find(selectedAuthorId.Value);
+                if (selectedAuthor == null) return HttpNotFound();
+
+                var publishedArticles = db.Articles
+                    .Where(a => a.AuthorID == selectedAuthorId.Value && a.Status == "Published")
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToList();
+
+                ViewBag.SelectedAuthor = selectedAuthor;
+                ViewBag.ShowAuthorProfile = true;
+                ViewBag.Articles = publishedArticles;
+                ViewBag.ArticleCount = publishedArticles.Count;
+                ViewBag.SuggestedAuthors = db.Authors
+                    .Where(a => a.AuthorID != selectedAuthorId.Value)
+                    .OrderBy(a => a.AuthorName)
+                    .Take(6)
+                    .ToList();
+                ViewBag.CategoryNames = db.Categories.ToDictionary(c => c.CategoryID, c => c.CategoryName);
+            }
 
             return View(query.OrderBy(a => a.AuthorName).ToList());
         }
@@ -207,19 +246,10 @@ namespace NewsPortal.Controllers
             var denied = CheckAdminManagementAccess();
             if (denied != null) return denied;
 
-            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-            var author = db.Authors.Find(id);
-            if (author == null) return HttpNotFound();
-
-            ViewBag.Articles = db.Articles
-                .Where(a => a.AuthorID == id && a.Status == "Published")
-                .OrderByDescending(a => a.CreatedDate)
-                .ToList();
-
-            // Tên danh mục để hiện trên thẻ bài
-            ViewBag.CategoryNames = db.Categories.ToDictionary(x => x.CategoryID, x => x.CategoryName);
-            return View(author);
+            return IsAdminManagementRequest()
+                ? RedirectToRoute("AdminAuthors", new { action = "Index", id = id })
+                : RedirectToRoute("PublicAuthor", new { action = "Index", id = id });
         }
 
         protected override void Dispose(bool disposing)

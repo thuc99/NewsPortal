@@ -54,6 +54,55 @@
             font-size: 14px;
         }
 
+        .usr-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            max-width: 620px;
+        }
+
+        .usr-search input {
+            flex: 1 1 320px;
+            width: 320px;
+            max-width: 100%;
+            min-width: 0;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .usr-search .search-button,
+        .usr-search .filter-reset {
+            flex: 0 0 auto;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            white-space: nowrap;
+        }
+
+        .usr-search .search-button {
+            border: 0;
+            border-radius: 8px;
+            background: var(--red);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .usr-search .filter-reset {
+            border-radius: 8px;
+            background: var(--soft);
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
             .usr-table th {
                 text-align: left;
                 padding: 11px 10px;
@@ -91,6 +140,11 @@
             .usr-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        @@media (max-width: 520px) {
+            .usr-search { flex-wrap: wrap; }
+            .usr-search input { flex-basis: 100%; width: 100%; }
         }
     </style>
 }
@@ -151,6 +205,14 @@
 
     <div class="usr-box" style="overflow-x:auto;">
         <h3 style="margin-top:0;"><i class="fa-solid fa-users" style="color:var(--red);"></i> Danh sách tài khoản</h3>
+        <form method="get" action="@Url.RouteUrl("Admin", new { action = "Users" })" class="usr-search">
+            <input type="search" name="search" value="@(ViewBag.Search ?? "")" placeholder="Tìm tên đăng nhập, họ tên, email hoặc vai trò..." />
+            <button type="submit" class="search-button">Tìm kiếm</button>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
+            {
+                <a href="@Url.RouteUrl("Admin", new { action = "Users" })" class="filter-reset">Xóa</a>
+            }
+        </form>
         <table class="usr-table">
             <thead>
                 <tr>
@@ -165,62 +227,69 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var u in Model)
+                @if (Model != null && Model.Any())
                 {
-                    <tr>
-                        <td>@u.UserID</td>
-                        <td style="font-weight:700;">@u.Username</td>
-                        <td>@u.FullName</td>
-                        <td>@(string.IsNullOrEmpty(u.Email) ? "---" : u.Email)</td>
-                        <td>
-                            @if (u.CanChangeRole)
-                            {
-                                using (Html.BeginForm("UpdateUserRole", "Admin", FormMethod.Post, new { style = "display:flex; gap:5px; align-items:center;" }))
+                    foreach (var u in Model)
+                    {
+                        <tr>
+                            <td>@u.UserID</td>
+                            <td style="font-weight:700;">@u.Username</td>
+                            <td>@u.FullName</td>
+                            <td>@(string.IsNullOrEmpty(u.Email) ? "---" : u.Email)</td>
+                            <td>
+                                @if (u.CanChangeRole)
                                 {
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@u.UserID" />
-                                    <select name="role" style="height:32px; border:1px solid var(--line); border-radius:6px;">
-                                        <option value="Admin" @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Admin</option>
-                                        <option value="Editor" @(string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Editor</option>
-                                        <option value="User" @(string.Equals(u.Role, "User", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>User</option>
-                                    </select>
-                                    <button type="submit" style="padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer;">Lưu</button>
+                                    using (Html.BeginForm("UpdateUserRole", "Admin", FormMethod.Post, new { style = "display:flex; gap:5px; align-items:center;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@u.UserID" />
+                                        <select name="role" style="height:32px; border:1px solid var(--line); border-radius:6px;">
+                                            <option value="Admin" @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Admin</option>
+                                            <option value="Editor" @(string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Editor</option>
+                                            <option value="User" @(string.Equals(u.Role, "User", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>User</option>
+                                        </select>
+                                        <button type="submit" style="padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer;">Lưu</button>
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                <strong>@u.Role</strong>
-                            }
-                        </td>
-                        <td>@u.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
-                            @if (u.IsActive)
-                            {
-                                <span style="color:#16a34a; font-weight:700;">Hoạt động</span>
-                            }
-                            else
-                            {
-                                <span style="color:#dc2626; font-weight:700;">Đã khóa</span>
-                            }
-                        </td>
-                        <td style="text-align:right;">
-                            @if (u.CanToggleStatus)
-                            {
-                                using (Html.BeginForm("ToggleUserActive", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                else
                                 {
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@u.UserID" />
-                                    <button type="submit" style="padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; font-weight:600;">
-                                        @(u.IsActive ? "Khóa" : "Mở khóa")
-                                    </button>
+                                    <strong>@u.Role</strong>
                                 }
-                            }
-                            else
-                            {
-                                <span style="color:var(--muted); font-size:12px;">Mặc định</span>
-                            }
-                        </td>
-                    </tr>
+                            </td>
+                            <td>@u.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (u.IsActive)
+                                {
+                                    <span style="color:#16a34a; font-weight:700;">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span style="color:#dc2626; font-weight:700;">Đã khóa</span>
+                                }
+                            </td>
+                            <td style="text-align:right;">
+                                @if (u.CanToggleStatus)
+                                {
+                                    using (Html.BeginForm("ToggleUserActive", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@u.UserID" />
+                                        <button type="submit" style="padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; font-weight:600;">
+                                            @(u.IsActive ? "Khóa" : "Mở khóa")
+                                        </button>
+                                    }
+                                }
+                                else
+                                {
+                                    <span style="color:var(--muted); font-size:12px;">Mặc định</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:24px;">Không tìm thấy tài khoản phù hợp.</td></tr>
                 }
             </tbody>
         </table>

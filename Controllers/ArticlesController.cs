@@ -237,6 +237,7 @@ namespace NewsPortal.Controllers
             int articleId = id.Value;
             var article = db.Articles
                 .Include(a => a.Categories)
+                .Include(a => a.Authors)
                 .FirstOrDefault(a => a.ArticleID == articleId);
 
             bool canManageArticles = IsAdminArticleRequest() && CanManageArticles();
@@ -261,6 +262,8 @@ namespace NewsPortal.Controllers
                 .Where(c => c.ArticleID == articleId)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToList();
+            ViewBag.AuthorId = article.AuthorID;
+            ViewBag.AuthorName = article.Authors == null ? null : article.Authors.AuthorName;
             ViewBag.RatingCount = db.ArticleRatings.Count(r => r.ArticleID == articleId);
             ViewBag.CanManageArticles = canManageArticles;
             ViewBag.IsAdminManagement = IsAdminArticleRequest();

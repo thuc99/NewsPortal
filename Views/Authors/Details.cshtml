@@ -3,17 +3,44 @@
 @{
     ViewBag.Title = Model.AuthorName;
     bool isAdminManagement = ViewBag.IsAdminManagement == true;
+    bool isAdminLayout = (Request.AppRelativeCurrentExecutionFilePath ?? string.Empty)
+        .StartsWith("~/Admin/", StringComparison.OrdinalIgnoreCase);
     var articles = ViewBag.Articles as List<NewsPortal.Models.Articles>
                    ?? new List<NewsPortal.Models.Articles>();
     var categoryNames = ViewBag.CategoryNames as Dictionary<int, string>
                         ?? new Dictionary<int, string>();
+    var suggestedAuthors = ViewBag.SuggestedAuthors as List<NewsPortal.Models.Author>
+                           ?? new List<NewsPortal.Models.Author>();
+    int articleCount = ViewBag.ArticleCount == null ? articles.Count : (int)ViewBag.ArticleCount;
 }
 
 @section styles {
     <style>
+        .author-details-page {
+            display: grid;
+            grid-template-columns: minmax(240px, 310px) minmax(0, 1fr);
+            gap: 24px;
+            max-width: 1160px;
+            margin: 36px auto;
+        }
+
+        .author-sidebar,
+        .author-profile,
+        .author-suggestions {
+            min-width: 0;
+        }
+
+        .author-profile,
+        .author-suggestions {
+            padding: 18px;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            background: #fff;
+        }
+
         .dt-back {
             display: inline-block;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             color: #64748b;
             font-size: 14px;
             text-decoration: none;
@@ -26,33 +53,59 @@
         .dt-head {
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin: 0 0 14px;
         }
 
         .dt-avatar {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 64px;
-            height: 64px;
+            width: 56px;
+            height: 56px;
+            flex: 0 0 56px;
             border-radius: 50%;
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: #e2e8f0;
+            color: #475569;
             font-weight: 700;
-            font-size: 26px;
+            font-size: 22px;
+        }
+
+        .dt-label {
+            margin: 0 0 4px;
+            color: #64748b;
+            font-size: 13px;
         }
 
         .dt-title {
             margin: 0;
-            font-size: 30px;
+            font-size: 17px;
             font-weight: 700;
+            line-height: 1.35;
         }
 
         .dt-sub {
             color: #64748b;
-            margin: 4px 0 0;
-            font-size: 14px;
+            margin: 8px 0 14px;
+            font-size: 12px;
+        }
+
+        .author-email {
+            display: block;
+            margin-top: 0;
+            padding: 8px 10px;
+            border-radius: 4px;
+            background: var(--red);
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 700;
+            font-family: inherit;
+        }
+
+        .author-email:hover {
+            background: var(--red-dark);
+            color: #fff;
         }
 
         .dt-edit {
@@ -63,16 +116,40 @@
             font-weight: 700;
         }
 
+        .author-articles .article-list-title {
+            margin: 0 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #b91c32;
+            color: #1f2937;
+            font-family: "Segoe UI", Arial, sans-serif !important;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: normal;
+            word-spacing: normal;
+        }
+
+        .author-articles .article-list-title span {
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .article-month {
+            margin: 16px 0 12px;
+            padding: 7px 10px;
+            background: #f3f4f6;
+            color: #b91c32;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
         .dt-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px 16px;
         }
 
         .dt-card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -80,22 +157,21 @@
 
             .dt-card img {
                 width: 100%;
-                aspect-ratio: 4 / 3;
+                aspect-ratio: 16 / 10;
                 object-fit: cover;
                 display: block;
             }
 
         .dt-noimg {
             width: 100%;
-            aspect-ratio: 4 / 3;
-            background: #fee2e2;
+            aspect-ratio: 16 / 10;
+            background: #e5e7eb;
         }
 
         .dt-body {
-            padding: 16px;
+            padding: 8px 0 0;
             display: flex;
             flex-direction: column;
-            gap: 8px;
             flex: 1;
         }
 
@@ -107,8 +183,10 @@
         }
 
         .dt-card h3 {
-            margin: 0;
-            font-size: 17px;
+            margin: 0 0 8px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
             line-height: 1.4;
         }
 
@@ -123,7 +201,7 @@
 
         .dt-sum {
             color: #64748b;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .dt-meta {
@@ -143,58 +221,160 @@
             color: #94a3b8;
             padding: 30px 0;
         }
+
+        .suggestion-title {
+            margin: 0 0 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .suggested-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px dotted #d1d5db;
+        }
+
+        .suggested-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .suggested-label {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .suggested-author a {
+            color: #374151;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .suggested-author a:hover {
+            color: var(--red);
+        }
+
+        @@media (max-width: 900px) {
+            .author-details-page { grid-template-columns: 230px minmax(0, 1fr); gap: 18px; }
+            .dt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @@media (max-width: 650px) {
+            .author-details-page { grid-template-columns: 1fr; margin: 18px auto; }
+            .dt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+            .author-suggestions { display: none; }
+        }
+
+        @@media (min-width: 651px) {
+            .author-details-page { padding: 0 16px; }
+        }
+
+        @@media (max-width: 420px) {
+            .dt-grid { grid-template-columns: 1fr; }
+        }
     </style>
 }
 
-<a class="dt-back" href="@(isAdminManagement ? Url.RouteUrl("AdminAuthors", new { action = "Index" }) : Url.Action("Index", "Authors"))">« Tất cả tác giả</a>
-
-<div class="dt-head">
-    <span class="dt-avatar">
-        @(string.IsNullOrWhiteSpace(Model.AuthorName)
-            ? "?"
-            : Model.AuthorName.Trim().Substring(0, 1).ToUpper())
-    </span>
-    <div>
-        <h1 class="dt-title">
-            @Model.AuthorName
-            @if (isAdminManagement)
-            {
-                <a class="dt-edit" href="@Url.RouteUrl("AdminAuthors", new { action = "Edit", id = Model.AuthorID })">Sửa</a>
-            }
-        </h1>
-        <p class="dt-sub">@Model.Email · @articles.Count bài viết</p>
-    </div>
-</div>
-
-@if (!articles.Any())
-{
-    <div class="dt-empty">Tác giả này chưa có bài viết nào.</div>
-}
-else
-{
-    <div class="dt-grid">
-        @foreach (var a in articles)
-        {
-            <div class="dt-card">
-                @if (!string.IsNullOrWhiteSpace(a.ImageUrl))
-                {
-                    <img src="@a.ImageUrl" alt="" />
-                }
-                else
-                {
-                    <div class="dt-noimg"></div>
-                }
-                <div class="dt-body">
-                    @if (categoryNames.ContainsKey(a.CategoryID))
-                    {
-                        <div class="dt-cat">@categoryNames[a.CategoryID]</div>
-                    }
-                    <h3><a href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = a.ArticleID }) : Url.Action("Details", "Articles", new { id = a.ArticleID }))">@a.Title</a></h3>
-                    <div class="dt-sum">@a.Summary</div>
-                    <div class="dt-meta">@a.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
-                    <a class="dt-more" href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = a.ArticleID }) : Url.Action("Details", "Articles", new { id = a.ArticleID }))">Đọc tiếp</a>
+<div class="author-details-page">
+    @if (!isAdminLayout)
+    {
+        <aside class="author-sidebar">
+            <a class="dt-back" href="@Url.RouteUrl("PublicAuthor", new { action = "Index" })">« Tất cả tác giả</a>
+        <section class="author-profile">
+            <div class="dt-head">
+                <span class="dt-avatar">
+                    @(string.IsNullOrWhiteSpace(Model.AuthorName) ? "?" : Model.AuthorName.Trim().Substring(0, 1).ToUpper())
+                </span>
+                <div>
+                    <p class="dt-label">Tác giả</p>
+                    <h1 class="dt-title">
+                        @Model.AuthorName
+                        @if (isAdminManagement)
+                        {
+                            <a class="dt-edit" href="@Url.RouteUrl("AdminAuthors", new { action = "Edit", id = Model.AuthorID })">Sửa</a>
+                        }
+                    </h1>
                 </div>
             </div>
+            <p class="dt-sub">@articleCount bài viết đã xuất bản</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Email))
+            {
+                <a class="author-email" href="mailto:@Model.Email">Gửi Email cho tác giả</a>
+            }
+        </section>
+
+        @if (suggestedAuthors.Any())
+        {
+            <section class="author-suggestions" style="margin-top:14px;">
+                <h2 class="suggestion-title">Có thể bạn quan tâm</h2>
+                @foreach (var suggested in suggestedAuthors)
+                {
+                    <div class="suggested-author">
+                        <span class="suggested-avatar">@(string.IsNullOrWhiteSpace(suggested.AuthorName) ? "?" : suggested.AuthorName.Trim().Substring(0, 1).ToUpper())</span>
+                        <div>
+                            <span class="suggested-label">Tác giả</span>
+                            <a href="@(isAdminManagement ? Url.RouteUrl("AdminAuthors", new { action = "Details", id = suggested.AuthorID }) : Url.RouteUrl("PublicAuthor", new { action = "Index", id = suggested.AuthorID }))">@suggested.AuthorName</a>
+                        </div>
+                    </div>
+                }
+            </section>
         }
-    </div>
-}
+        </aside>
+    }
+
+    <section class="author-articles" style="@(isAdminLayout ? "grid-column: 1 / -1;" : "")">
+        <h2 class="article-list-title">Danh sách bài viết <span>(@articleCount bài)</span></h2>
+        @if (!articles.Any())
+        {
+            <div class="dt-empty">Tác giả này chưa có bài viết nào.</div>
+        }
+        else
+        {
+            foreach (var monthGroup in articles.GroupBy(a => new { a.CreatedDate.Year, a.CreatedDate.Month }))
+            {
+                <h3 class="article-month">Tháng @monthGroup.Key.Month, @monthGroup.Key.Year</h3>
+                <div class="dt-grid">
+                    @foreach (var a in monthGroup)
+                    {
+                        var articleUrl = isAdminManagement
+                            ? Url.RouteUrl("AdminArticles", new { action = "Details", id = a.ArticleID })
+                            : Url.Action("Details", "Articles", new { id = a.ArticleID });
+                        <article class="dt-card">
+                            <a href="@articleUrl">
+                                @if (!string.IsNullOrWhiteSpace(a.ImageUrl))
+                                {
+                                    <img src="@a.ImageUrl" alt="@a.Title" />
+                                }
+                                else
+                                {
+                                    <div class="dt-noimg"></div>
+                                }
+                            </a>
+                            <div class="dt-body">
+                                @if (categoryNames.ContainsKey(a.CategoryID))
+                                {
+                                    <div class="dt-cat">@categoryNames[a.CategoryID]</div>
+                                }
+                                <h3><a href="@articleUrl">@a.Title</a></h3>
+                                <div class="dt-meta">@a.CreatedDate.ToString("dd/MM/yyyy")</div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        }
+    </section>
+</div>

@@ -51,12 +51,24 @@ namespace NewsPortal.Controllers
                 string keyword = search.Trim();
 
                 query = query.Where(c =>
-                    c.CategoryName.Contains(keyword));
+                    c.CategoryName.Contains(keyword) ||
+                    c.Description.Contains(keyword));
             }
 
             ViewBag.Search = search;
 
             return View(query.OrderBy(c => c.CategoryName).ToList());
+        }
+
+        [ChildActionOnly]
+        public ActionResult Navigation(string activeCategoryId)
+        {
+            var categories = db.Categories
+                .OrderBy(c => c.CategoryName)
+                .ToList();
+
+            ViewBag.ActiveCategoryId = activeCategoryId;
+            return PartialView("_Navigation", categories);
         }
 
         // GET: Categories/Create
