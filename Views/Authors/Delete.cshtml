@@ -91,14 +91,13 @@
             <strong>Email:</strong> @Model.Email
         </div>
 
-        @using (Html.BeginForm("Delete", "Authors", new { id = Model.AuthorID }, FormMethod.Post))
-        {
+        <form action="@Url.RouteUrl("AdminAuthors", new { action = "Delete", id = Model.AuthorID })" method="post">
             @Html.AntiForgeryToken()
 
             <div class="delete-actions">
                 <button type="submit" class="btn-delete">Xác nhận xóa</button>
-                @Html.ActionLink("Hủy", "Index", null, new { @class = "btn-back" })
+                @Html.RouteLink("Hủy", "AdminAuthors", new { action = "Index" }, new { @class = "btn-back" })
             </div>
-        }
+        </form>
     </div>
 </div>

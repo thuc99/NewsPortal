@@ -146,9 +146,7 @@
         <p>Điền thông tin bên dưới để tạo bài viết mới.</p>
     </div>
 
-    @using (Html.BeginForm("Create", "Articles", FormMethod.Post,
-        new { enctype = "multipart/form-data" }))
-    {
+    <form action="@Url.RouteUrl("AdminArticles", new { action = "Create" })" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
@@ -180,7 +178,7 @@
             @Html.ActionLink("Quay lại danh sách", "Index", null,
                 new { @class = "btn-create btn-back" })
         </div>
-    }
+    </form>
 </div>
 
 <script>

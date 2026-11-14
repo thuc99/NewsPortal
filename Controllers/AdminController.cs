@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity.Core.EntityClient;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web.Mvc;
 using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
 {
-    [AdminAuthorize]
+    [AdminAreaAuthorize]
     public class AdminController : Controller
     {
         private SqlConnection CreateConnection()
@@ -50,6 +53,9 @@ namespace NewsPortal.Controllers
         // GET: /Admin
         public ActionResult Index(string search = "", string status = "")
         {
+            if (Session["Admin"] == null)
+                return RedirectToRoute("AdminArticles", new { action = "Index" });
+
             var model = new AdminDashboardViewModel
             {
                 SearchQuery = search ?? "",
@@ -129,6 +135,7 @@ namespace NewsPortal.Controllers
         }
 
         // POST: /Admin/ToggleStatus
+        [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ToggleStatus(int id, string search = "", string status = "")
@@ -154,6 +161,7 @@ namespace NewsPortal.Controllers
         }
 
         // GET: /Admin/Users
+        [AdminAuthorize]
         public ActionResult Users()
         {
             var users = new List<AdminUserRow>();
@@ -162,9 +170,9 @@ namespace NewsPortal.Controllers
             {
                 conn.Open();
                 string sql = @"
-                    SELECT UserID, Username, FullName, Email, Role, IsActive, CreatedDate
+                    SELECT UserId, Username, FullName, Email, Role, IsActive, CreatedAt AS CreatedDate
                     FROM dbo.Users
-                    ORDER BY UserID ASC;";
+                    ORDER BY UserId ASC;";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 using (var reader = cmd.ExecuteReader())
@@ -173,7 +181,7 @@ namespace NewsPortal.Controllers
                     {
                         users.Add(new AdminUserRow
                         {
-                            UserID = Convert.ToInt32(reader["UserID"]),
+                            UserID = Convert.ToInt32(reader["UserId"]),
                             Username = Convert.ToString(reader["Username"]),
                             FullName = Convert.ToString(reader["FullName"]),
                             Email = reader["Email"] == DBNull.Value ? "" : Convert.ToString(reader["Email"]),
@@ -185,17 +193,93 @@ namespace NewsPortal.Controllers
                 }
             }
 
+            int activeAdminCount = users.Count(u =>
+                u.IsActive && string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase));
+
+            foreach (var user in users)
+            {
+                bool isRootAdmin = string.Equals(user.Username, "admin", StringComparison.OrdinalIgnoreCase);
+                bool isLastActiveAdmin = user.IsActive &&
+                    string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase) &&
+                    activeAdminCount <= 1;
+                user.CanToggleStatus = !isLastActiveAdmin && !(isRootAdmin && user.IsActive);
+                user.CanChangeRole = !isRootAdmin && !isLastActiveAdmin;
+            }
+
             return View(users);
         }
 
         // POST: /Admin/CreateUser
+        [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult CreateUser(string username, string password, string fullName, string email, string role)
         {
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
+            username = (username ?? "").Trim();
+            fullName = (fullName ?? "").Trim();
+            email = (email ?? "").Trim();
+            role = string.IsNullOrWhiteSpace(role) ? "User" : role.Trim();
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
+                string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email))
             {
-                TempData["AdminError"] = "Vui lòng nhập đầy đủ Tài khoản, Mật khẩu và Họ tên.";
+                TempData["AdminError"] = "Vui lòng nhập đầy đủ Tài khoản, Mật khẩu, Họ tên và Email.";
+                return RedirectToAction("Users");
+            }
+
+            if (username.Length < 3 || username.Length > 30 || Regex.IsMatch(username, @"\s"))
+            {
+                TempData["AdminError"] = "Tên đăng nhập phải từ 3 đến 30 ký tự và không chứa khoảng trắng.";
+                return RedirectToAction("Users");
+            }
+
+            if (string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["AdminError"] = "Tên đăng nhập 'admin' được dành riêng cho tài khoản gốc.";
+                return RedirectToAction("Users");
+            }
+
+            if (fullName.Length < 2 || fullName.Length > 100)
+            {
+                TempData["AdminError"] = "Họ tên phải từ 2 đến 100 ký tự.";
+                return RedirectToAction("Users");
+            }
+
+            if (password.Trim().Length < 6 || password.Length > 64)
+            {
+                TempData["AdminError"] = "Mật khẩu phải từ 6 đến 64 ký tự.";
+                return RedirectToAction("Users");
+            }
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                bool validEmail = email.Length <= 256;
+                try
+                {
+                    var address = new MailAddress(email);
+                    validEmail = validEmail && string.Equals(address.Address, email, StringComparison.OrdinalIgnoreCase);
+                }
+                catch (FormatException)
+                {
+                    validEmail = false;
+                }
+
+                if (!validEmail)
+                {
+                    TempData["AdminError"] = "Email không đúng định dạng hoặc vượt quá 256 ký tự.";
+                    return RedirectToAction("Users");
+                }
+            }
+
+            if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase))
+                role = "Editor";
+            else if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+                role = "Admin";
+            else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
+                role = "User";
+            else
+            {
+                TempData["AdminError"] = "Vai trò không hợp lệ.";
                 return RedirectToAction("Users");
             }
 
@@ -205,52 +289,181 @@ namespace NewsPortal.Controllers
 
                 using (var checkCmd = new SqlCommand("SELECT COUNT(*) FROM dbo.Users WHERE Username = @u", conn))
                 {
-                    checkCmd.Parameters.AddWithValue("@u", username.Trim());
+                    checkCmd.Parameters.AddWithValue("@u", username);
                     if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
                     {
-                        TempData["AdminError"] = "Tên đăng nhập '" + username.Trim() + "' đã tồn tại.";
+                        TempData["AdminError"] = "Tên đăng nhập '" + username + "' đã tồn tại.";
+                        return RedirectToAction("Users");
+                    }
+                }
+
+                using (var checkEmailCmd = new SqlCommand("SELECT COUNT(*) FROM dbo.Users WHERE Email = @email", conn))
+                {
+                    checkEmailCmd.Parameters.AddWithValue("@email", email);
+                    if (Convert.ToInt32(checkEmailCmd.ExecuteScalar()) > 0)
+                    {
+                        TempData["AdminError"] = "Email này đã được sử dụng cho tài khoản khác.";
                         return RedirectToAction("Users");
                     }
                 }
 
                 string insertSql = @"
-                    INSERT INTO dbo.Users (Username, PasswordHash, FullName, Email, Role, IsActive, CreatedDate)
+                    INSERT INTO dbo.Users (Username, PasswordHash, FullName, Email, Role, IsActive, CreatedAt)
                     VALUES (@u, @p, @fn, @em, @role, 1, GETDATE());";
 
                 using (var cmd = new SqlCommand(insertSql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@u", username.Trim());
+                    cmd.Parameters.AddWithValue("@u", username);
                     cmd.Parameters.AddWithValue("@p", ComputeSha256(password.Trim()));
-                    cmd.Parameters.AddWithValue("@fn", fullName.Trim());
-                    cmd.Parameters.AddWithValue("@em", string.IsNullOrWhiteSpace(email) ? (object)DBNull.Value : email.Trim());
-                    cmd.Parameters.AddWithValue("@role", string.IsNullOrWhiteSpace(role) ? "Editor" : role.Trim());
+                    cmd.Parameters.AddWithValue("@fn", fullName);
+                    cmd.Parameters.AddWithValue("@em", email);
+                    cmd.Parameters.AddWithValue("@role", role);
                     cmd.ExecuteNonQuery();
                 }
             }
 
-            TempData["AdminMessage"] = "Đã tạo tài khoản '" + username.Trim() + "' thành công.";
+            TempData["AdminMessage"] = "Đã tạo tài khoản '" + username + "' thành công.";
             return RedirectToAction("Users");
         }
 
-        // POST: /Admin/ToggleUserActive
+        // POST: /Admin/UpdateUserRole
+        [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ToggleUserActive(int id)
+        public ActionResult UpdateUserRole(int id, string role)
         {
-            if (id == 1)
+            role = (role ?? "").Trim();
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+                role = "Admin";
+            else if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase))
+                role = "Editor";
+            else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
+                role = "User";
+            else
             {
-                TempData["AdminError"] = "Không thể khóa tài khoản Quản trị viên gốc.";
+                TempData["AdminError"] = "Vai trò không hợp lệ.";
                 return RedirectToAction("Users");
             }
 
             using (var conn = CreateConnection())
             {
                 conn.Open();
-                string sql = "UPDATE dbo.Users SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE UserID = @id;";
+                const string accountSql = "SELECT Username, Role, IsActive FROM dbo.Users WHERE UserId = @id;";
+                string username;
+                string currentRole;
+                bool isActive;
+
+                using (var cmd = new SqlCommand(accountSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                        {
+                            TempData["AdminError"] = "Không tìm thấy tài khoản.";
+                            return RedirectToAction("Users");
+                        }
+
+                        username = Convert.ToString(reader["Username"]);
+                        currentRole = Convert.ToString(reader["Role"]);
+                        isActive = Convert.ToBoolean(reader["IsActive"]);
+                    }
+                }
+
+                bool isRootAdmin = string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase);
+                bool isSelf = string.Equals(Convert.ToString(Session["Admin"]), username, StringComparison.OrdinalIgnoreCase);
+                if (role != "Admin" && (isRootAdmin || isSelf))
+                {
+                    TempData["AdminError"] = "Không thể hạ cấp tài khoản Admin gốc hoặc tài khoản đang đăng nhập.";
+                    return RedirectToAction("Users");
+                }
+
+                if (isActive && string.Equals(currentRole, "Admin", StringComparison.OrdinalIgnoreCase) && role != "Admin")
+                {
+                    const string countSql = "SELECT COUNT(*) FROM dbo.Users WHERE Role = N'Admin' AND IsActive = 1;";
+                    using (var countCmd = new SqlCommand(countSql, conn))
+                    {
+                        if (Convert.ToInt32(countCmd.ExecuteScalar()) <= 1)
+                        {
+                            TempData["AdminError"] = "Không thể hạ cấp Admin đang hoạt động cuối cùng.";
+                            return RedirectToAction("Users");
+                        }
+                    }
+                }
+
+                const string updateSql = "UPDATE dbo.Users SET Role = @role WHERE UserId = @id;";
+                using (var updateCmd = new SqlCommand(updateSql, conn))
+                {
+                    updateCmd.Parameters.AddWithValue("@role", role);
+                    updateCmd.Parameters.AddWithValue("@id", id);
+                    updateCmd.ExecuteNonQuery();
+                }
+            }
+
+            TempData["AdminMessage"] = "Đã cập nhật vai trò tài khoản.";
+            return RedirectToAction("Users");
+        }
+
+        // POST: /Admin/ToggleUserActive
+        [AdminAuthorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ToggleUserActive(int id)
+        {
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+
+                string accountSql = "SELECT Username, Role, IsActive FROM dbo.Users WHERE UserId = @id;";
+                string username;
+                string role;
+                bool isActive;
+
+                using (var accountCmd = new SqlCommand(accountSql, conn))
+                {
+                    accountCmd.Parameters.AddWithValue("@id", id);
+                    using (var reader = accountCmd.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                        {
+                            TempData["AdminError"] = "Không tìm thấy tài khoản.";
+                            return RedirectToAction("Users");
+                        }
+
+                        username = Convert.ToString(reader["Username"]);
+                        role = Convert.ToString(reader["Role"]);
+                        isActive = Convert.ToBoolean(reader["IsActive"]);
+                    }
+                }
+
+                if (isActive && string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData["AdminError"] = "Không thể khóa tài khoản Quản trị viên gốc.";
+                    return RedirectToAction("Users");
+                }
+
+                if (isActive && string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    const string countSql = "SELECT COUNT(*) FROM dbo.Users WHERE Role = N'Admin' AND IsActive = 1;";
+                    using (var countCmd = new SqlCommand(countSql, conn))
+                    {
+                        if (Convert.ToInt32(countCmd.ExecuteScalar()) <= 1)
+                        {
+                            TempData["AdminError"] = "Không thể khóa Admin đang hoạt động cuối cùng.";
+                            return RedirectToAction("Users");
+                        }
+                    }
+                }
+
+                string sql = "UPDATE dbo.Users SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE UserId = @id;";
                 using (var cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", id);
-                    cmd.ExecuteNonQuery();
+                    if (cmd.ExecuteNonQuery() == 0)
+                    {
+                        TempData["AdminError"] = "Không tìm thấy tài khoản.";
+                        return RedirectToAction("Users");
+                    }
                 }
             }
 

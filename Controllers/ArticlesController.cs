@@ -13,19 +13,49 @@ namespace NewsPortal.Controllers
     {
         private readonly NewsPortalDBEntities db = new NewsPortalDBEntities();
 
-        private ActionResult CheckAdminPermission(string actionLabel)
+        private bool CanManageArticles()
         {
-            if (Session["Admin"] != null)
-                return null;
+            return Session["Admin"] != null ||
+                string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase);
+        }
 
-            if (Session["User"] != null)
+        private bool IsAdminArticleRequest()
+        {
+            return (Request.AppRelativeCurrentExecutionFilePath ?? string.Empty)
+                .StartsWith("~/Admin/Article", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private ActionResult RedirectToArticleManagement()
+        {
+            return RedirectToRoute("AdminArticles", new { action = "Index" });
+        }
+
+        private ActionResult CheckArticlePermission(string actionLabel)
+        {
+            if (!CanManageArticles())
             {
-                TempData["Error"] = "Bạn không có quyền " + actionLabel + " bài viết. Chức năng này chỉ dành cho Quản trị viên.";
-                return RedirectToAction("Index");
+                if (Session["User"] != null)
+                {
+                    TempData["Error"] = "Bạn không có quyền " + actionLabel + " bài viết. Chức năng này chỉ dành cho Admin và Editor.";
+                    return RedirectToAction("Index", "Articles");
+                }
+
+                TempData["Error"] = "Vui lòng đăng nhập tài khoản Admin hoặc Editor trước khi truy cập chức năng này.";
+                return RedirectToAction("Login", "Account");
             }
 
-            TempData["Error"] = "Vui lòng đăng nhập tài khoản Quản trị viên trước khi truy cập trang này.";
-            return RedirectToAction("Login", "Account");
+            if (!IsAdminArticleRequest())
+                return RedirectToArticleManagement();
+
+            return null;
+        }
+
+        private ActionResult CheckAdminArticlePage()
+        {
+            if (!IsAdminArticleRequest())
+                return null;
+
+            return CheckArticlePermission("quản lý");
         }
 
         private void ValidateArticleInput(Article article, HttpPostedFileBase imageFile, bool checkStatus = false)
@@ -73,15 +103,20 @@ namespace NewsPortal.Controllers
         public ActionResult Index(string searchString, int? categoryId, int? authorId,
             string status, DateTime? fromDate, DateTime? toDate, int? page)
         {
+            var denied = CheckAdminArticlePage();
+            if (denied != null) return denied;
+
             const int pageSize = 8;
             int requestedPage = page ?? 1;
+            bool isAdminManagementRequest = IsAdminArticleRequest();
+            bool canManageArticles = isAdminManagementRequest && CanManageArticles();
 
             var query = db.Articles
                 .Include(a => a.Categories)
                 .Include(a => a.Authors)
                 .AsQueryable();
 
-            if (Session["Admin"] == null)
+            if (!canManageArticles)
             {
                 query = query.Where(a => a.Status == "Published");
             }
@@ -118,7 +153,7 @@ namespace NewsPortal.Controllers
             if (authorId.HasValue)
                 query = query.Where(a => a.AuthorID == authorId.Value);
 
-            if (Session["Admin"] != null && (status == "Draft" || status == "Published"))
+            if (canManageArticles && (status == "Draft" || status == "Published"))
                 query = query.Where(a => a.Status == status);
 
             if (fromDate.HasValue)
@@ -171,6 +206,8 @@ namespace NewsPortal.Controllers
             ViewBag.CurrentPage = currentPage;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalArticles = totalArticles;
+            ViewBag.CanManageArticles = canManageArticles;
+            ViewBag.IsAdminManagement = isAdminManagementRequest;
 
             return View(articles);
         }
@@ -188,10 +225,13 @@ namespace NewsPortal.Controllers
 
         private ActionResult LoadArticleDetails(int? id, bool canComment)
         {
+            var denied = CheckAdminArticlePage();
+            if (denied != null) return denied;
+
             if (!id.HasValue || id.Value <= 0)
             {
                 TempData["Error"] = "Mã bài viết không hợp lệ.";
-                return RedirectToAction("Index");
+                return IsAdminArticleRequest() ? RedirectToArticleManagement() : RedirectToAction("Index");
             }
 
             int articleId = id.Value;
@@ -199,10 +239,11 @@ namespace NewsPortal.Controllers
                 .Include(a => a.Categories)
                 .FirstOrDefault(a => a.ArticleID == articleId);
 
-            if (article == null || (article.Status != "Published" && Session["Admin"] == null))
+            bool canManageArticles = IsAdminArticleRequest() && CanManageArticles();
+            if (article == null || (article.Status != "Published" && !canManageArticles))
             {
                 TempData["Error"] = "Bài viết bạn tìm không tồn tại hoặc đã bị gỡ.";
-                return RedirectToAction("Index");
+                return IsAdminArticleRequest() ? RedirectToArticleManagement() : RedirectToAction("Index");
             }
 
             if (canComment && !HasViewedRecently(articleId))
@@ -221,6 +262,8 @@ namespace NewsPortal.Controllers
                 .OrderByDescending(c => c.CreatedDate)
                 .ToList();
             ViewBag.RatingCount = db.ArticleRatings.Count(r => r.ArticleID == articleId);
+            ViewBag.CanManageArticles = canManageArticles;
+            ViewBag.IsAdminManagement = IsAdminArticleRequest();
             ViewBag.AverageRating = db.ArticleRatings
                 .Where(r => r.ArticleID == articleId)
                 .Select(r => (double?)r.Rating)
@@ -394,9 +437,10 @@ namespace NewsPortal.Controllers
 
         public ActionResult Create()
         {
-            var denied = CheckAdminPermission("thêm");
+            var denied = CheckArticlePermission("thêm");
             if (denied != null) return denied;
 
+            ViewBag.IsAdminManagement = true;
             return View(new Article());
         }
 
@@ -404,8 +448,10 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Article article, HttpPostedFileBase imageFile)
         {
-            var denied = CheckAdminPermission("thêm");
+            var denied = CheckArticlePermission("thêm");
             if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = true;
 
             ValidateArticleInput(article, imageFile);
 
@@ -435,25 +481,27 @@ namespace NewsPortal.Controllers
             db.SaveChanges();
 
             TempData["Success"] = "Đã đăng bài viết mới thành công.";
-            return RedirectToAction("Index");
+            return RedirectToArticleManagement();
         }
 
         public ActionResult Edit(int? id)
         {
-            var denied = CheckAdminPermission("chỉnh sửa");
+            var denied = CheckArticlePermission("chỉnh sửa");
             if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = true;
 
             if (!id.HasValue || id.Value <= 0)
             {
                 TempData["Error"] = "Mã bài viết cần chỉnh sửa không hợp lệ.";
-                return RedirectToAction("Index");
+                return RedirectToArticleManagement();
             }
 
             var article = db.Articles.Find(id.Value);
             if (article == null)
             {
                 TempData["Error"] = "Bài viết cần chỉnh sửa không tồn tại hoặc đã bị xóa.";
-                return RedirectToAction("Index");
+                return RedirectToArticleManagement();
             }
 
             return View(ToArticleViewModel(article));
@@ -463,8 +511,10 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Article article, HttpPostedFileBase imageFile)
         {
-            var denied = CheckAdminPermission("chỉnh sửa");
+            var denied = CheckArticlePermission("chỉnh sửa");
             if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = true;
 
             ValidateArticleInput(article, imageFile, true);
 
@@ -475,7 +525,7 @@ namespace NewsPortal.Controllers
             if (existing == null)
             {
                 TempData["Error"] = "Bài viết cần chỉnh sửa không tồn tại hoặc đã bị xóa trước đó.";
-                return RedirectToAction("Index");
+                return RedirectToArticleManagement();
             }
 
             existing.Title = article.Title;
@@ -492,25 +542,27 @@ namespace NewsPortal.Controllers
 
             db.SaveChanges();
             TempData["Success"] = "Đã cập nhật bài viết thành công.";
-            return RedirectToAction("Index");
+            return RedirectToArticleManagement();
         }
 
         public ActionResult Delete(int? id)
         {
-            var denied = CheckAdminPermission("xóa");
+            var denied = CheckArticlePermission("xóa");
             if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = true;
 
             if (!id.HasValue || id.Value <= 0)
             {
                 TempData["Error"] = "Mã bài viết cần xóa không hợp lệ.";
-                return RedirectToAction("Index");
+                return RedirectToArticleManagement();
             }
 
             var article = db.Articles.Find(id.Value);
             if (article == null)
             {
                 TempData["Error"] = "Bài viết cần xóa không tồn tại hoặc đã bị xóa trước đó.";
-                return RedirectToAction("Index");
+                return RedirectToArticleManagement();
             }
 
             return View(ToArticleViewModel(article));
@@ -520,20 +572,22 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int? id)
         {
-            var denied = CheckAdminPermission("xóa");
+            var denied = CheckArticlePermission("xóa");
             if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = true;
 
             if (!id.HasValue || id.Value <= 0)
             {
                 TempData["Error"] = "Mã bài viết cần xóa không hợp lệ.";
-                return RedirectToAction("Index");
+                return RedirectToArticleManagement();
             }
 
             var article = db.Articles.Find(id.Value);
             if (article == null)
             {
                 TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa trước đó.";
-                return RedirectToAction("Index");
+                return RedirectToArticleManagement();
             }
 
             try
@@ -546,7 +600,7 @@ namespace NewsPortal.Controllers
             {
                 TempData["Error"] = "Không thể xóa: bài viết còn bình luận hoặc đánh giá liên quan.";
             }
-            return RedirectToAction("Index");
+            return RedirectToArticleManagement();
         }
 
         private Article ToArticleViewModel(Articles article)

@@ -2,7 +2,7 @@
 
 @{
     ViewBag.Title = Model.CategoryName;
-    bool isAdmin = Session["Admin"] != null;
+    bool isAdminManagement = ViewBag.IsAdminManagement == true;
     var articles = ViewBag.Articles as List<NewsPortal.Models.Articles>
                    ?? new List<NewsPortal.Models.Articles>();
     var authorNames = ViewBag.AuthorNames as Dictionary<int, string>
@@ -119,13 +119,13 @@
     </style>
 }
 
-<a class="dt-back" href="@Url.Action("Index", "Categories")">« Tất cả danh mục</a>
+<a class="dt-back" href="@(isAdminManagement ? Url.RouteUrl("AdminCategories", new { action = "Index" }) : Url.Action("Index", "Categories"))">« Tất cả danh mục</a>
 
 <h1 class="dt-title">
     @Model.CategoryName
-    @if (isAdmin)
+    @if (isAdminManagement)
     {
-        <a class="dt-edit" href="@Url.Action("Edit", "Categories", new { id = Model.CategoryID })">Sửa</a>
+        <a class="dt-edit" href="@Url.RouteUrl("AdminCategories", new { action = "Edit", id = Model.CategoryID })">Sửa</a>
     }
 </h1>
 <p class="dt-sub">
@@ -151,12 +151,12 @@ else
                     <div class="dt-noimg"></div>
                 }
                 <div class="dt-body">
-                    <h3><a href="@Url.Action("Details", "Articles", new { id = a.ArticleID })">@a.Title</a></h3>
+                    <h3><a href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = a.ArticleID }) : Url.Action("Details", "Articles", new { id = a.ArticleID }))">@a.Title</a></h3>
                     <div class="dt-sum">@a.Summary</div>
                     <div class="dt-meta">
                         @(authorNames.ContainsKey(a.AuthorID) ? authorNames[a.AuthorID] + " · " : "")@a.CreatedDate.ToString("dd/MM/yyyy HH:mm")
                     </div>
-                    <a class="dt-more" href="@Url.Action("Details", "Articles", new { id = a.ArticleID })">Đọc tiếp</a>
+                    <a class="dt-more" href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = a.ArticleID }) : Url.Action("Details", "Articles", new { id = a.ArticleID }))">Đọc tiếp</a>
                 </div>
             </div>
         }

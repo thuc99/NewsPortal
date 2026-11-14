@@ -11,9 +11,39 @@ namespace NewsPortal.Controllers
     {
         private NewsPortalDBEntities db = new NewsPortalDBEntities();
 
+        private bool IsAdminManagementRequest()
+        {
+            return (Request.AppRelativeCurrentExecutionFilePath ?? string.Empty)
+                .StartsWith("~/Admin/Category", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private ActionResult CheckAdminManagementAccess()
+        {
+            if (!IsAdminManagementRequest() || Session["Admin"] != null)
+                return null;
+
+            if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
+                return RedirectToRoute("AdminArticles", new { action = "Index" });
+
+            return Session["User"] != null
+                ? (ActionResult)RedirectToAction("Index", "Categories")
+                : RedirectToAction("Login", "Account");
+        }
+
+        private ActionResult RedirectToCategoriesIndex()
+        {
+            return IsAdminManagementRequest()
+                ? (ActionResult)RedirectToRoute("AdminCategories", new { action = "Index" })
+                : RedirectToAction("Index");
+        }
+
         // Danh sách danh mục - mọi người đều được xem
         public ActionResult Index(string search)
         {
+            var denied = CheckAdminManagementAccess();
+            if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             var query = db.Categories.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -33,6 +63,10 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Create()
         {
+            if (!IsAdminManagementRequest())
+                return RedirectToRoute("AdminCategories", new { action = "Create" });
+
+            ViewBag.IsAdminManagement = true;
             return View();
         }
 
@@ -42,6 +76,7 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Category category)
         {
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             if (category.CategoryName != null)
                 category.CategoryName = category.CategoryName.Trim();
 
@@ -61,7 +96,7 @@ namespace NewsPortal.Controllers
 
                 TempData["Success"] = "Thêm danh mục thành công";
 
-                return RedirectToAction("Index");
+                return RedirectToCategoriesIndex();
             }
 
             return View(category);
@@ -71,6 +106,10 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Edit(int id)
         {
+            if (!IsAdminManagementRequest())
+                return RedirectToRoute("AdminCategories", new { action = "Edit", id = id });
+
+            ViewBag.IsAdminManagement = true;
             var category = db.Categories.Find(id);
 
             if (category == null)
@@ -85,6 +124,7 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Category category)
         {
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             if (category.CategoryName != null)
                 category.CategoryName = category.CategoryName.Trim();
 
@@ -105,7 +145,7 @@ namespace NewsPortal.Controllers
 
                 TempData["Success"] = "Cập nhật thành công";
 
-                return RedirectToAction("Index");
+                return RedirectToCategoriesIndex();
             }
 
             return View(category);
@@ -115,6 +155,10 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Delete(int id)
         {
+            if (!IsAdminManagementRequest())
+                return RedirectToRoute("AdminCategories", new { action = "Delete", id = id });
+
+            ViewBag.IsAdminManagement = true;
             var category = db.Categories.Find(id);
 
             if (category == null)
@@ -133,6 +177,7 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             var category = db.Categories.Find(id);
 
             if (category == null)
@@ -144,7 +189,7 @@ namespace NewsPortal.Controllers
                 TempData["Error"] =
                     "Không thể xóa: danh mục này vẫn còn bài viết";
 
-                return RedirectToAction("Index");
+                return RedirectToCategoriesIndex();
             }
 
             db.Categories.Remove(category);
@@ -152,11 +197,15 @@ namespace NewsPortal.Controllers
 
             TempData["Success"] = "Đã xóa danh mục";
 
-            return RedirectToAction("Index");
+            return RedirectToCategoriesIndex();
         }
 
         public ActionResult Details(int? id)
         {
+            var denied = CheckAdminManagementAccess();
+            if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
             var category = db.Categories.Find(id);
             if (category == null) return HttpNotFound();

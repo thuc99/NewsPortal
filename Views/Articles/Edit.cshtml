@@ -28,8 +28,7 @@
         <h2>Chỉnh sửa bài viết</h2>
         <p class="form-sub">Cập nhật nội dung và trạng thái bài viết.</p>
 
-        @using (Html.BeginForm("Edit", "Articles", FormMethod.Post, new { enctype = "multipart/form-data" }))
-        {
+        <form action="@Url.RouteUrl("AdminArticles", new { action = "Edit" })" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             @Html.HiddenFor(m => m.Id)
             @Html.HiddenFor(m => m.Image)
@@ -66,8 +65,8 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn-save">Lưu thay đổi</button>
-                @Html.ActionLink("Quay lại", "Index", "Articles", null, new { @class = "btn-back" })
+                @Html.RouteLink("Quay lại", "AdminArticles", new { action = "Index" }, new { @class = "btn-back" })
             </div>
-        }
+        </form>
     </div>
 </div>

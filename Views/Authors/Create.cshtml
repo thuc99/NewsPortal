@@ -99,8 +99,7 @@
         <h2>Thêm tác giả</h2>
         <p class="form-sub">Thêm thông tin tác giả mới vào NewsPortal.</p>
 
-        @using (Html.BeginForm("Create", "Authors", FormMethod.Post))
-        {
+        <form action="@Url.RouteUrl("AdminAuthors", new { action = "Create" })" method="post">
             @Html.AntiForgeryToken()
             @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
 
@@ -127,8 +126,8 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn-save">Lưu tác giả</button>
-                @Html.ActionLink("Quay lại", "Index", null, new { @class = "btn-back" })
+                @Html.RouteLink("Quay lại", "AdminAuthors", new { action = "Index" }, new { @class = "btn-back" })
             </div>
-        }
+        </form>
     </div>
 </div>

@@ -230,32 +230,6 @@
         <div class="adm-sub"><i class="fa-solid fa-shield-halved"></i> Hệ thống Quản trị TinNhanh</div>
         <h1>Xin chào, @Session["Admin"]!</h1>
     </div>
-    <div class="adm-actions">
-        <a class="adm-btn adm-btn-white" href="@Url.Action("Create", "Articles")">
-            <i class="fa-solid fa-plus"></i> Viết bài mới
-        </a>
-        <a class="adm-btn adm-btn-ghost" href="@Url.Action("Logout", "Account")">
-            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-        </a>
-    </div>
-</div>
-
-<div class="adm-menu">
-    <a class="adm-tab active" href="@Url.Action("Index", "Admin")">
-        <i class="fa-solid fa-gauge-high"></i> Tổng quan
-    </a>
-    <a class="adm-tab" href="@Url.Action("Index", "Articles")">
-        <i class="fa-solid fa-newspaper"></i> Quản lý Bài viết
-    </a>
-    <a class="adm-tab" href="@Url.Action("Index", "Categories")">
-        <i class="fa-solid fa-folder-tree"></i> Quản lý Danh mục
-    </a>
-    <a class="adm-tab" href="@Url.Action("Index", "Authors")">
-        <i class="fa-solid fa-pen-nib"></i> Quản lý Tác giả
-    </a>
-    <a class="adm-tab" href="@Url.Action("Users", "Admin")">
-        <i class="fa-solid fa-users-gear"></i> Tài khoản Hệ thống
-    </a>
 </div>
 
 @if (TempData["AdminMessage"] != null)
@@ -282,8 +256,8 @@
         <div class="adm-card-label">Danh mục &amp; Tác giả</div>
         <div class="adm-card-val">@Model.TotalCategories / @Model.TotalAuthors</div>
         <div class="adm-card-foot">
-            <a href="@Url.Action("Index", "Categories")">Danh mục</a> &bull;
-            <a href="@Url.Action("Index", "Authors")">Tác giả</a>
+            <a href="@Url.RouteUrl("AdminCategories", new { action = "Index" })">Danh mục</a> &bull;
+            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index" })">Tác giả</a>
         </div>
     </div>
 
@@ -372,8 +346,8 @@
                                         @(item.Status == "Published" ? "Hạ nháp" : "Duyệt đăng")
                                     </button>
                                 }
-                                <a class="btn-mini" href="@Url.Action("Edit", "Articles", new { id = item.ArticleID })">Sửa</a>
-                                <a class="btn-mini" style="color:var(--red);" href="@Url.Action("Delete", "Articles", new { id = item.ArticleID })">Xóa</a>
+                                <a class="btn-mini" href="@Url.RouteUrl("AdminArticles", new { action = "Edit", id = item.ArticleID })">Sửa</a>
+                                <a class="btn-mini" style="color:var(--red);" href="@Url.RouteUrl("AdminArticles", new { action = "Delete", id = item.ArticleID })">Xóa</a>
                             </td>
                         </tr>
                     }

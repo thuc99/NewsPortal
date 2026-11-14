@@ -3,7 +3,7 @@
 
 @{
     ViewBag.Title = "Danh mục";
-    bool isAdmin = Session["Admin"] != null;
+    bool isAdminManagement = ViewBag.IsAdminManagement == true;
 }
 
 <style>
@@ -166,16 +166,10 @@
             </p>
         </div>
 
-        @if (isAdmin)
+        @if (isAdminManagement)
         {
             <div>
-                @Html.ActionLink(
-                         "+ Thêm danh mục",
-                         "Create",
-                         "Categories",
-                         null,
-                         new { @class = "btn-add" }
-                     )
+                @Html.RouteLink("+ Thêm danh mục", "AdminCategories", new { action = "Create" }, new { @class = "btn-add" })
             </div>
         }
     </div>
@@ -187,7 +181,7 @@
                     <th>Danh mục</th>
                     <th>Mô tả</th>
 
-                    @if (isAdmin)
+                    @if (isAdminManagement)
                     {
                         <th style="width: 180px;">Thao tác</th>
                     }
@@ -207,29 +201,19 @@
                                         : item.CategoryName.Trim().Substring(0, 1).ToUpper())
                                 </span>
 
-                                <strong><a href="@Url.Action("Details", "Categories", new { id = item.CategoryID })" class="name-link">@item.CategoryName</a></strong>
+                                <strong><a href="@(isAdminManagement ? Url.RouteUrl("AdminCategories", new { action = "Details", id = item.CategoryID }) : Url.Action("Details", "Categories", new { id = item.CategoryID }))" class="name-link">@item.CategoryName</a></strong>
                             </td>
 
                             <td>
                                 @item.Description
                             </td>
 
-                            @if (isAdmin)
+                            @if (isAdminManagement)
                             {
                                 <td>
-                                    @Html.ActionLink(
-                                             "Sửa",
-                                             "Edit",
-                                             new { id = item.CategoryID },
-                                             new { @class = "action-link action-edit" }
-                                         )
+                                    @Html.RouteLink("Sửa", "AdminCategories", new { action = "Edit", id = item.CategoryID }, new { @class = "action-link action-edit" })
 
-                                    @Html.ActionLink(
-                                             "Xóa",
-                                             "Delete",
-                                             new { id = item.CategoryID },
-                                             new { @class = "action-link action-delete" }
-                                         )
+                                    @Html.RouteLink("Xóa", "AdminCategories", new { action = "Delete", id = item.CategoryID }, new { @class = "action-link action-delete" })
                                 </td>
                             }
                         </tr>
@@ -238,7 +222,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="@(isAdmin ? 3 : 2)" class="empty-message">
+                        <td colspan="@(isAdminManagement ? 3 : 2)" class="empty-message">
                             Chưa có danh mục nào.
                         </td>
                     </tr>

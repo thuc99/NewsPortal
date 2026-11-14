@@ -4,9 +4,13 @@
 @using NewsPortal.Models
 
 @{
-    bool isAdmin = Session["Admin"] != null;
+    bool canManageArticles = ViewBag.CanManageArticles == true;
+    bool isAdminManagement = ViewBag.IsAdminManagement == true;
+    string articleIndexUrl = isAdminManagement
+        ? Url.RouteUrl("AdminArticles", new { action = "Index" })
+        : Url.Action("Index", "Articles");
 
-    ViewBag.Title = isAdmin ? "Quản lý bài viết" : "Tin tức";
+    ViewBag.Title = canManageArticles ? "Quản lý bài viết" : "Tin tức";
 
     var categories = ViewBag.Categories as IEnumerable<Category> ?? Enumerable.Empty<Category>();
     var authors = ViewBag.Authors as IEnumerable<Author> ?? Enumerable.Empty<Author>();
@@ -354,19 +358,18 @@
 
     <div class="management-header">
         <div>
-            <h2>@(isAdmin ? "Quản lý bài viết" : "Tin tức mới nhất")</h2>
+            <h2>@(canManageArticles ? "Quản lý bài viết" : "Tin tức mới nhất")</h2>
 
             <p class="management-subtitle">
-                @(isAdmin
+                @(canManageArticles
                     ? "Quản lý, tìm kiếm và cập nhật các bài viết trên NewsPortal."
                     : "Cập nhật những tin tức mới nhất trên NewsPortal.")
             </p>
         </div>
 
-        @if (isAdmin)
+        @if (canManageArticles)
         {
-            @Html.ActionLink("+ Thêm bài viết", "Create", "Articles",
-                     null, new { @class = "btn-add" })
+            <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create" })">+ Thêm bài viết</a>
         }
     </div>
 
@@ -378,8 +381,7 @@
     </div>
 
     <div id="advancedFilter" class="advanced-filter is-hidden">
-        @using (Html.BeginForm("Index", "Articles", FormMethod.Get))
-        {
+        <form method="get" action="@articleIndexUrl">
             <input type="search"
                    name="searchString"
                    value="@(ViewBag.SearchString ?? "")"
@@ -409,7 +411,7 @@
                 }
             </select>
 
-            if (isAdmin)
+            if (canManageArticles)
             {
                 <select name="status">
                     <option value="">Mọi trạng thái</option>
@@ -438,9 +440,8 @@
                 Lọc
             </button>
 
-            @Html.ActionLink("Xóa lọc", "Index", "Articles",
-                     null, new { @class = "filter-reset" })
-        }
+            <a class="filter-reset" href="@articleIndexUrl">Xóa lọc</a>
+        </form>
     </div>
 
 
@@ -456,9 +457,10 @@
                     <th>Tiêu đề bài viết</th>
                     <th>Ngày đăng</th>
 
-                    @if (isAdmin)
+                    @if (canManageArticles)
                     {
                         <th>Trạng thái</th>
+                        <th>Thao tác</th>
                     }
 
 
@@ -488,19 +490,25 @@
                             </td>
 
                             <td class="article-title">
-                                @item.Title
+                                <a href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = item.Id }) : Url.Action("Details", "Articles", new { id = item.Id }))">@item.Title</a>
                             </td>
 
                             <td class="article-date">
                                 @item.CreatedDate.ToString("dd/MM/yyyy")
                             </td>
 
-                            @if (isAdmin)
+                            @if (canManageArticles)
                             {
                                 <td>
                                     <span class="status-badge @(item.Status == "Published" ? "status-published" : "status-draft")">
                                         @item.Status
                                     </span>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        @Html.RouteLink("Sửa", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
+                                        @Html.RouteLink("Xóa", "AdminArticles", new { action = "Delete", id = item.Id }, new { @class = "action-btn btn-delete" })
+                                    </div>
                                 </td>
                             }
 
@@ -512,7 +520,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="@(isAdmin ? 4 : 3)" class="empty-message">
+                        <td colspan="@(canManageArticles ? 5 : 3)" class="empty-message">
                             @(string.IsNullOrWhiteSpace(ViewBag.SearchString as string)
                                 ? "Không tìm thấy bài viết phù hợp."
                                 : "Không tìm thấy bài viết nào phù hợp với từ khóa '" + ViewBag.SearchString + "'.")
@@ -529,7 +537,8 @@
             @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
             {
                 <a class="@(pageNumber == currentPage ? "active" : "")"
-                   href="@Url.Action("Index", "Articles", new {
+                   href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new {
+                        action = "Index",
                        searchString = ViewBag.SearchString,
                        categoryId = ViewBag.CategoryId,
                        authorId = ViewBag.AuthorId,
@@ -537,7 +546,15 @@
                        fromDate = ViewBag.FromDate,
                        toDate = ViewBag.ToDate,
                        page = pageNumber
-                   })">
+                    }) : Url.Action("Index", "Articles", new {
+                        searchString = ViewBag.SearchString,
+                        categoryId = ViewBag.CategoryId,
+                        authorId = ViewBag.AuthorId,
+                        status = ViewBag.Status,
+                        fromDate = ViewBag.FromDate,
+                        toDate = ViewBag.ToDate,
+                        page = pageNumber
+                    }))">
                     @pageNumber
                 </a>
             }

@@ -461,15 +461,19 @@
         @Model.Content
     </div>
 
-    @if (ViewBag.CanComment != true)
+    @if (ViewBag.CanManageArticles == true)
     {
         <div class="view-actions">
-            @Html.ActionLink("Chỉnh sửa bài viết", "Edit", "Articles",
-                new { id = Model.Id },
+            @Html.RouteLink("Chỉnh sửa bài viết", "AdminArticles",
+                new { action = "Edit", id = Model.Id },
                 new { @class = "btn-detail btn-edit-article" })
 
-            @Html.ActionLink("Quay lại danh sách", "Index", "Articles",
-                null,
+            @Html.RouteLink("Xóa bài viết", "AdminArticles",
+                new { action = "Delete", id = Model.Id },
+                new { @class = "btn-detail btn-delete-article" })
+
+            @Html.RouteLink("Quay lại danh sách", "AdminArticles",
+                new { action = "Index" },
                 new { @class = "btn-detail btn-back" })
         </div>
     }

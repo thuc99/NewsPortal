@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data.Entity.Core.EntityClient;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Mail;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web.Mvc;
 using NewsPortal.Models;
@@ -12,6 +17,39 @@ namespace NewsPortal.Controllers
     {
         // Lưu danh sách tài khoản User đã đăng ký trong bộ nhớ ứng dụng
         private static List<UserAccount> _registeredUsers = new List<UserAccount>();
+
+        private static SqlConnection CreateUsersConnection()
+        {
+            foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
+            {
+                if (string.IsNullOrWhiteSpace(item.ConnectionString))
+                    continue;
+
+                if (item.ConnectionString.IndexOf("metadata=", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    var builder = new EntityConnectionStringBuilder(item.ConnectionString);
+                    return new SqlConnection(builder.ProviderConnectionString);
+                }
+
+                if (item.ConnectionString.IndexOf("NewsPortalDB", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return new SqlConnection(item.ConnectionString);
+            }
+
+            throw new InvalidOperationException("Không tìm thấy chuỗi kết nối NewsPortalDB trong Web.config.");
+        }
+
+        private static string ComputeSha256(string rawText)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(rawText));
+                var result = new StringBuilder();
+                foreach (byte value in bytes)
+                    result.Append(value.ToString("x2"));
+
+                return result.ToString();
+            }
+        }
 
         private static bool IsValidEmail(string email)
         {
@@ -37,6 +75,10 @@ namespace NewsPortal.Controllers
             if (Session["Admin"] != null)
             {
                 return RedirectToAction("Index", "Admin");
+            }
+            if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToRoute("AdminArticles", new { action = "Index" });
             }
             if (TempData["Error"] != null && ViewBag.Error == null)
             {
@@ -70,25 +112,93 @@ namespace NewsPortal.Controllers
                 return View();
             }
 
-            // 1. Đăng nhập quyền Admin -> chuyển thẳng về Dashboard Admin
-            if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) && password == "123456")
+            bool databaseAccountFound = false;
+            bool databaseAccountIsActive = false;
+            string databaseUsername = null;
+            string databaseFullName = null;
+            string databaseRole = null;
+
+            using (var conn = CreateUsersConnection())
+            {
+                conn.Open();
+                const string sql = @"
+                    SELECT TOP 1 Username, FullName, PasswordHash, Role, IsActive
+                    FROM dbo.Users
+                    WHERE Username = @username;";
+
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@username", username);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            databaseAccountFound = true;
+                            databaseAccountIsActive = Convert.ToBoolean(reader["IsActive"]);
+                            databaseRole = Convert.ToString(reader["Role"]);
+                            string storedHash = Convert.ToString(reader["PasswordHash"]);
+
+                            if (databaseAccountIsActive && string.Equals(storedHash, ComputeSha256(password.Trim()), StringComparison.OrdinalIgnoreCase))
+                            {
+                                databaseUsername = Convert.ToString(reader["Username"]);
+                                databaseFullName = Convert.ToString(reader["FullName"]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (databaseUsername != null)
+            {
+                Session.Remove("LockUntil");
+                Session["FailCount"] = 0;
+
+                if (string.Equals(databaseRole, "Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    Session.Remove("User");
+                    Session.Remove("UserFullName");
+                    Session["Role"] = "Admin";
+                    Session["Admin"] = databaseUsername;
+                    return RedirectToAction("Index", "Admin");
+                }
+
+                Session.Remove("Admin");
+                Session["User"] = databaseUsername;
+                Session["UserFullName"] = databaseFullName;
+                Session["Role"] = string.Equals(databaseRole, "Editor", StringComparison.OrdinalIgnoreCase)
+                    ? "Editor"
+                    : "User";
+                if (string.Equals(databaseRole, "Editor", StringComparison.OrdinalIgnoreCase))
+                    return RedirectToRoute("AdminArticles", new { action = "Index" });
+                return RedirectToAction("Index", "Articles");
+            }
+
+            // Giữ đăng nhập gốc cũ nếu chưa có tài khoản admin trong cơ sở dữ liệu.
+            bool canUseLegacyRootLogin = username.Equals("admin", StringComparison.OrdinalIgnoreCase) &&
+                password == "123456" &&
+                (!databaseAccountFound || (databaseAccountIsActive && string.Equals(databaseRole, "Admin", StringComparison.OrdinalIgnoreCase)));
+            if (canUseLegacyRootLogin)
             {
                 Session.Remove("User");
                 Session.Remove("UserFullName");
+                Session.Remove("LockUntil");
+                Session["Role"] = "Admin";
                 Session["Admin"] = "admin";
                 Session["FailCount"] = 0;
                 return RedirectToAction("Index", "Admin");
             }
 
-            // 2. Đăng nhập quyền User thường
-            var user = _registeredUsers.FirstOrDefault(u =>
+            // Tài khoản đăng ký trong bộ nhớ chỉ dùng khi username chưa tồn tại trong dbo.Users.
+            var user = databaseAccountFound ? null : _registeredUsers.FirstOrDefault(u =>
                 u.Username.Equals(username, StringComparison.OrdinalIgnoreCase) && u.Password == password);
 
             if (user != null)
             {
                 Session.Remove("Admin");
+                Session.Remove("LockUntil");
                 Session["User"] = user.Username;
                 Session["UserFullName"] = user.FullName;
+                Session["Role"] = "User";
                 Session["FailCount"] = 0;
                 return RedirectToAction("Index", "Articles");
             }
@@ -192,6 +302,7 @@ namespace NewsPortal.Controllers
             Session.Remove("Admin");
             Session.Remove("User");
             Session.Remove("UserFullName");
+            Session.Remove("Role");
             return RedirectToAction("Index", "Articles");
         }
     }

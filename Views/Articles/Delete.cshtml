@@ -38,13 +38,12 @@
                  class="delete-image" alt="Ảnh bài viết" />
         }
 
-        @using (Html.BeginForm("Delete", "Articles", new { id = Model.Id }, FormMethod.Post))
-        {
+        <form action="@Url.RouteUrl("AdminArticles", new { action = "Delete", id = Model.Id })" method="post">
             @Html.AntiForgeryToken()
             <div class="delete-actions">
                 <button type="submit" class="btn-delete">Xác nhận xóa</button>
-                @Html.ActionLink("Hủy", "Index", "Articles", null, new { @class = "btn-back" })
+                @Html.RouteLink("Hủy", "AdminArticles", new { action = "Index" }, new { @class = "btn-back" })
             </div>
-        }
+        </form>
     </div>
 </div>

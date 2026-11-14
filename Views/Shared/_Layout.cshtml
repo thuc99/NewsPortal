@@ -776,12 +776,20 @@
                     {
                         <div style="padding: 8px 14px; font-size: 13px; font-weight: 700; color: #b91c1c;">
                             Xin chào, @(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])
+                            <span style="font-size:11px; color:var(--muted);">(@Session["Role"])</span>
                         </div>
                         if (Session["Admin"] != null)
                         {
                             <a href="@Url.Action("Index", "Admin")"
                                class="account-menu-link">
                                 Bảng điều khiển Admin
+                            </a>
+                        }
+                        if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })"
+                               class="account-menu-link">
+                                Quản lý bài viết
                             </a>
                         }
                         <a href="@Url.Action("Logout", "Account")"

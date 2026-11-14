@@ -3,7 +3,7 @@
 
 @{
     ViewBag.Title = "Quản lý tác giả";
-    bool isAdmin = Session["Admin"] != null;
+    bool isAdminManagement = ViewBag.IsAdminManagement == true;
 }
 
 <style>
@@ -171,16 +171,10 @@
             </p>
         </div>
 
-        @if (isAdmin)
+        @if (isAdminManagement)
         {
             <div>
-                @Html.ActionLink(
-                         "+ Thêm tác giả",
-                         "Create",
-                         "Authors",
-                         null,
-                         new { @class = "btn-add" }
-                     )
+                @Html.RouteLink("+ Thêm tác giả", "AdminAuthors", new { action = "Create" }, new { @class = "btn-add" })
             </div>
         }
     </div>
@@ -192,7 +186,7 @@
                     <th>Tác giả</th>
                     <th>Email</th>
 
-                    @if (isAdmin)
+                    @if (isAdminManagement)
                     {
                         <th style="width: 180px;">Thao tác</th>
                     }
@@ -212,7 +206,7 @@
                                         : item.AuthorName.Trim().Substring(0, 1).ToUpper())
                                 </span>
 
-                                <strong><a href="@Url.Action("Details", "Authors", new { id = item.AuthorID })" class="name-link">@item.AuthorName</a></strong>
+                                <strong><a href="@(isAdminManagement ? Url.RouteUrl("AdminAuthors", new { action = "Details", id = item.AuthorID }) : Url.Action("Details", "Authors", new { id = item.AuthorID }))" class="name-link">@item.AuthorName</a></strong>
                             </td>
 
                             <td>
@@ -221,22 +215,12 @@
                                 </span>
                             </td>
 
-                            @if (isAdmin)
+                            @if (isAdminManagement)
                             {
                                 <td>
-                                    @Html.ActionLink(
-                                             "Sửa",
-                                             "Edit",
-                                             new { id = item.AuthorID },
-                                             new { @class = "action-link action-edit" }
-                                         )
+                                    @Html.RouteLink("Sửa", "AdminAuthors", new { action = "Edit", id = item.AuthorID }, new { @class = "action-link action-edit" })
 
-                                    @Html.ActionLink(
-                                             "Xóa",
-                                             "Delete",
-                                             new { id = item.AuthorID },
-                                             new { @class = "action-link action-delete" }
-                                         )
+                                    @Html.RouteLink("Xóa", "AdminAuthors", new { action = "Delete", id = item.AuthorID }, new { @class = "action-link action-delete" })
                                 </td>
                             }
                         </tr>
@@ -245,7 +229,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="@(isAdmin ? 3 : 2)" class="empty-message">
+                        <td colspan="@(isAdminManagement ? 3 : 2)" class="empty-message">
                             Chưa có tác giả nào.
                         </td>
                     </tr>

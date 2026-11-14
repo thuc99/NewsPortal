@@ -11,9 +11,39 @@ namespace NewsPortal.Controllers
     {
         private NewsPortalDBEntities db = new NewsPortalDBEntities();
 
+        private bool IsAdminManagementRequest()
+        {
+            return (Request.AppRelativeCurrentExecutionFilePath ?? string.Empty)
+                .StartsWith("~/Admin/Author", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private ActionResult CheckAdminManagementAccess()
+        {
+            if (!IsAdminManagementRequest() || Session["Admin"] != null)
+                return null;
+
+            if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
+                return RedirectToRoute("AdminArticles", new { action = "Index" });
+
+            return Session["User"] != null
+                ? (ActionResult)RedirectToAction("Index", "Authors")
+                : RedirectToAction("Login", "Account");
+        }
+
+        private ActionResult RedirectToAuthorsIndex()
+        {
+            return IsAdminManagementRequest()
+                ? (ActionResult)RedirectToRoute("AdminAuthors", new { action = "Index" })
+                : RedirectToAction("Index");
+        }
+
         // Danh sách tác giả - mọi người đều được xem
         public ActionResult Index(string search)
         {
+            var denied = CheckAdminManagementAccess();
+            if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             var query = db.Authors.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -34,6 +64,10 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Create()
         {
+            if (!IsAdminManagementRequest())
+                return RedirectToRoute("AdminAuthors", new { action = "Create" });
+
+            ViewBag.IsAdminManagement = true;
             return View();
         }
 
@@ -42,6 +76,7 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Author author)
         {
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             if (author.AuthorName != null)
                 author.AuthorName = author.AuthorName.Trim();
 
@@ -64,7 +99,7 @@ namespace NewsPortal.Controllers
 
                 TempData["Success"] = "Thêm tác giả thành công";
 
-                return RedirectToAction("Index");
+                return RedirectToAuthorsIndex();
             }
 
             return View(author);
@@ -74,6 +109,10 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Edit(int id)
         {
+            if (!IsAdminManagementRequest())
+                return RedirectToRoute("AdminAuthors", new { action = "Edit", id = id });
+
+            ViewBag.IsAdminManagement = true;
             var author = db.Authors.Find(id);
 
             if (author == null)
@@ -87,6 +126,7 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Author author)
         {
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             if (author.AuthorName != null)
                 author.AuthorName = author.AuthorName.Trim();
 
@@ -111,7 +151,7 @@ namespace NewsPortal.Controllers
 
                 TempData["Success"] = "Cập nhật thành công";
 
-                return RedirectToAction("Index");
+                return RedirectToAuthorsIndex();
             }
 
             return View(author);
@@ -121,6 +161,10 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Delete(int id)
         {
+            if (!IsAdminManagementRequest())
+                return RedirectToRoute("AdminAuthors", new { action = "Delete", id = id });
+
+            ViewBag.IsAdminManagement = true;
             var author = db.Authors.Find(id);
 
             if (author == null)
@@ -135,6 +179,7 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             var author = db.Authors.Find(id);
 
             if (author == null)
@@ -146,7 +191,7 @@ namespace NewsPortal.Controllers
                 TempData["Error"] =
                     "Không thể xóa: tác giả này vẫn còn bài viết";
 
-                return RedirectToAction("Index");
+                return RedirectToAuthorsIndex();
             }
 
             db.Authors.Remove(author);
@@ -154,11 +199,15 @@ namespace NewsPortal.Controllers
 
             TempData["Success"] = "Đã xóa tác giả";
 
-            return RedirectToAction("Index");
+            return RedirectToAuthorsIndex();
         }
         // GET: Authors/Details/5  -> các bài của tác giả
         public ActionResult Details(int? id)
         {
+            var denied = CheckAdminManagementAccess();
+            if (denied != null) return denied;
+
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
             if (id == null) return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
             var author = db.Authors.Find(id);
             if (author == null) return HttpNotFound();

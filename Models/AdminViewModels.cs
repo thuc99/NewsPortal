@@ -23,6 +23,8 @@ namespace NewsPortal.Models
         public string Role { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
+        public bool CanToggleStatus { get; set; }
+        public bool CanChangeRole { get; set; }
     }
 
     public class AdminDashboardViewModel

@@ -103,8 +103,7 @@
         <h2>Chỉnh sửa tác giả</h2>
         <p class="form-sub">Cập nhật thông tin tác giả.</p>
 
-        @using (Html.BeginForm("Edit", "Authors", FormMethod.Post))
-        {
+        <form action="@Url.RouteUrl("AdminAuthors", new { action = "Edit" })" method="post">
             @Html.AntiForgeryToken()
             @Html.HiddenFor(m => m.AuthorID)
             @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
@@ -135,8 +134,8 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn-save">Lưu thay đổi</button>
-                @Html.ActionLink("Quay lại", "Index", null, new { @class = "btn-back" })
+                @Html.RouteLink("Quay lại", "AdminAuthors", new { action = "Index" }, new { @class = "btn-back" })
             </div>
-        }
+        </form>
     </div>
 </div>
