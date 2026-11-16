@@ -15,8 +15,22 @@ namespace NewsPortal.Controllers
 
         private bool CanManageArticles()
         {
-            return Session["Admin"] != null ||
-                string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase);
+            if (Session["Admin"] != null)
+                return true;
+
+            string username = Convert.ToString(Session["User"]);
+            if (string.IsNullOrWhiteSpace(username))
+                return false;
+
+            var dbUser = db.Users.FirstOrDefault(u => u.Username == username);
+            if (dbUser != null)
+            {
+                Session["Role"] = dbUser.Role;
+                return string.Equals(dbUser.Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(dbUser.Role, "Editor", StringComparison.OrdinalIgnoreCase);
+            }
+
+            return string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool IsAdminArticleRequest()
@@ -208,6 +222,11 @@ namespace NewsPortal.Controllers
             ViewBag.TotalArticles = totalArticles;
             ViewBag.CanManageArticles = canManageArticles;
             ViewBag.IsAdminManagement = isAdminManagementRequest;
+
+            if (!string.IsNullOrWhiteSpace(searchString) && totalArticles == 0)
+            {
+                ViewBag.SearchMessage = "Không tìm thấy bài viết nào phù hợp với từ khóa \"" + searchString.Trim() + "\".";
+            }
 
             return View(articles);
         }

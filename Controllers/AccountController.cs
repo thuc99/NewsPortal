@@ -1,7 +1,7 @@
 ﻿
 using System;
-using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.Entity.Core.EntityClient;
 using System.Data.SqlClient;
 using System.Linq;
@@ -16,10 +16,6 @@ namespace NewsPortal.Controllers
 {
     public class AccountController : Controller
     {
-        // Danh sách tài khoản đăng ký tạm trong bộ nhớ
-        private static List<UserAccount> _registeredUsers =
-            new List<UserAccount>();
-
         // Kết nối đến database NewsPortalDB
         private static SqlConnection CreateUsersConnection()
         {
@@ -121,9 +117,7 @@ namespace NewsPortal.Controllers
             }
 
             if (TempData["Error"] != null)
-            {
                 ViewBag.Error = TempData["Error"];
-            }
 
             // Thông báo khi bị từ chối truy cập Admin
             if (Session["LoginMessage"] != null)
@@ -134,9 +128,7 @@ namespace NewsPortal.Controllers
 
             // Thông báo đăng ký thành công
             if (TempData["Success"] != null)
-            {
                 ViewBag.Success = TempData["Success"];
-            }
 
             return View();
         }
@@ -203,7 +195,9 @@ namespace NewsPortal.Controllers
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@username", username);
+                    cmd.Parameters.Add(
+                        "@username", SqlDbType.NVarChar, 50
+                    ).Value = username;
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -301,29 +295,6 @@ namespace NewsPortal.Controllers
                 return RedirectToAction("Index", "Admin");
             }
 
-            // Đăng nhập tài khoản đăng ký trong bộ nhớ
-            var user = databaseAccountFound
-                ? null
-                : _registeredUsers.FirstOrDefault(u =>
-                    u.Username.Equals(
-                        username,
-                        StringComparison.OrdinalIgnoreCase)
-                    && u.Password == password);
-
-            if (user != null)
-            {
-                ClearLoginSession();
-
-                Session.Remove("LockUntil");
-
-                Session["User"] = user.Username;
-                Session["UserFullName"] = user.FullName;
-                Session["Role"] = "User";
-                Session["FailCount"] = 0;
-
-                return RedirectToAction("Index", "Articles");
-            }
-
             // Đăng nhập thất bại
             int fails = (Session["FailCount"] as int? ?? 0) + 1;
 
@@ -408,11 +379,11 @@ namespace NewsPortal.Controllers
             }
 
             if (string.IsNullOrWhiteSpace(password) ||
-                password.Length < 6 ||
+                password.Trim().Length < 6 ||
                 password.Length > 64)
             {
                 ViewBag.Error =
-                    "Mật khẩu phải từ 6 đến 64 ký tự và không chỉ chứa khoảng trắng.";
+                    "Mật khẩu phải từ 6 đến 64 ký tự.";
 
                 return View();
             }
@@ -427,42 +398,128 @@ namespace NewsPortal.Controllers
 
             if (username.Equals(
                 "admin",
-                StringComparison.OrdinalIgnoreCase) ||
-                _registeredUsers.Any(u =>
-                    u.Username.Equals(
-                        username,
-                        StringComparison.OrdinalIgnoreCase)))
+                StringComparison.OrdinalIgnoreCase))
             {
                 ViewBag.Error =
-                    "Tên đăng nhập này đã tồn tại. Vui lòng chọn tên khác.";
+                    "Tên đăng nhập này không được phép sử dụng.";
 
                 return View();
             }
 
-            if (_registeredUsers.Any(u =>
-                !string.IsNullOrEmpty(u.Email) &&
-                u.Email.Equals(
-                    email,
-                    StringComparison.OrdinalIgnoreCase)))
+            try
             {
-                ViewBag.Error =
-                    "Email này đã được sử dụng cho tài khoản khác.";
+                using (var conn = CreateUsersConnection())
+                {
+                    conn.Open();
+
+                    // Kiểm tra tài khoản hoặc email đã tồn tại
+                    const string checkSql = @"
+                        SELECT COUNT(1)
+                        FROM dbo.Users
+                        WHERE Username = @username
+                           OR Email = @email;";
+
+                    using (var checkCmd = new SqlCommand(checkSql, conn))
+                    {
+                        checkCmd.Parameters.Add(
+                            "@username", SqlDbType.NVarChar, 30
+                        ).Value = username;
+
+                        checkCmd.Parameters.Add(
+                            "@email", SqlDbType.NVarChar, 100
+                        ).Value = email;
+
+                        int exists = Convert.ToInt32(
+                            checkCmd.ExecuteScalar());
+
+                        if (exists > 0)
+                        {
+                            ViewBag.Error =
+                                "Tên đăng nhập hoặc email đã tồn tại.";
+
+                            return View();
+                        }
+                    }
+
+                    // Thêm tài khoản mới vào SQL Server
+                    const string insertSql = @"
+                        INSERT INTO dbo.Users
+                        (
+                            Username,
+                            FullName,
+                            Email,
+                            PasswordHash,
+                            Role,
+                            IsActive
+                        )
+                        VALUES
+                        (
+                            @username,
+                            @fullName,
+                            @email,
+                            @passwordHash,
+                            @role,
+                            @isActive
+                        );";
+
+                    using (var cmd = new SqlCommand(insertSql, conn))
+                    {
+                        cmd.Parameters.Add(
+                            "@username", SqlDbType.NVarChar, 30
+                        ).Value = username;
+
+                        cmd.Parameters.Add(
+                            "@fullName", SqlDbType.NVarChar, 100
+                        ).Value = fullName;
+
+                        cmd.Parameters.Add(
+                            "@email", SqlDbType.NVarChar, 100
+                        ).Value = email;
+
+                        cmd.Parameters.Add(
+                            "@passwordHash", SqlDbType.NVarChar, 64
+                        ).Value = ComputeSha256(password.Trim());
+
+                        cmd.Parameters.Add(
+                            "@role", SqlDbType.NVarChar, 20
+                        ).Value = "User";
+
+                        cmd.Parameters.Add(
+                            "@isActive", SqlDbType.Bit
+                        ).Value = true;
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                TempData["Success"] =
+                    "Đăng ký thành công! Mời bạn đăng nhập.";
+
+                return RedirectToAction("Login");
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2601 || ex.Number == 2627)
+                {
+                    ViewBag.Error =
+                        "Tên đăng nhập hoặc email đã được sử dụng.";
+                }
+                else
+                {
+                    ViewBag.Error =
+                        "Không thể lưu tài khoản vào cơ sở dữ liệu. "
+                        + "Vui lòng kiểm tra cấu trúc bảng Users.";
+                }
 
                 return View();
             }
-
-            _registeredUsers.Add(new UserAccount
+            catch (Exception)
             {
-                FullName = fullName,
-                Username = username,
-                Email = email,
-                Password = password
-            });
+                ViewBag.Error =
+                    "Đã xảy ra lỗi khi đăng ký tài khoản.";
 
-            TempData["Success"] =
-                "Đăng ký thành công! Mời bạn đăng nhập.";
-
-            return RedirectToAction("Login");
+                return View();
+            }
         }
 
         // GET: /Account/Logout
