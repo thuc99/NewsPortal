@@ -1,72 +1,488 @@
-﻿@model NewsPortal.Models.Article
+﻿
+@model NewsPortal.Models.Article
 
 @{
     ViewBag.Title = "Chỉnh sửa bài viết";
 }
 
 <style>
-    .form-page { width: min(760px, calc(100% - 32px)); max-width: 760px; margin: 35px auto; padding: 0; }
-    .form-card { background: white; border: 0; border-radius: 0; padding: 28px 0; box-shadow: none; }
-    .form-page h2 { font-size: 27px; font-weight: 750; color: #1e293b; margin: 0 0 8px; }
-    .form-sub { color: #64748b; margin: 0 0 25px; }
-    .field { margin-bottom: 20px; }
-    .field label { display: block; font-weight: 600; margin-bottom: 8px; color: #334155; }
-    .field input, .field textarea, .field select { width: 100%; padding: 11px 13px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font: inherit; }
-    .field textarea { min-height: 220px; resize: vertical; line-height: 1.7; }
-    .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: #b91c1c; }
-    .field input[readonly] { background: #f1f5f9; color: #64748b; }
-    .form-actions { display: flex; gap: 10px; margin-top: 25px; }
-    .btn-save, .btn-back { padding: 10px 17px; border-radius: 8px; text-decoration: none; border: 0; cursor: pointer; font-weight: 600; }
-    .btn-save { background: #b91c1c; color: white; }
-    .btn-back { background: #e2e8f0; color: #334155; }
-    .text-danger, .validation-summary-errors { color: #b91c1c; font-size: 13px; }
-    @@media (max-width: 650px) { .form-page { width: calc(100% - 24px); margin-top: 22px; } .form-card { padding: 18px 0 30px; } .form-actions { flex-wrap: wrap; } .btn-save, .btn-back { flex: 1 1 160px; text-align: center; } }
+    .form-page {
+        width: min(850px, calc(100% - 32px));
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 28px 32px;
+        box-sizing: border-box;
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+    }
+
+    .form-card {
+        background: white;
+        padding: 0;
+    }
+
+    .form-page h2 {
+        font-size: 27px;
+        font-weight: 750;
+        color: #1e293b;
+        margin: 0 0 8px;
+    }
+
+    .form-sub {
+        color: #64748b;
+        margin: 0 0 28px;
+        font-size: 14px;
+    }
+
+    .field {
+        margin-bottom: 24px;
+    }
+
+        .field label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 9px;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .field input:not([type="file"]),
+        .field textarea,
+        .field select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 9px;
+            box-sizing: border-box;
+            font: inherit;
+            background: #fff;
+            transition: all .25s ease;
+        }
+
+            .field input:focus,
+            .field textarea:focus,
+            .field select:focus {
+                outline: none;
+                border-color: #dc2626;
+                box-shadow: 0 0 0 4px rgba(220,38,38,.08);
+            }
+
+        .field textarea {
+            min-height: 220px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        .field input[readonly] {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+    /* Bộ đếm ký tự */
+    .title-counter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+        .title-counter .count {
+            font-weight: 750;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+    .title-progress {
+        width: 100%;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .title-progress-bar {
+        width: 0;
+        height: 100%;
+        background: #16a34a;
+        border-radius: 20px;
+        transition: width .25s ease, background .25s ease;
+    }
+
+    .title-warning {
+        display: none;
+        margin-top: 9px;
+        padding: 9px 12px;
+        border-radius: 7px;
+        background: #fff7ed;
+        color: #c2410c;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Khu vực chọn ảnh */
+    .image-upload {
+        width: 100%;
+        min-height: 190px;
+        padding: 28px 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        text-align: center;
+        transition: all .25s ease;
+    }
+
+        .image-upload:hover {
+            border-color: #b91c1c;
+            background: #fffafa;
+        }
+
+        .image-upload input[type="file"] {
+            display: none;
+        }
+
+    .choose-image-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 22px;
+        margin: 0;
+        border: none;
+        border-radius: 8px;
+        background: #b91c1c;
+        color: #fff !important;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .25s ease;
+    }
+
+        .choose-image-btn:hover {
+            background: #991b1b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(185,28,28,.2);
+        }
+
+    .upload-icon {
+        display: block;
+        margin: 0 auto 14px;
+        color: #b91c1c;
+    }
+
+    .upload-description {
+        margin: 12px 0 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .image-preview {
+        width: 100%;
+        margin-top: 18px;
+        text-align: center;
+    }
+
+        .image-preview img {
+            display: none;
+            max-width: 280px;
+            max-height: 200px;
+            object-fit: contain;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 5px;
+            background: #fff;
+        }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-save,
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        border: 0;
+        cursor: pointer;
+        font-weight: 700;
+        transition: all .25s ease;
+    }
+
+    .btn-save {
+        background: #b91c1c;
+        color: white;
+    }
+
+    .btn-back {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .btn-save:hover {
+        background: #991b1b;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(185,28,28,.2);
+    }
+
+    .btn-back:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        text-decoration: none;
+        transform: translateY(-2px);
+    }
+
+    .text-danger,
+    .validation-summary-errors {
+        color: #b91c1c;
+        font-size: 13px;
+    }
+
+    @@media (max-width: 650px) {
+        .form-page {
+            width: calc(100% - 24px);
+            margin-top: 22px;
+            padding: 20px 16px;
+        }
+
+        .form-actions {
+            flex-wrap: wrap;
+        }
+
+        .btn-save,
+        .btn-back {
+            flex: 1 1 160px;
+            text-align: center;
+        }
+    }
 </style>
 
 <div class="form-page">
     <div class="form-card">
-        <h2>Chỉnh sửa bài viết</h2>
-        <p class="form-sub">Cập nhật nội dung và trạng thái bài viết.</p>
 
-        <form action="@Url.RouteUrl("AdminArticles", new { action = "Edit" })" method="post" enctype="multipart/form-data">
+        <h2>Chỉnh sửa bài viết</h2>
+        <p class="form-sub">
+            Cập nhật nội dung và trạng thái bài viết.
+        </p>
+
+        <form action="@Url.RouteUrl("AdminArticles", new { action = "Edit" })"
+              method="post"
+              enctype="multipart/form-data">
+
             @Html.AntiForgeryToken()
             @Html.HiddenFor(m => m.Id)
             @Html.HiddenFor(m => m.Image)
-            @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
+
+            @Html.ValidationSummary(true, "", new
+            {
+                @class = "validation-summary-errors"
+            })
 
             <div class="field">
                 @Html.LabelFor(m => m.Id, "Mã bài viết")
-                @Html.TextBoxFor(m => m.Id, new { @readonly = "readonly" })
+                @Html.TextBoxFor(m => m.Id, new
+                {
+                    @readonly = "readonly"
+                })
             </div>
 
             <div class="field">
                 @Html.LabelFor(m => m.Title, "Tiêu đề bài viết")
-                @Html.TextBoxFor(m => m.Title, new { placeholder = "Nhập tiêu đề bài viết..." })
-                @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+
+                @Html.TextBoxFor(m => m.Title, new
+                {
+                    maxlength = "150",
+                    placeholder = "Nhập tiêu đề bài viết...",
+                    id = "Title"
+                })
+
+                @Html.ValidationMessageFor(m => m.Title, "", new
+                {
+                    @class = "text-danger"
+                })
+
+                <div class="title-counter">
+                    <span>Tiêu đề tối đa 150 ký tự</span>
+                    <span class="count">0/150</span>
+                </div>
+
+                <div class="title-progress">
+                    <div class="title-progress-bar"></div>
+                </div>
+
+                <div class="title-warning"></div>
             </div>
 
             <div class="field">
                 @Html.LabelFor(m => m.Content, "Nội dung bài viết")
-                @Html.TextAreaFor(m => m.Content, new { placeholder = "Nhập nội dung bài viết..." })
-                @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger" })
+
+                @Html.TextAreaFor(m => m.Content, new
+                {
+                    placeholder = "Nhập nội dung bài viết..."
+                })
+
+                @Html.ValidationMessageFor(m => m.Content, "", new
+                {
+                    @class = "text-danger"
+                })
             </div>
 
             <div class="field">
                 @Html.LabelFor(m => m.Status, "Trạng thái")
+
                 @Html.DropDownListFor(m => m.Status,
-                    new SelectList(new[] { "Draft", "Published" }, Model.Status),
-                    "-- Chọn trạng thái --")
+                         new SelectList(
+                             new[] { "Draft", "Published" },
+                             Model.Status
+                         ),
+                         "-- Chọn trạng thái --")
             </div>
 
             <div class="field">
                 <label for="imageFile">Ảnh bài viết</label>
-                <input type="file" name="imageFile" id="imageFile" accept="image/*" />
+
+                <div class="image-upload">
+
+                    <svg class="upload-icon"
+                         xmlns="http://www.w3.org/2000/svg"
+                         width="42"
+                         height="42"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.7"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <path d="m21 15-5-5L5 21" />
+                    </svg>
+
+                    <label for="imageFile" class="choose-image-btn">
+                        Chọn ảnh trên máy tính
+                    </label>
+
+                    <input type="file"
+                           name="imageFile"
+                           id="imageFile"
+                           accept="image/*" />
+
+                    <p class="upload-description" id="fileName">
+                        Chọn hình ảnh từ thiết bị của bạn
+                    </p>
+
+                    <div class="image-preview">
+                        <img id="previewImage" alt="Ảnh xem trước" />
+                    </div>
+
+                </div>
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn-save">Lưu thay đổi</button>
-                @Html.RouteLink("Quay lại", "AdminArticles", new { action = "Index" }, new { @class = "btn-back" })
+                <button type="submit" class="btn-save">
+                    Lưu thay đổi
+                </button>
+
+                @Html.RouteLink("Quay lại",
+                         "AdminArticles",
+                         new { action = "Index" },
+                         new { @class = "btn-back" })
             </div>
+
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // Đếm ký tự tiêu đề
+        const input = document.getElementById("Title");
+        const count = document.querySelector(".title-counter .count");
+        const bar = document.querySelector(".title-progress-bar");
+        const warning = document.querySelector(".title-warning");
+
+        function updateCounter() {
+            if (!input) return;
+
+            const length = input.value.length;
+            const percent = Math.min(length / 150 * 100, 100);
+
+            count.textContent = length + "/150";
+            bar.style.width = percent + "%";
+
+            if (length >= 150) {
+                bar.style.background = "#dc2626";
+                count.style.color = "#dc2626";
+                warning.textContent = "Bạn đã đạt giới hạn 150 ký tự.";
+                warning.style.display = "block";
+            }
+            else if (length >= 135) {
+                bar.style.background = "#f59e0b";
+                count.style.color = "#d97706";
+                warning.textContent = "Bạn sắp đạt giới hạn ký tự.";
+                warning.style.display = "block";
+            }
+            else {
+                bar.style.background = "#16a34a";
+                count.style.color = "#64748b";
+                warning.style.display = "none";
+            }
+        }
+
+        if (input) {
+            input.addEventListener("input", updateCounter);
+            updateCounter();
+        }
+
+        // Xem trước hình ảnh
+        const imageInput = document.getElementById("imageFile");
+        const preview = document.getElementById("previewImage");
+        const fileName = document.getElementById("fileName");
+
+        let currentImageUrl = null;
+
+        imageInput.addEventListener("change", function () {
+            const file = this.files[0];
+
+            if (currentImageUrl) {
+                URL.revokeObjectURL(currentImageUrl);
+                currentImageUrl = null;
+            }
+
+            if (file && file.type.startsWith("image/")) {
+                currentImageUrl = URL.createObjectURL(file);
+
+                preview.src = currentImageUrl;
+                preview.style.display = "inline-block";
+
+                fileName.textContent = "Đã chọn: " + file.name;
+                fileName.style.color = "#b91c1c";
+                fileName.style.fontWeight = "700";
+            }
+            else {
+                preview.removeAttribute("src");
+                preview.style.display = "none";
+
+                fileName.textContent = "Chọn hình ảnh từ thiết bị của bạn";
+                fileName.style.color = "#64748b";
+                fileName.style.fontWeight = "400";
+            }
+        });
+    });
+</script>

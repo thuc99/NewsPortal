@@ -7,23 +7,22 @@
 
 <style>
     body {
-        background: #ffffff;
+        background: #fff;
         font-family: Arial, sans-serif;
     }
 
     .create-container {
         width: min(850px, calc(100% - 32px));
-        max-width: 850px;
         margin: 35px auto;
-        padding: 28px 0;
+        padding: 28px 32px;
+        box-sizing: border-box;
         background: #fff;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
     }
 
     .create-header {
-        margin-bottom: 25px;
+        margin-bottom: 28px;
         padding-bottom: 18px;
         border-bottom: 1px solid #e5e7eb;
     }
@@ -31,93 +30,223 @@
         .create-header h2 {
             color: #1e293b;
             font-size: 28px;
-            font-weight: bold;
+            font-weight: 750;
             margin: 0 0 8px;
         }
 
         .create-header p {
             color: #64748b;
             margin: 0;
+            font-size: 14px;
         }
+
+    .form-group-custom {
+        margin-bottom: 25px;
+    }
 
     .form-label {
         display: block;
         color: #334155;
-        font-weight: 600;
-        margin-bottom: 8px;
+        font-weight: 700;
+        margin-bottom: 9px;
+        font-size: 14px;
     }
 
     .form-control-custom {
         width: 100%;
-        padding: 11px 13px;
-        border: 1px solid #cbd5e1;
-        border-radius: 7px;
+        padding: 12px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 9px;
         font-size: 15px;
         outline: none;
         box-sizing: border-box;
-        margin-bottom: 20px;
+        background: #fff;
+        transition: all .25s ease;
     }
 
         .form-control-custom:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            border-color: #dc2626;
+            box-shadow: 0 0 0 4px rgba(220,38,38,.08);
         }
 
     textarea.form-control-custom {
         resize: vertical;
         min-height: 180px;
+        line-height: 1.7;
+    }
+
+    /* Bộ đếm ký tự */
+    .title-counter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+        .title-counter .count {
+            font-weight: 750;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+    .title-progress {
+        width: 100%;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .title-progress-bar {
+        width: 0;
+        height: 100%;
+        background: #16a34a;
+        border-radius: 20px;
+        transition: width .25s ease, background .25s ease;
+    }
+
+    .title-warning {
+        display: none;
+        margin-top: 9px;
+        padding: 9px 12px;
+        border-radius: 7px;
+        background: #fff7ed;
+        color: #c2410c;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Khu vực chọn ảnh */
+    .image-upload {
+        width: 100%;
+        min-height: 190px;
+        padding: 28px 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        text-align: center;
+        transition: all .25s ease;
+    }
+
+        .image-upload:hover {
+            border-color: #b91c1c;
+            background: #fffafa;
+        }
+
+        .image-upload input[type="file"] {
+            display: none;
+        }
+
+    .choose-image-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 22px;
+        margin: 0;
+        border: none;
+        border-radius: 8px;
+        background: #b91c1c;
+        color: #fff !important;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .25s ease;
+    }
+
+        .choose-image-btn:hover {
+            background: #991b1b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(185,28,28,.2);
+        }
+
+    .upload-icon {
+        display: block;
+        margin: 0 auto 14px;
+        color: #b91c1c;
+    }
+
+    .upload-description {
+        margin: 12px 0 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .image-preview {
-        margin-top: 12px;
-        margin-bottom: 20px;
+        width: 100%;
+        margin-top: 18px;
+        text-align: center;
     }
 
         .image-preview img {
-            max-width: 220px;
-            max-height: 160px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
             display: none;
+            max-width: 280px;
+            max-height: 200px;
+            object-fit: contain;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 5px;
+            background: #fff;
         }
 
     .create-actions {
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
-        padding-top: 20px;
+        padding-top: 22px;
         border-top: 1px solid #e5e7eb;
     }
 
     .btn-create {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
         border: none;
         padding: 11px 22px;
-        border-radius: 7px;
-        font-weight: 600;
+        border-radius: 8px;
+        font-weight: 700;
         cursor: pointer;
-        color: white;
         text-decoration: none;
+        transition: all .25s ease;
     }
 
     .btn-save {
-        background: #2563eb;
+        background: #b91c1c;
+        color: white;
     }
 
     .btn-back {
-        background: #64748b;
+        background: #f1f5f9;
+        color: #334155;
     }
 
-    .btn-create:hover {
-        opacity: 0.85;
+    .btn-save:hover {
+        background: #991b1b;
         color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(185,28,28,.2);
+    }
+
+    .btn-back:hover {
+        background: #e2e8f0;
+        color: #1e293b;
         text-decoration: none;
+        transform: translateY(-2px);
     }
 
     .text-danger {
         color: #dc2626;
-        margin-top: -15px;
-        margin-bottom: 15px;
+        font-size: 13px;
+        margin-top: 7px;
         display: block;
     }
 
@@ -125,7 +254,7 @@
         .create-container {
             width: calc(100% - 24px);
             margin: 22px auto;
-            padding: 18px 0 30px;
+            padding: 20px 16px;
         }
 
         .create-header h2 {
@@ -133,8 +262,7 @@
         }
 
         .btn-create {
-            flex: 1 1 180px;
-            text-align: center;
+            flex: 1 1 160px;
         }
     }
 </style>
@@ -146,27 +274,105 @@
         <p>Điền thông tin bên dưới để tạo bài viết mới.</p>
     </div>
 
-    <form action="@Url.RouteUrl("AdminArticles", new { action = "Create" })" method="post" enctype="multipart/form-data">
+    <form action="@Url.RouteUrl("AdminArticles", new { action = "Create" })"
+          method="post"
+          enctype="multipart/form-data">
+
         @Html.AntiForgeryToken()
 
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.ValidationSummary(true, "", new
+        {
+            @class = "text-danger"
+        })
 
-        <label class="form-label">Tiêu đề bài viết</label>
-        @Html.TextBoxFor(model => model.Title,
-            new { @class = "form-control-custom", placeholder = "Nhập tiêu đề bài viết..." })
-        @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+        <div class="form-group-custom">
+            <label class="form-label" for="Title">
+                Tiêu đề bài viết
+            </label>
 
-        <label class="form-label">Nội dung bài viết</label>
-        @Html.TextAreaFor(model => model.Content,
-            new { @class = "form-control-custom", rows = 8, placeholder = "Nhập nội dung bài viết..." })
-        @Html.ValidationMessageFor(model => model.Content, "", new { @class = "text-danger" })
+            @Html.TextBoxFor(m => m.Title, new
+            {
+                @class = "form-control-custom",
+                maxlength = "150",
+                placeholder = "Nhập tiêu đề bài viết...",
+                id = "Title"
+            })
 
-        <label class="form-label">Hình ảnh bài viết</label>
-        <input type="file" name="imageFile" id="imageFile"
-               class="form-control-custom" accept="image/*" />
+            @Html.ValidationMessageFor(m => m.Title, "", new
+            {
+                @class = "text-danger"
+            })
 
-        <div class="image-preview">
-            <img id="previewImage" alt="Ảnh xem trước" />
+            <div class="title-counter">
+                <span>Tiêu đề tối đa 150 ký tự</span>
+                <span class="count">0/150</span>
+            </div>
+
+            <div class="title-progress">
+                <div class="title-progress-bar"></div>
+            </div>
+
+            <div class="title-warning"></div>
+        </div>
+
+        <div class="form-group-custom">
+            <label class="form-label" for="Content">
+                Nội dung bài viết
+            </label>
+
+            @Html.TextAreaFor(m => m.Content, new
+            {
+                @class = "form-control-custom",
+                rows = 8,
+                placeholder = "Nhập nội dung bài viết..."
+            })
+
+            @Html.ValidationMessageFor(m => m.Content, "", new
+            {
+                @class = "text-danger"
+            })
+        </div>
+
+        <div class="form-group-custom">
+            <label class="form-label" for="imageFile">
+                Hình ảnh bài viết
+            </label>
+
+            <div class="image-upload">
+
+                <svg class="upload-icon"
+                     xmlns="http://www.w3.org/2000/svg"
+                     width="42"
+                     height="42"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.7"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="m21 15-5-5L5 21" />
+                </svg>
+
+                <label for="imageFile" class="choose-image-btn">
+                    Chọn ảnh trên máy tính
+                </label>
+
+                <input type="file"
+                       name="imageFile"
+                       id="imageFile"
+                       accept="image/*" />
+
+                <p class="upload-description" id="fileName">
+                    Chọn hình ảnh từ thiết bị của bạn
+                </p>
+
+                <div class="image-preview">
+                    <img id="previewImage" alt="Ảnh xem trước" />
+                </div>
+
+            </div>
         </div>
 
         <div class="create-actions">
@@ -175,23 +381,90 @@
                 Thêm bài viết
             </button>
 
-            @Html.ActionLink("Quay lại danh sách", "Index", null,
-                new { @class = "btn-create btn-back" })
+            @Html.RouteLink("Quay lại danh sách",
+                     "AdminArticles",
+                     new { action = "Index" },
+                     new { @class = "btn-create btn-back" })
         </div>
+
     </form>
 </div>
 
 <script>
-    document.getElementById("imageFile").addEventListener("change", function (event) {
-        var file = event.target.files[0];
-        var preview = document.getElementById("previewImage");
+    document.addEventListener("DOMContentLoaded", function () {
 
-        if (file && file.type.startsWith("image/")) {
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = "block";
-        } else {
-            preview.removeAttribute("src");
-            preview.style.display = "none";
+        // Đếm ký tự tiêu đề
+        const input = document.getElementById("Title");
+        const count = document.querySelector(".title-counter .count");
+        const bar = document.querySelector(".title-progress-bar");
+        const warning = document.querySelector(".title-warning");
+
+        function updateCounter() {
+            if (!input) return;
+
+            const length = input.value.length;
+            const percent = Math.min(length / 150 * 100, 100);
+
+            count.textContent = length + "/150";
+            bar.style.width = percent + "%";
+
+            if (length >= 150) {
+                bar.style.background = "#dc2626";
+                count.style.color = "#dc2626";
+                warning.textContent = "Bạn đã đạt giới hạn 150 ký tự.";
+                warning.style.display = "block";
+            }
+            else if (length >= 135) {
+                bar.style.background = "#f59e0b";
+                count.style.color = "#d97706";
+                warning.textContent = "Bạn sắp đạt giới hạn ký tự.";
+                warning.style.display = "block";
+            }
+            else {
+                bar.style.background = "#16a34a";
+                count.style.color = "#64748b";
+                warning.style.display = "none";
+            }
         }
+
+        if (input) {
+            input.addEventListener("input", updateCounter);
+            updateCounter();
+        }
+
+        // Xem trước hình ảnh
+        const imageInput = document.getElementById("imageFile");
+        const preview = document.getElementById("previewImage");
+        const fileName = document.getElementById("fileName");
+
+        let currentImageUrl = null;
+
+        imageInput.addEventListener("change", function () {
+            const file = this.files[0];
+
+            if (currentImageUrl) {
+                URL.revokeObjectURL(currentImageUrl);
+                currentImageUrl = null;
+            }
+
+            if (file && file.type.startsWith("image/")) {
+                currentImageUrl = URL.createObjectURL(file);
+
+                preview.src = currentImageUrl;
+                preview.style.display = "inline-block";
+
+                fileName.textContent = "Đã chọn: " + file.name;
+                fileName.style.color = "#b91c1c";
+                fileName.style.fontWeight = "700";
+            }
+            else {
+                preview.removeAttribute("src");
+                preview.style.display = "none";
+
+                fileName.textContent = "Chọn hình ảnh từ thiết bị của bạn";
+                fileName.style.color = "#64748b";
+                fileName.style.fontWeight = "400";
+            }
+        });
     });
 </script>

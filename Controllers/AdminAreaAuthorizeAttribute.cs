@@ -1,3 +1,4 @@
+
 using System;
 using System.Web;
 using System.Web.Mvc;
@@ -8,19 +9,46 @@ namespace NewsPortal.Controllers
     {
         protected override bool AuthorizeCore(HttpContextBase httpContext)
         {
-            return httpContext.Session["Admin"] != null ||
-                string.Equals(Convert.ToString(httpContext.Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase);
+            if (httpContext.Session == null)
+                return false;
+
+            string role = Convert.ToString(httpContext.Session["Role"]);
+
+            bool isAdmin = httpContext.Session["Admin"] != null;
+
+            bool isEditor = string.Equals(
+                role,
+                "Editor",
+                StringComparison.OrdinalIgnoreCase
+            );
+
+            return isAdmin || isEditor;
         }
 
-        protected override void HandleUnauthorizedRequest(AuthorizationContext filterContext)
+        protected override void HandleUnauthorizedRequest(
+            AuthorizationContext filterContext)
         {
-            if (filterContext.HttpContext.Session["User"] != null)
+            var session = filterContext.HttpContext.Session;
+
+            if (session != null && session["User"] != null)
             {
-                filterContext.Result = new RedirectResult("/Articles/Index");
+                session["AccessDeniedMessage"] =
+                    "B?n không có quy?n truy c?p khu v?c qu?n tr?.";
+
+                filterContext.Result =
+                    new RedirectResult("~/Home/Index");
+
                 return;
             }
 
-            filterContext.Result = new RedirectResult("/Account/Login");
+            if (session != null)
+            {
+                session["LoginMessage"] =
+                    "Vui lòng ??ng nh?p ?? truy c?p khu v?c qu?n tr?.";
+            }
+
+            filterContext.Result =
+                new RedirectResult("~/Account/Login");
         }
     }
 }

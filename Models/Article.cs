@@ -9,7 +9,7 @@ namespace NewsPortal.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập tiêu đề bài viết")]
-        [StringLength(250, MinimumLength = 10, ErrorMessage = "Tiêu đề từ 10 đến 250 ký tự")]
+        [StringLength(150, ErrorMessage = "Tiêu đề bài viết không được vượt quá 150 ký tự")]
         [Display(Name = "Tiêu đề")]
         public string Title { get; set; }
 

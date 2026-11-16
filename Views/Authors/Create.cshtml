@@ -7,127 +7,354 @@
 
 <style>
     .form-page {
-        width: min(760px, calc(100% - 32px));
-        max-width: 760px;
-        margin: 35px auto;
-        padding: 0;
+        width: min(850px, calc(100% - 32px));
+        max-width: 850px;
+        margin: 40px auto;
     }
 
     .form-card {
-        background: white;
-        border: 0;
-        border-radius: 0;
-        padding: 28px 0;
-        box-shadow: none;
+        background: #ffffff;
+        padding: 40px 45px;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
     }
 
     .form-page h2 {
-        font-size: 27px;
+        font-size: 30px;
         font-weight: 750;
         color: #1e293b;
+        margin: 0 0 10px;
     }
 
     .form-sub {
         color: #64748b;
-        margin-bottom: 25px;
+        font-size: 15px;
+        margin-bottom: 32px;
     }
 
     .field {
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
 
         .field label {
             display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-weight: 650;
+            margin-bottom: 10px;
             color: #334155;
+            font-size: 15px;
         }
 
         .field input {
+            display: block;
             width: 100%;
-            padding: 11px 13px;
+            padding: 14px 15px;
             border: 1px solid #cbd5e1;
-            border-radius: 8px;
+            border-radius: 9px;
             box-sizing: border-box;
+            font-size: 15px;
+            background: #ffffff;
+            transition: all 0.2s ease;
         }
 
             .field input:focus {
                 outline: none;
                 border-color: #b91c1c;
-                box-shadow: 0 0 0 3px rgba(185,28,28,.1);
+                box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.10);
             }
+
+    /* Khu vực chọn ảnh */
+    .image-upload .choose-image-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: fit-content !important;
+        padding: 10px 15px;
+        background: #b91c1c;
+        color: #ffffff !important;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 750;
+        cursor: pointer;
+        margin: 0;
+        transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+        .image-upload .choose-image-btn:hover {
+            background: #991b1b;
+            color: #ffffff !important;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(185, 28, 28, 0.3);
+        }
+        .image-upload .choose-image-btn:active {
+            transform: translateY(-1px) scale(0.97);
+        }
+        .image-upload .choose-image-btn svg {
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+        }
+
+
+        .image-upload input[type="file"] {
+            display: none;
+        }
+
+    /* Nút chọn ảnh */
+    .choose-image-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 15px;
+        background: #b91c1c;
+        color: #ffffff !important;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 750;
+        line-height: 1.4;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0;
+        width: auto;
+        text-shadow: none;
+    }
+        .choose-image-btn:hover {
+            background: #991b1b;
+            color: #ffffff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(185, 28, 28, 0.2);
+        }
+
+        .choose-image-btn svg {
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+        }
+
+    .image-preview {
+        display: none;
+        margin-top: 16px;
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+    }
+
+    .image-note {
+        color: #64748b;
+        font-size: 13px;
+        margin: 12px 0 0;
+    }
 
     .form-actions {
         display: flex;
-        gap: 10px;
-        margin-top: 25px;
+        gap: 14px;
+        margin-top: 35px;
+        padding-top: 25px;
+        border-top: 1px solid #e2e8f0;
     }
 
     .btn-save, .btn-back {
-        padding: 10px 17px;
-        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 13px 25px;
+        border-radius: 9px;
         text-decoration: none;
-        border: 0;
+        border: none;
         cursor: pointer;
-        font-weight: 600;
+        font-size: 15px;
+        font-weight: 700;
+        transition: all 0.2s ease;
     }
 
     .btn-save {
         background: #b91c1c;
-        color: white;
+        color: #ffffff;
+        box-shadow: 0 4px 10px rgba(185, 28, 28, 0.18);
     }
+
+        .btn-save:hover {
+            background: #991b1b;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(185, 28, 28, 0.25);
+        }
 
     .btn-back {
         background: #e2e8f0;
         color: #334155;
     }
 
-    .text-danger, .validation-summary-errors {
+        .btn-back:hover {
+            background: #cbd5e1;
+            color: #1e293b;
+            transform: translateY(-2px);
+        }
+
+    .text-danger,
+    .validation-summary-errors {
         color: #b91c1c;
         font-size: 13px;
     }
 
+        .validation-summary-errors ul {
+            padding-left: 20px;
+        }
+
     @@media (max-width: 650px) {
-        .form-page { width: calc(100% - 24px); margin-top: 22px; }
-        .form-actions { flex-wrap: wrap; }
-        .btn-save, .btn-back { flex: 1 1 160px; text-align: center; }
+        .form-page {
+            width: calc(100% - 24px);
+            margin: 22px auto;
+        }
+
+        .form-card {
+            padding: 25px 20px;
+        }
+
+        .form-page h2 {
+            font-size: 25px;
+        }
+
+        .form-actions {
+            flex-wrap: wrap;
+        }
+
+        .btn-save, .btn-back {
+            flex: 1 1 140px;
+        }
     }
 </style>
 
 <div class="form-page">
     <div class="form-card">
-        <h2>Thêm tác giả</h2>
-        <p class="form-sub">Thêm thông tin tác giả mới vào NewsPortal.</p>
 
-        <form action="@Url.RouteUrl("AdminAuthors", new { action = "Create" })" method="post">
+        <h2>Thêm tác giả</h2>
+
+        <p class="form-sub">
+            Nhập thông tin tác giả mới vào hệ thống NewsPortal.
+        </p>
+
+        <form action="@Url.RouteUrl("AdminAuthors", new { action = "Create" })"
+              method="post"
+              enctype="multipart/form-data">
+
             @Html.AntiForgeryToken()
-            @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
+
+            @Html.ValidationSummary(true, "", new
+            {
+                @class = "validation-summary-errors"
+            })
 
             <div class="field">
                 @Html.LabelFor(m => m.AuthorName, "Tên tác giả")
+
                 @Html.TextBoxFor(m => m.AuthorName, new
                 {
                     placeholder = "Nhập họ tên tác giả...",
                     required = "required"
                 })
-                @Html.ValidationMessageFor(m => m.AuthorName, "", new { @class = "text-danger" })
+
+                @Html.ValidationMessageFor(m => m.AuthorName, "", new
+                {
+                    @class = "text-danger"
+                })
             </div>
 
             <div class="field">
                 @Html.LabelFor(m => m.Email, "Địa chỉ email")
+
                 @Html.TextBoxFor(m => m.Email, new
                 {
                     type = "email",
                     placeholder = "example@email.com",
                     required = "required"
                 })
-                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+
+                @Html.ValidationMessageFor(m => m.Email, "", new
+                {
+                    @class = "text-danger"
+                })
+            </div>
+
+            <div class="field">
+                <label>Ảnh tác giả</label>
+
+                <div class="image-upload">
+
+                    <label for="imageFile" class="choose-image-btn">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <path d="m21 15-5-5L5 21"></path>
+                        </svg>
+
+                        Chọn ảnh từ máy tính
+                    </label>
+
+                    <input type="file"
+                           id="imageFile"
+                           name="imageFile"
+                           accept=".jpg,.jpeg,.png,.gif,.webp" />
+
+                    <p class="image-note">
+                        Hỗ trợ JPG, PNG, GIF, WEBP. Dung lượng tối đa 5 MB.
+                    </p>
+
+                    <img id="imagePreview"
+                         class="image-preview"
+                         alt="Ảnh xem trước" />
+
+                </div>
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn-save">Lưu tác giả</button>
-                @Html.RouteLink("Quay lại", "AdminAuthors", new { action = "Index" }, new { @class = "btn-back" })
+
+                <button type="submit" class="btn-save">
+                    Lưu tác giả
+                </button>
+
+                @Html.RouteLink(
+                         "Quay lại",
+                         "AdminAuthors",
+                         new { action = "Index" },
+                         new { @class = "btn-back" }
+                     )
+
             </div>
+
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var imageInput = document.getElementById("imageFile");
+        var preview = document.getElementById("imagePreview");
+
+        if (!imageInput || !preview) return;
+
+        imageInput.addEventListener("change", function () {
+
+            var file = this.files && this.files[0];
+
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = "block";
+            } else {
+                preview.removeAttribute("src");
+                preview.style.display = "none";
+            }
+
+        });
+    });
+</script>

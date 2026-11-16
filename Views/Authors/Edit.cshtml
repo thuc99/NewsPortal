@@ -6,34 +6,37 @@
 }
 
 <style>
+    body {
+        background: #f8fafc;
+    }
+
     .form-page {
-        width: min(760px, calc(100% - 32px));
-        max-width: 760px;
+        width: min(850px, calc(100% - 32px));
         margin: 35px auto;
-        padding: 0;
     }
 
     .form-card {
-        background: white;
-        border: 0;
-        border-radius: 0;
-        padding: 28px 0;
-        box-shadow: none;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 32px 36px;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
     }
 
     .form-page h2 {
         font-size: 27px;
         font-weight: 750;
         color: #1e293b;
+        margin: 0 0 8px;
     }
 
     .form-sub {
         color: #64748b;
-        margin-bottom: 25px;
+        margin: 0 0 28px;
     }
 
     .field {
-        margin-bottom: 20px;
+        margin-bottom: 22px;
     }
 
         .field label {
@@ -43,37 +46,136 @@
             color: #334155;
         }
 
-        .field input {
+        .field input:not([type="file"]) {
             width: 100%;
-            padding: 11px 13px;
+            padding: 12px 13px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             box-sizing: border-box;
+            font-size: 14px;
+            background: #fff;
         }
 
-            .field input:focus {
-                outline: none;
-                border-color: #b91c1c;
-            }
+        .field input:focus {
+            outline: none;
+            border-color: #b91c1c;
+            box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.08);
+        }
 
-            .field input[readonly] {
-                background: #f1f5f9;
-                color: #64748b;
-            }
+        .field input[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+    .image-upload {
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #fff;
+        padding: 25px 20px;
+        text-align: center;
+        transition: .2s;
+    }
+
+        .image-upload:hover {
+            border-color: #b91c1c;
+            background: #fffafa;
+        }
+
+        .image-upload input[type="file"] {
+            display: none;
+        }
+
+    .upload-icon {
+        color: #b91c1c;
+        margin-bottom: 10px;
+    }
+
+        .upload-icon svg {
+            width: 42px;
+            height: 42px;
+        }
+
+    .choose-image-btn {
+        display: inline-block;
+        background: #b91c1c;
+        color: #fff;
+        padding: 11px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+        .choose-image-btn:hover {
+            background: #991b1b;
+        }
+
+    .upload-description {
+        color: #64748b;
+        font-size: 13px;
+        margin: 12px 0 0;
+    }
+
+    .file-name {
+        color: #475569;
+        font-size: 13px;
+        margin-top: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .image-preview {
+        margin-top: 18px;
+        display: none;
+    }
+
+        .image-preview img {
+            max-width: 100%;
+            width: auto;
+            max-height: 240px;
+            object-fit: contain;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 5px;
+            background: #fff;
+        }
+
+    .current-image {
+        margin-bottom: 18px;
+    }
+
+        .current-image img {
+            display: block;
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            margin: 10px auto 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .current-image p {
+            color: #64748b;
+            font-size: 13px;
+            margin: 0;
+        }
 
     .form-actions {
         display: flex;
         gap: 10px;
-        margin-top: 25px;
+        margin-top: 28px;
     }
 
     .btn-save, .btn-back {
-        padding: 10px 17px;
+        display: inline-block;
+        padding: 11px 19px;
         border-radius: 8px;
         text-decoration: none;
         border: 0;
         cursor: pointer;
         font-weight: 600;
+        font-size: 14px;
+        text-align: center;
     }
 
     .btn-save {
@@ -81,10 +183,18 @@
         color: white;
     }
 
+        .btn-save:hover {
+            background: #991b1b;
+        }
+
     .btn-back {
         background: #e2e8f0;
         color: #334155;
     }
+
+        .btn-back:hover {
+            background: #cbd5e1;
+        }
 
     .text-danger, .validation-summary-errors {
         color: #b91c1c;
@@ -92,20 +202,38 @@
     }
 
     @@media (max-width: 650px) {
-        .form-page { width: calc(100% - 24px); margin-top: 22px; }
-        .form-actions { flex-wrap: wrap; }
-        .btn-save, .btn-back { flex: 1 1 160px; text-align: center; }
+        .form-page {
+            width: calc(100% - 24px);
+            margin-top: 22px;
+        }
+
+        .form-card {
+            padding: 24px 18px;
+        }
+
+        .form-actions {
+            flex-wrap: wrap;
+        }
+
+        .btn-save, .btn-back {
+            flex: 1 1 140px;
+        }
     }
 </style>
 
 <div class="form-page">
     <div class="form-card">
         <h2>Chỉnh sửa tác giả</h2>
-        <p class="form-sub">Cập nhật thông tin tác giả.</p>
+        <p class="form-sub">Cập nhật thông tin và hình ảnh tác giả.</p>
 
-        <form action="@Url.RouteUrl("AdminAuthors", new { action = "Edit" })" method="post">
+        <form action="@Url.RouteUrl("AdminAuthors", new { action = "Edit" })"
+              method="post"
+              enctype="multipart/form-data">
+
             @Html.AntiForgeryToken()
             @Html.HiddenFor(m => m.AuthorID)
+            @Html.HiddenFor(m => m.Images)
+
             @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
 
             <div class="field">
@@ -132,10 +260,108 @@
                 @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
             </div>
 
+            <div class="field">
+                <label>Ảnh tác giả</label>
+
+                @if (!string.IsNullOrEmpty(Model.Images))
+                {
+                    <div class="current-image" id="currentImage">
+                        <p>Ảnh hiện tại:</p>
+                        <img src="@Url.Content("~/Content/Images/" + Model.Images)"
+                             alt="Ảnh tác giả hiện tại" />
+                    </div>
+                }
+
+                <div class="image-upload">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.7"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 16V4" />
+                            <path d="M7 9l5-5 5 5" />
+                            <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+                        </svg>
+                    </div>
+
+                    <input type="file"
+                           id="imageFile"
+                           name="imageFile"
+                           accept=".jpg,.jpeg,.png,.gif,.webp,image/*" />
+
+                    <label for="imageFile" class="choose-image-btn">
+                        Chọn ảnh trên máy tính
+                    </label>
+
+                    <p class="upload-description">
+                        Hỗ trợ JPG, JPEG, PNG, GIF, WEBP
+                    </p>
+
+                    <div class="file-name" id="fileName">
+                        Chưa chọn ảnh mới
+                    </div>
+
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImage" src="" alt="Ảnh xem trước" />
+                    </div>
+                </div>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn-save">Lưu thay đổi</button>
-                @Html.RouteLink("Quay lại", "AdminAuthors", new { action = "Index" }, new { @class = "btn-back" })
+                @Html.RouteLink("Quay lại", "AdminAuthors",
+                         new { action = "Index" }, new { @class = "btn-back" })
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const imageInput = document.getElementById("imageFile");
+        const fileName = document.getElementById("fileName");
+        const imagePreview = document.getElementById("imagePreview");
+        const previewImage = document.getElementById("previewImage");
+        const currentImage = document.getElementById("currentImage");
+
+        let currentObjectUrl = null;
+
+        imageInput.addEventListener("change", function () {
+            const file = this.files[0];
+
+            if (!file) {
+                fileName.textContent = "Chưa chọn ảnh mới";
+                imagePreview.style.display = "none";
+                previewImage.src = "";
+
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
+
+                return;
+            }
+
+            if (!file.type.startsWith("image/")) {
+                alert("Vui lòng chọn một tệp hình ảnh hợp lệ.");
+                this.value = "";
+                fileName.textContent = "Chưa chọn ảnh mới";
+                imagePreview.style.display = "none";
+                return;
+            }
+
+            fileName.textContent = "Ảnh đã chọn: " + file.name;
+
+            if (currentObjectUrl) {
+                URL.revokeObjectURL(currentObjectUrl);
+            }
+
+            currentObjectUrl = URL.createObjectURL(file);
+            previewImage.src = currentObjectUrl;
+            imagePreview.style.display = "block";
+
+            if (currentImage) {
+                currentImage.style.display = "none";
+            }
+        });
+    });
+</script>
