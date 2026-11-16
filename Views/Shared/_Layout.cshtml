@@ -477,37 +477,36 @@
 
         .back-to-top {
             position: fixed;
-            right: 16px;
-            bottom: 16px;
+            right: 22px;
+            bottom: 22px;
             z-index: 1000;
-            display: flex;
-            width: 68px;
-            height: 66px;
-            flex-direction: column;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #bdbdbd;
-            border-radius: 4px;
+            gap: 8px;
+            min-height: 46px;
+            padding: 0 15px;
+            border: 1px solid #b91c32;
+            border-radius: 7px;
             background: #fff;
-            color: #777;
+            color: #b91c32;
             cursor: pointer;
-            line-height: 1.1;
-            transition: color .2s, border-color .2s, box-shadow .2s;
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: .04em;
+            line-height: 1;
+            transition: color .2s, background .2s, transform .2s;
         }
 
             .back-to-top:hover {
-                border-color: var(--red);
-                color: var(--red);
-                box-shadow: 0 3px 12px rgba(0, 0, 0, .12);
+                background: #b91c32;
+                color: #fff;
+                transform: translateY(-2px);
             }
 
             .back-to-top svg {
-                width: 28px;
-                height: 28px;
-            }
-
-            .back-to-top span {
-                font-size: 13px;
+                width: 18px;
+                height: 18px;
             }
 
         /* FOOTER */
