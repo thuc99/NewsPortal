@@ -302,6 +302,13 @@
             flex-wrap: nowrap;
         }
 
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-width: 0;
+        }
+
         .nav-link {
             display: inline-flex;
             align-items: center;
@@ -834,11 +841,32 @@
 
         @@media (max-width: 900px) {
             .nav-inner {
-                gap: 18px;
+                gap: 12px;
             }
 
-            .brand-actions { gap: 8px; }
-            .search-input { width: 145px; }
+            .nav-links {
+                flex: 1;
+                gap: 14px;
+                flex-wrap: wrap;
+                padding: 5px 0;
+            }
+
+            .nav-links .nav-link {
+                min-height: 42px;
+            }
+
+            .nav-dropdown {
+                flex: 0 0 auto;
+                align-self: flex-start;
+            }
+
+            .brand-actions {
+                gap: 8px;
+            }
+
+            .search-input {
+                width: 145px;
+            }
         }
 
         @@media (max-width: 650px) {
@@ -853,6 +881,7 @@
             .brand-row {
                 align-items: center;
                 flex-wrap: wrap;
+                gap: 12px;
             }
 
             .top-inner { align-items: flex-start; flex-direction: column; }
@@ -867,13 +896,21 @@
             }
 
             .nav-inner {
-                gap: 18px;
-                padding-top: 5px;
+                min-height: 48px;
+                align-items: flex-start;
+                gap: 8px;
+                padding-top: 0;
             }
 
+            .nav-links { gap: 12px; }
+
             .nav-link {
-                min-height: 42px;
+                min-height: 48px;
                 font-size: 11px;
+            }
+
+            .hamburger-toggle {
+                margin-top: 2px;
             }
 
             .search-input {
@@ -1054,18 +1091,19 @@
     <!-- THANH ĐIỀU HƯỚNG -->
     <nav class="navbar">
         <div class="container nav-inner">
+            <div class="nav-links">
+                <a class="nav-link @(currentController == "Home" && !isFavoritesPage ? "active" : "")"
+                   href="@Url.Action("Index", "Home")">
+                    Trang chủ
+                </a>
 
-            <a class="nav-link @(currentController == "Home" && !isFavoritesPage ? "active" : "")"
-               href="@Url.Action("Index", "Home")">
-                Trang chủ
-            </a>
-
-            @Html.Action("Navigation", "Categories", new
-            {
-                activeCategoryId = currentController == "Categories" && currentAction == "Details"
-                    ? Convert.ToString(ViewContext.RouteData.Values["id"])
-                    : string.Empty
-            })
+                @Html.Action("Navigation", "Categories", new
+                {
+                    activeCategoryId = currentController == "Categories" && currentAction == "Details"
+                        ? Convert.ToString(ViewContext.RouteData.Values["id"])
+                        : string.Empty
+                })
+            </div>
 
             <div class="nav-dropdown" id="content-nav-dropdown">
                 <button type="button"
