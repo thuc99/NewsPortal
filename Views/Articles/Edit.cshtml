@@ -3,6 +3,33 @@
 
 @{
     ViewBag.Title = "Chỉnh sửa bài viết";
+    bool isAdminUser = ViewBag.IsAdminUser == true;
+
+    string currentImageSrc = null;
+    if (!string.IsNullOrWhiteSpace(Model.Image))
+    {
+        if (Model.Image.StartsWith("http", System.StringComparison.OrdinalIgnoreCase) || Model.Image.StartsWith("/"))
+        {
+            currentImageSrc = Model.Image;
+        }
+        else if (Model.Image.StartsWith("~/"))
+        {
+            currentImageSrc = Url.Content(Model.Image);
+        }
+        else
+        {
+            currentImageSrc = Url.Content("~/Content/Images/" + Model.Image);
+        }
+    }
+
+    var statusItems = new[]
+    {
+        new SelectListItem { Value = "Draft", Text = "Draft - Bản nháp" },
+        new SelectListItem { Value = "Pending", Text = "Pending - Chờ duyệt" },
+        new SelectListItem { Value = "Published", Text = "Published - Đã xuất bản" },
+        new SelectListItem { Value = "Rejected", Text = "Rejected - Bị từ chối" },
+        new SelectListItem { Value = "Archived", Text = "Archived - Đã lưu trữ" }
+    };
 }
 
 <style>
@@ -31,9 +58,45 @@
 
     .form-sub {
         color: #64748b;
-        margin: 0 0 28px;
+        margin: 0 0 22px;
         font-size: 14px;
     }
+
+    .rejected-banner {
+        margin-bottom: 22px;
+        padding: 13px 16px;
+        border-radius: 9px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+        font-size: 13.5px;
+        line-height: 1.55;
+    }
+
+    .pending-banner {
+        margin-bottom: 22px;
+        padding: 13px 16px;
+        border-radius: 9px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+        font-size: 13.5px;
+        line-height: 1.55;
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 5px 11px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 700;
+    }
+
+    .status-pill-draft { background: #fef3c7; color: #92400e; }
+    .status-pill-pending { background: #dbeafe; color: #1e40af; }
+    .status-pill-published { background: #dcfce7; color: #166534; }
+    .status-pill-rejected { background: #fee2e2; color: #b91c1c; }
+    .status-pill-archived { background: #f1f5f9; color: #475569; }
 
     .field {
         margin-bottom: 24px;
@@ -203,6 +266,7 @@
 
     .form-actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 12px;
         margin-top: 28px;
         padding-top: 22px;
@@ -210,6 +274,7 @@
     }
 
     .btn-save,
+    .btn-draft,
     .btn-back {
         display: inline-flex;
         align-items: center;
@@ -228,6 +293,12 @@
         color: white;
     }
 
+    .btn-draft {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
     .btn-back {
         background: #f1f5f9;
         color: #334155;
@@ -238,6 +309,12 @@
         color: white;
         transform: translateY(-2px);
         box-shadow: 0 5px 12px rgba(185,28,28,.2);
+    }
+
+    .btn-draft:hover {
+        background: #fde68a;
+        color: #78350f;
+        transform: translateY(-2px);
     }
 
     .btn-back:hover {
@@ -260,11 +337,8 @@
             padding: 20px 16px;
         }
 
-        .form-actions {
-            flex-wrap: wrap;
-        }
-
         .btn-save,
+        .btn-draft,
         .btn-back {
             flex: 1 1 160px;
             text-align: center;
@@ -277,8 +351,21 @@
 
         <h2>Chỉnh sửa bài viết</h2>
         <p class="form-sub">
-            Cập nhật nội dung và trạng thái bài viết.
+            @(isAdminUser ? "Cập nhật nội dung và trạng thái kiểm duyệt bài viết." : "Chỉnh sửa nội dung để lưu nháp hoặc gửi Admin xét duyệt.")
         </p>
+
+        @if (Model.Status == "Rejected")
+        {
+            <div class="rejected-banner">
+                <strong>Bài viết này đã bị Admin từ chối (Rejected).</strong> Vui lòng chỉnh sửa lại nội dung rồi bấm <strong>Gửi duyệt lại</strong> để chuyển về hàng đợi chờ Admin duyệt.
+            </div>
+        }
+        else if (!isAdminUser && Model.Status == "Pending")
+        {
+            <div class="pending-banner">
+                <strong>Bài viết đang chờ Admin duyệt (Pending).</strong> Bạn có thể cập nhật nội dung và tiếp tục giữ ở hàng đợi duyệt hoặc lưu tạm về bản nháp.
+            </div>
+        }
 
         <form action="@Url.RouteUrl("AdminArticles", new { action = "Edit" })"
               method="post"
@@ -342,16 +429,36 @@
                 })
             </div>
 
-            <div class="field">
-                @Html.LabelFor(m => m.Status, "Trạng thái")
+            @if (isAdminUser)
+            {
+                <div class="field">
+                    @Html.LabelFor(m => m.Status, "Trạng thái bài viết")
 
-                @Html.DropDownListFor(m => m.Status,
-                         new SelectList(
-                             new[] { "Draft", "Published" },
-                             Model.Status
-                         ),
-                         "-- Chọn trạng thái --")
-            </div>
+                    @Html.DropDownListFor(m => m.Status,
+                             new SelectList(statusItems, "Value", "Text", Model.Status))
+                </div>
+            }
+            else
+            {
+                @Html.HiddenFor(m => m.Status)
+                <div class="field">
+                    <label>Trạng thái hiện tại</label>
+                    <div>
+                        @if (Model.Status == "Rejected")
+                        {
+                            <span class="status-pill status-pill-rejected">Bị từ chối (Rejected)</span>
+                        }
+                        else if (Model.Status == "Pending")
+                        {
+                            <span class="status-pill status-pill-pending">Chờ duyệt (Pending)</span>
+                        }
+                        else
+                        {
+                            <span class="status-pill status-pill-draft">Bản nháp (Draft)</span>
+                        }
+                    </div>
+                </div>
+            }
 
             <div class="field">
                 <label for="imageFile">Ảnh bài viết</label>
@@ -383,20 +490,36 @@
                            accept="image/*" />
 
                     <p class="upload-description" id="fileName">
-                        Chọn hình ảnh từ thiết bị của bạn
+                        @(string.IsNullOrWhiteSpace(currentImageSrc) ? "Chọn hình ảnh từ thiết bị của bạn" : "Đang dùng ảnh hiện tại (chọn ảnh mới nếu muốn thay thế)")
                     </p>
 
                     <div class="image-preview">
-                        <img id="previewImage" alt="Ảnh xem trước" />
+                        <img id="previewImage"
+                             src="@(currentImageSrc ?? "")"
+                             style="@(string.IsNullOrWhiteSpace(currentImageSrc) ? "display:none;" : "display:inline-block;")"
+                             alt="Ảnh xem trước" />
                     </div>
 
                 </div>
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn-save">
-                    Lưu thay đổi
-                </button>
+                @if (isAdminUser)
+                {
+                    <button type="submit" class="btn-save">
+                        Lưu thay đổi
+                    </button>
+                }
+                else
+                {
+                    <button type="submit" name="submitAction" value="Pending" class="btn-save">
+                        @(Model.Status == "Rejected" ? "Gửi duyệt lại" : "Gửi Admin duyệt")
+                    </button>
+
+                    <button type="submit" name="submitAction" value="Draft" class="btn-draft">
+                        Lưu bản nháp
+                    </button>
+                }
 
                 @Html.RouteLink("Quay lại",
                          "AdminArticles",

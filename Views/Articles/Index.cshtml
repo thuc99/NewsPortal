@@ -6,6 +6,9 @@
 @{
     bool canManageArticles = ViewBag.CanManageArticles == true;
     bool isAdminManagement = ViewBag.IsAdminManagement == true;
+    bool isAdminUser = ViewBag.IsAdminUser == true;
+    string currentStatusFilter = ViewBag.Status as string ?? "";
+
     string articleIndexUrl = isAdminManagement
         ? Url.RouteUrl("AdminArticles", new { action = "Index" })
         : Url.Action("Index", "Articles");
@@ -18,6 +21,12 @@
     var totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
     var totalArticles = ViewBag.TotalArticles == null ? 0 : (int)ViewBag.TotalArticles;
 
+    int countAll = ViewBag.CountAll == null ? totalArticles : (int)ViewBag.CountAll;
+    int countDraft = ViewBag.CountDraft == null ? 0 : (int)ViewBag.CountDraft;
+    int countPending = ViewBag.CountPending == null ? 0 : (int)ViewBag.CountPending;
+    int countPublished = ViewBag.CountPublished == null ? 0 : (int)ViewBag.CountPublished;
+    int countRejected = ViewBag.CountRejected == null ? 0 : (int)ViewBag.CountRejected;
+    int countArchived = ViewBag.CountArchived == null ? 0 : (int)ViewBag.CountArchived;
 }
 
 @if (TempData["Success"] != null)
@@ -69,7 +78,7 @@
         align-items: center;
         gap: 18px;
         flex-wrap: wrap;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
 
         .management-header h2 {
@@ -83,6 +92,13 @@
         margin: 0;
         color: #64748b;
         font-size: 14px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
     }
 
     .btn-add {
@@ -101,6 +117,68 @@
             background: #991b1b;
         }
 
+    .btn-admin-dash {
+        display: inline-block;
+        padding: 11px 15px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #1e293b !important;
+        text-decoration: none !important;
+        font-weight: 600;
+    }
+
+        .btn-admin-dash:hover {
+            background: #e2e8f0;
+        }
+
+    .workflow-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .wf-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 13px;
+        border-radius: 999px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #334155 !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: .2s;
+    }
+
+        .wf-tab:hover {
+            border-color: #b91c1c;
+            color: #b91c1c !important;
+        }
+
+        .wf-tab.active {
+            background: #b91c1c;
+            border-color: #b91c1c;
+            color: #fff !important;
+        }
+
+    .wf-count {
+        display: inline-block;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, .08);
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+
+    .wf-tab.active .wf-count {
+        background: rgba(255, 255, 255, .22);
+        color: #fff;
+    }
+
     .filter-toggle {
         border: 0;
         padding: 9px 14px;
@@ -117,7 +195,10 @@
 
     .filter-toolbar {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
         margin-bottom: 12px;
     }
 
@@ -180,7 +261,7 @@
     }
 
     .result-count {
-        margin: 0 0 12px;
+        margin: 0;
         color: #64748b;
         font-size: 13px;
     }
@@ -279,7 +360,7 @@
 
     .status-badge {
         display: inline-block;
-        padding: 5px 9px;
+        padding: 5px 10px;
         border-radius: 999px;
         font-size: 12px;
         font-weight: 700;
@@ -296,27 +377,65 @@
         color: #92400e;
     }
 
+    .status-pending {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-rejected {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .status-archived {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
     .action-group {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
+        align-items: center;
+    }
+
+    .inline-wf-form {
+        display: inline;
+        margin: 0;
     }
 
     .action-btn {
         display: inline-block;
         padding: 7px 10px;
         margin: 2px;
+        border: 0;
         border-radius: 6px;
         text-decoration: none !important;
-        font-size: 13px;
+        font-size: 12.5px;
         font-weight: 600;
         white-space: nowrap;
+        cursor: pointer;
     }
 
     .btn-edit,
     .btn-detail {
         background: #dbeafe;
         color: #1d4ed8 !important;
+    }
+
+    .btn-submit-wf {
+        background: #dcfce7;
+        color: #166534 !important;
+    }
+
+    .btn-reject-wf {
+        background: #ffedd5;
+        color: #c2410c !important;
+    }
+
+    .btn-archive-wf {
+        background: #e2e8f0;
+        color: #334155 !important;
     }
 
     .btn-delete {
@@ -352,7 +471,7 @@
 
     @@media (max-width: 850px) {
         .management-table {
-            min-width: 700px;
+            min-width: 760px;
         }
     }
 
@@ -394,23 +513,64 @@
 
     <div class="management-header">
         <div>
-            <h2>@(canManageArticles ? "Quản lý bài viết" : "Tin tức mới nhất")</h2>
+            <h2>@(canManageArticles ? (isAdminUser ? "Quản lý & Kiểm duyệt bài viết" : "Bài viết của Phóng viên") : "Tin tức mới nhất")</h2>
 
             <p class="management-subtitle">
                 @(canManageArticles
-                    ? "Quản lý, tìm kiếm và cập nhật các bài viết trên NewsPortal."
+                    ? (isAdminUser
+                        ? "Kiểm duyệt bài chờ duyệt (Pending), xuất bản lên trang chủ, từ chối hoặc lưu trữ bài viết."
+                        : "Soạn bài nháp (Draft), gửi Admin duyệt (Pending) và chỉnh sửa bài bị từ chối (Rejected).")
                     : "Cập nhật những tin tức mới nhất trên NewsPortal.")
             </p>
         </div>
 
         @if (canManageArticles)
         {
-            <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create" })">+ Thêm bài viết</a>
+            <div class="header-actions">
+                @if (isAdminUser)
+                {
+                    <a class="btn-admin-dash" href="@Url.Action("Index", "Admin")">Bảng điều khiển Admin</a>
+                }
+                <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create" })">+ Thêm bài viết</a>
+            </div>
         }
     </div>
 
+    @if (canManageArticles)
+    {
+        <div class="workflow-tabs">
+            <a class="wf-tab @(string.IsNullOrEmpty(currentStatusFilter) ? "active" : "")"
+               href="@Url.RouteUrl("AdminArticles", new { action = "Index" })">
+                Tất cả <span class="wf-count">@countAll</span>
+            </a>
+            <a class="wf-tab @(currentStatusFilter == "Pending" ? "active" : "")"
+               href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Pending" })">
+                Chờ duyệt (Pending) <span class="wf-count">@countPending</span>
+            </a>
+            <a class="wf-tab @(currentStatusFilter == "Draft" ? "active" : "")"
+               href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Draft" })">
+                Bản nháp (Draft) <span class="wf-count">@countDraft</span>
+            </a>
+            <a class="wf-tab @(currentStatusFilter == "Published" ? "active" : "")"
+               href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Published" })">
+                Đã xuất bản (Published) <span class="wf-count">@countPublished</span>
+            </a>
+            <a class="wf-tab @(currentStatusFilter == "Rejected" ? "active" : "")"
+               href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Rejected" })">
+                Bị từ chối (Rejected) <span class="wf-count">@countRejected</span>
+            </a>
+            <a class="wf-tab @(currentStatusFilter == "Archived" ? "active" : "")"
+               href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Archived" })">
+                Đã lưu trữ (Archived) <span class="wf-count">@countArchived</span>
+            </a>
+        </div>
+    }
 
     <div class="filter-toolbar">
+        <p class="result-count">
+            Tìm thấy <strong>@totalArticles</strong> bài viết
+        </p>
+
         <button type="button" id="filterToggle" class="filter-toggle">
             Bộ lọc nâng cao
         </button>
@@ -447,20 +607,15 @@
                 }
             </select>
 
-            if (canManageArticles)
+            @if (canManageArticles)
             {
                 <select name="status">
                     <option value="">Mọi trạng thái</option>
-
-                    <option value="Published"
-                            @(ViewBag.Status as string == "Published" ? "selected" : "")>
-                        Published
-                    </option>
-
-                    <option value="Draft"
-                            @(ViewBag.Status as string == "Draft" ? "selected" : "")>
-                        Draft
-                    </option>
+                    <option value="Draft" @(currentStatusFilter == "Draft" ? "selected" : "")>Draft - Bản nháp</option>
+                    <option value="Pending" @(currentStatusFilter == "Pending" ? "selected" : "")>Pending - Chờ duyệt</option>
+                    <option value="Published" @(currentStatusFilter == "Published" ? "selected" : "")>Published - Đã xuất bản</option>
+                    <option value="Rejected" @(currentStatusFilter == "Rejected" ? "selected" : "")>Rejected - Bị từ chối</option>
+                    <option value="Archived" @(currentStatusFilter == "Archived" ? "selected" : "")>Archived - Đã lưu trữ</option>
                 </select>
             }
 
@@ -480,11 +635,6 @@
         </form>
     </div>
 
-
-    <p class="result-count">
-        Tìm thấy <strong>@totalArticles</strong> bài viết
-    </p>
-
     <div class="management-card">
         <table class="management-table">
             <thead>
@@ -498,10 +648,7 @@
                         <th>Trạng thái</th>
                         <th>Thao tác</th>
                     }
-
-
                 </tr>
-
             </thead>
 
             <tbody>
@@ -515,13 +662,51 @@
                             excerpt = excerpt.Substring(0, 180).TrimEnd() + "…";
                         }
 
+                        string imgSrc = null;
+                        if (!string.IsNullOrWhiteSpace(item.Image))
+                        {
+                            if (item.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase) || item.Image.StartsWith("/"))
+                            {
+                                imgSrc = item.Image;
+                            }
+                            else if (item.Image.StartsWith("~/"))
+                            {
+                                imgSrc = Url.Content(item.Image);
+                            }
+                            else
+                            {
+                                imgSrc = Url.Content("~/Content/Images/" + item.Image);
+                            }
+                        }
+
+                        string badgeClass = "status-draft";
+                        string badgeLabel = "Bản nháp (Draft)";
+                        if (item.Status == "Pending")
+                        {
+                            badgeClass = "status-pending";
+                            badgeLabel = "Chờ duyệt (Pending)";
+                        }
+                        else if (item.Status == "Published")
+                        {
+                            badgeClass = "status-published";
+                            badgeLabel = "Đã xuất bản (Published)";
+                        }
+                        else if (item.Status == "Rejected")
+                        {
+                            badgeClass = "status-rejected";
+                            badgeLabel = "Bị từ chối (Rejected)";
+                        }
+                        else if (item.Status == "Archived")
+                        {
+                            badgeClass = "status-archived";
+                            badgeLabel = "Đã lưu trữ (Archived)";
+                        }
+
                         <tr>
                             <td>
-                                @if (!string.IsNullOrWhiteSpace(item.Image))
+                                @if (!string.IsNullOrWhiteSpace(imgSrc))
                                 {
-                                    <img src="@(item.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-                                        ? item.Image
-                                        : Url.Content("~/Content/Images/" + item.Image))"
+                                    <img src="@imgSrc"
                                          class="article-image"
                                          alt="@item.Title" />
                                 }
@@ -532,7 +717,7 @@
                             </td>
 
                             <td class="article-title">
-                                <a href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = item.Id }) : Url.Action("Details", "Articles", new { id = item.Id }))">@item.Title</a>
+                                <a href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = item.Id }) : Url.Action("View", "Articles", new { id = item.Id }))">@item.Title</a>
                                 @if (!string.IsNullOrWhiteSpace(excerpt))
                                 {
                                     <p class="article-excerpt">@excerpt</p>
@@ -546,23 +731,121 @@
                             @if (canManageArticles)
                             {
                                 <td>
-                                    <span class="status-badge @(item.Status == "Published" ? "status-published" : "status-draft")">
-                                        @item.Status
+                                    <span class="status-badge @badgeClass">
+                                        @badgeLabel
                                     </span>
                                 </td>
                                 <td>
                                     <div class="action-group">
-                                        @Html.RouteLink("Sửa", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
-                                        @Html.RouteLink("Xóa", "AdminArticles", new { action = "Delete", id = item.Id }, new { @class = "action-btn btn-delete" })
+                                        @if (isAdminUser)
+                                        {
+                                            if (item.Status == "Pending")
+                                            {
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Published" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-submit-wf">Duyệt đăng</button>
+                                                }
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Rejected" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-reject-wf">Từ chối</button>
+                                                }
+                                            }
+                                            else if (item.Status == "Published")
+                                            {
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Archived" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-archive-wf">Lưu trữ</button>
+                                                }
+                                            }
+                                            else if (item.Status == "Archived")
+                                            {
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Published" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-submit-wf">Xuất bản lại</button>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Published" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-submit-wf">Duyệt đăng</button>
+                                                }
+                                            }
+
+                                            @Html.RouteLink("Sửa", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
+                                            @Html.RouteLink("Xóa", "AdminArticles", new { action = "Delete", id = item.Id }, new { @class = "action-btn btn-delete" })
+                                        }
+                                        else
+                                        {
+                                            if (item.Status == "Draft")
+                                            {
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Pending" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-submit-wf">Gửi duyệt</button>
+                                                }
+                                                @Html.RouteLink("Sửa", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
+                                                @Html.RouteLink("Xóa", "AdminArticles", new { action = "Delete", id = item.Id }, new { @class = "action-btn btn-delete" })
+                                            }
+                                            else if (item.Status == "Rejected")
+                                            {
+                                                @Html.RouteLink("Sửa & gửi lại", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Pending" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-submit-wf">Gửi duyệt lại</button>
+                                                }
+                                                @Html.RouteLink("Xóa", "AdminArticles", new { action = "Delete", id = item.Id }, new { @class = "action-btn btn-delete" })
+                                            }
+                                            else if (item.Status == "Pending")
+                                            {
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Draft" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-archive-wf">Rút về nháp</button>
+                                                }
+                                                @Html.RouteLink("Sửa", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
+                                            }
+                                            else
+                                            {
+                                                @Html.RouteLink("Xem bài", "AdminArticles", new { action = "Details", id = item.Id }, new { @class = "action-btn btn-detail" })
+                                            }
+                                        }
                                     </div>
                                 </td>
                             }
-
                         </tr>
                     }
-
                 }
-
                 else
                 {
                     <tr>
@@ -585,13 +868,13 @@
                 <a class="@(pageNumber == currentPage ? "active" : "")"
                    href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new {
                         action = "Index",
-                       searchString = ViewBag.SearchString,
-                       categoryId = ViewBag.CategoryId,
-                       authorId = ViewBag.AuthorId,
-                       status = ViewBag.Status,
-                       fromDate = ViewBag.FromDate,
-                       toDate = ViewBag.ToDate,
-                       page = pageNumber
+                        searchString = ViewBag.SearchString,
+                        categoryId = ViewBag.CategoryId,
+                        authorId = ViewBag.AuthorId,
+                        status = ViewBag.Status,
+                        fromDate = ViewBag.FromDate,
+                        toDate = ViewBag.ToDate,
+                        page = pageNumber
                     }) : Url.Action("Index", "Articles", new {
                         searchString = ViewBag.SearchString,
                         categoryId = ViewBag.CategoryId,
@@ -609,22 +892,21 @@
 
 </div>
 
-
 <script>
-            (function () {
-                var toggle = document.getElementById("filterToggle");
-                var filter = document.getElementById("advancedFilter");
+    (function () {
+        var toggle = document.getElementById("filterToggle");
+        var filter = document.getElementById("advancedFilter");
 
-                if (toggle && filter) {
-                    toggle.addEventListener("click", function () {
-                        if (!toggle || !filter) return;
-                        filter.classList.toggle("is-hidden");
+        if (toggle && filter) {
+            toggle.addEventListener("click", function () {
+                if (!toggle || !filter) return;
+                filter.classList.toggle("is-hidden");
 
-                        toggle.textContent =
-                            filter.classList.contains("is-hidden")
-                                ? "Bộ lọc nâng cao"
-                                : "Ẩn bộ lọc";
-                    });
-                }
-            })();
+                toggle.textContent =
+                    filter.classList.contains("is-hidden")
+                        ? "Bộ lọc nâng cao"
+                        : "Ẩn bộ lọc";
+            });
+        }
+    })();
 </script>
