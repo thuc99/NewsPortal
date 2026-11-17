@@ -16,10 +16,24 @@ namespace NewsPortal.Controllers
             const int pageSize = 6;
             page = Math.Max(page, 1);
 
-            var query = db.Articles
+            var publishedArticles = db.Articles
                 .Include(a => a.Categories)
                 .Include(a => a.Authors)
                 .Where(a => a.Status == "Published");
+
+            var featuredSince = DateTime.Now.AddDays(-7);
+            var featured = publishedArticles
+                .Where(a => a.CreatedDate >= featuredSince)
+                .OrderByDescending(a => a.ViewCount)
+                .ThenByDescending(a => a.CreatedDate)
+                .FirstOrDefault();
+
+            var latestArticles = publishedArticles
+                .OrderByDescending(a => a.CreatedDate)
+                .Take(3)
+                .ToList();
+
+            var query = publishedArticles;
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {
@@ -51,6 +65,12 @@ namespace NewsPortal.Controllers
                 query = query.Where(a => a.CreatedDate < endDate);
             }
 
+            if (featured != null)
+            {
+                var featuredId = featured.ArticleID;
+                query = query.Where(a => a.ArticleID != featuredId);
+            }
+
             var totalArticles = query.Count();
             var totalPages = Math.Max((int)Math.Ceiling((double)totalArticles / pageSize), 1);
             page = Math.Min(page, totalPages);
@@ -68,6 +88,8 @@ namespace NewsPortal.Controllers
             ViewBag.ToDate = toDate;
             ViewBag.Categories = db.Categories.OrderBy(c => c.CategoryName).ToList();
             ViewBag.Authors = db.Authors.OrderBy(a => a.AuthorName).ToList();
+            ViewBag.FeaturedArticle = featured;
+            ViewBag.LatestArticles = latestArticles;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalArticles = totalArticles;

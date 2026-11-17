@@ -8,10 +8,10 @@
         .Where(a => a.Status == "Published")
         .OrderByDescending(a => a.CreatedDate)
         .ToList();
-    var featured = articles.FirstOrDefault();
-    var remaining = featured == null
-        ? new System.Collections.Generic.List<NewsPortal.Models.Articles>()
-        : articles.Skip(1).ToList();
+    var featured = ViewBag.FeaturedArticle as NewsPortal.Models.Articles;
+    var latestArticles = ViewBag.LatestArticles as IEnumerable<NewsPortal.Models.Articles>
+        ?? new System.Collections.Generic.List<NewsPortal.Models.Articles>();
+    var remaining = articles;
     var currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
     var totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
 }
@@ -34,9 +34,10 @@
     .read-more { display: inline-block; margin-top: 12px; color: #b91c32; font-weight: 700; }
     .latest-panel { padding: 20px; align-self: start; }
     .latest-heading { font-size: 15px; font-weight: 800; border-bottom: 1px solid #e9e9ed; padding-bottom: 12px; }
-    .latest-item { padding: 14px 0; border-bottom: 1px solid #ededf0; }
-    .latest-number { color: #b91c32; font-weight: 900; }
-    .latest-title { display: block; font-weight: 700; margin: 4px 0; }
+    .latest-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid #ededf0; }
+    .latest-thumb { flex: 0 0 76px; width: 76px; height: 58px; object-fit: cover; background: #f1f5f9; }
+    .latest-copy { min-width: 0; }
+    .latest-title { display: block; font-weight: 700; margin: 0 0 5px; }
     .article-meta { color: #858995; font-size: 12px; }
     .news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
     .news-card { transition: transform .18s ease, box-shadow .18s ease; }
@@ -49,18 +50,25 @@
     .pagination { display: flex; justify-content: center; gap: 6px; margin: 28px 0; }
     .pagination a { padding: 7px 11px; border-radius: 6px; background: #f1f5f9; color: #334155; text-decoration: none; }
     .pagination a.active { background: #b91c32; color: white; }
+    .pagination-direction { min-width: 64px; text-align: center; }
+    .pagination-direction.disabled { padding: 7px 11px; color: #a0a5ae; background: #f8fafc; }
     .empty-state { padding: 35px; border: 1px dashed #d7d8de; color: #737985; text-align: center; }
-    .weather-widget { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 22px 0 28px; min-height: 166px; padding: 26px 30px; border: 1px solid #e1e5eb; border-radius: 8px; background: #fff; box-shadow: none; }
-    .weather-label { margin: 0 0 6px; color: #172033; font-size: 25px; font-weight: 800; }
-    .weather-location, .weather-date { color: #64748b; }
-    .weather-date { font-size: 13px; }
-    .weather-temperature { color: #c51f3a; font-size: 42px; font-weight: 900; white-space: nowrap; }
-    .weather-widget-icon { margin-left: 5px; font-size: 38px; vertical-align: middle; }
+    .weather-feature { width: 100%; margin: 18px 0 0; padding: 13px 16px; background: linear-gradient(120deg, #eaf5ff 0%, #cfe7ff 55%, #fff3df 100%); }
+    .weather-feature-heading { margin: 0 0 6px; color: #4f7fe0; font-size: 18px; font-weight: 800; }
+    .weather-feature-content { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.8); }
+    .weather-feature-copy { min-width: 0; }
+    .weather-feature-title { margin: 0 0 9px; color: #252830; font-size: 15px; line-height: 1.35; }
+    .weather-city-forecasts { display: flex; flex-wrap: wrap; gap: 5px; }
+    .weather-city-chip { padding: 5px 6px; background: rgba(255,255,255,.88); color: #4f7fe0; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .weather-feature-art { display: flex; flex: 0 0 78px; min-height: 64px; align-items: center; justify-content: center; background: linear-gradient(145deg, rgba(63,143,210,.25), rgba(255,255,255,.65)); color: #4f7fe0; }
+    .weather-feature-art i { font-size: 30px; }
+    .weather-feature-status { margin-top: 6px; color: #64748b; font-size: 10px; }
     .latest-panel { margin-bottom: 0; }
     .article-link { display: block; }
     .article-link:hover { color: inherit; }
     @@media (max-width: 760px) { .hero-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: repeat(2, 1fr); } }
-    @@media (max-width: 480px) { .news-grid { grid-template-columns: 1fr; } .weather-widget { align-items: flex-start; flex-direction: column; } }
+    @@media (max-width: 600px) { .weather-feature { padding: 13px 16px; } .weather-feature-title { font-size: 15px; } .weather-feature-art { display: none; } .weather-city-forecasts { gap: 5px; } .weather-city-chip { font-size: 10px; } }
+    @@media (max-width: 480px) { .news-grid { grid-template-columns: 1fr; } }
 </style>
 
 <div class="home-page">
@@ -90,28 +98,41 @@
             <aside>
                 <div class="latest-panel">
                     <h3 class="latest-heading">TIN MỚI NHẤT</h3>
-                    @foreach (var item in articles.Take(4))
+                    @foreach (var item in latestArticles)
                     {
                         <div class="latest-item">
-                            <span class="latest-number">@item.CreatedDate.ToString("dd")</span>
-                            @Html.ActionLink(item.Title, "View", "Articles", new { id = item.ArticleID }, new { @class = "latest-title" })
-                            <span class="article-meta">@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                                    <img class="latest-thumb" src="@item.ImageUrl" alt="@item.Title" />
+                                </a>
+                            }
+                            <div class="latest-copy">
+                                @Html.ActionLink(item.Title, "View", "Articles", new { id = item.ArticleID }, new { @class = "latest-title" })
+                                <span class="article-meta">@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
                         </div>
                     }
                 </div>
-
-                <section class="weather-widget" aria-label="Thời tiết hôm nay">
-                    <div>
-                        <h2 class="weather-label">Thời tiết hôm nay</h2>
-                        <div class="weather-location" id="home-weather-location">TP. Hồ Chí Minh · Đang cập nhật...</div>
-                        <div class="weather-date" id="home-weather-date"></div>
+                <section class="weather-feature" aria-label="Dự báo thời tiết hôm nay">
+                    <h2 class="weather-feature-heading">Thời tiết</h2>
+                    <div class="weather-feature-content">
+                        <div class="weather-feature-copy">
+                            <h3 class="weather-feature-title" id="home-weather-title">Cập nhật dự báo thời tiết hôm nay</h3>
+                            <div class="weather-city-forecasts" aria-live="polite">
+                                <span class="weather-city-chip" id="home-weather-hcm">TP. HCM —</span>
+                                <span class="weather-city-chip" id="home-weather-hanoi">Hà Nội —</span>
+                                <span class="weather-city-chip" id="home-weather-danang">Đà Nẵng —</span>
+                            </div>
+                            <div class="weather-feature-status" id="home-weather-status">Đang tải dữ liệu dự báo…</div>
+                        </div>
+                        <div class="weather-feature-art" aria-hidden="true"><i class="fa-solid fa-cloud-sun" id="home-weather-icon"></i></div>
                     </div>
-                    <div class="weather-temperature"><span id="home-weather-temperature">--°C</span> <i class="weather-widget-icon fa-regular fa-sun" id="home-weather-icon" aria-hidden="true"></i></div>
                 </section>
             </aside>
         </section>
 
-        <div class="section-heading">
+        <div class="section-heading" id="other-articles">
             <h2 class="section-title">Các bài viết khác</h2>
         </div>
 
@@ -147,10 +168,30 @@
     @if (totalPages > 1)
     {
         <nav class="pagination">
+            @if (currentPage > 1)
+            {
+                <a class="pagination-direction"
+                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage - 1 }) + "#other-articles")">Trước</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Trước</span>
+            }
+
             @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
             {
                 <a class="@(pageNumber == currentPage ? "active" : "")"
-                   href="@Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, page = pageNumber })">@pageNumber</a>
+                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = pageNumber }) + "#other-articles")">@pageNumber</a>
+            }
+
+            @if (currentPage < totalPages)
+            {
+                <a class="pagination-direction"
+                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage + 1 }) + "#other-articles")">Sau</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Sau</span>
             }
         </nav>
     }
@@ -158,54 +199,56 @@
 
 <script>
     (function () {
-        var city = { name: 'TP. Hồ Chí Minh', latitude: 10.8231, longitude: 106.6297 };
-        try {
-            var savedCity = localStorage.getItem('newsPortalWeatherCity');
-            if (savedCity === 'Da Nang') city = { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022 };
-            else if (savedCity === 'Hanoi') city = { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342 };
-            else if (savedCity === 'Can Tho') city = { name: 'Cần Thơ', latitude: 10.0452, longitude: 105.7469 };
-            else if (savedCity === 'Hai Phong') city = { name: 'Hải Phòng', latitude: 20.8449, longitude: 106.6881 };
-            else if (savedCity === 'Nha Trang') city = { name: 'Nha Trang', latitude: 12.2388, longitude: 109.1967 };
-        } catch (ignore) { }
+        var cities = [
+            { name: 'TP. HCM', latitude: 10.8231, longitude: 106.6297, element: 'home-weather-hcm' },
+            { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342, element: 'home-weather-hanoi' },
+            { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022, element: 'home-weather-danang' }
+        ];
+        var title = document.getElementById('home-weather-title');
+        var status = document.getElementById('home-weather-status');
+        var icon = document.getElementById('home-weather-icon');
+        var currentWeatherCode = 0;
 
-        var today = new Date();
-        var dateElement = document.getElementById('home-weather-date');
-        var locationElement = document.getElementById('home-weather-location');
-        if (dateElement) dateElement.textContent = today.toLocaleDateString('vi-VN', {
-            weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-        });
-        if (locationElement) locationElement.textContent = city.name + ' · Đang cập nhật...';
+        function conditionFor() {
+            var code = currentWeatherCode;
+            if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
+            if (code <= 2) return { text: 'Có nắng, mây', icon: 'fa-cloud-sun' };
+            if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
+            if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
+            if (code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
+            if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Có mưa', icon: 'fa-cloud-showers-heavy' };
+            if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
+            return { text: 'Dự báo hôm nay', icon: 'fa-cloud' };
+        }
 
-        fetch('https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude + '&longitude=' + city.longitude + '&current=temperature_2m,weather_code&timezone=auto')
-            .then(function (response) {
+        Promise.all(cities.map(function (city) {
+            var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
+                '&longitude=' + city.longitude + '&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=1';
+            return fetch(url).then(function (response) {
                 if (!response.ok) throw new Error('Weather request failed');
                 return response.json();
-            })
-            .then(function (data) {
-                var current = data.current;
-                var code = current.weather_code;
-                var conditionText = 'Thời tiết hiện tại';
-                var conditionIcon = 'fa-cloud';
-                if (code === 0) { conditionText = 'Trời quang'; conditionIcon = 'fa-sun'; }
-                else if (code === 1) { conditionText = 'Ít mây'; conditionIcon = 'fa-cloud-sun'; }
-                else if (code === 2) { conditionText = 'Có mây'; conditionIcon = 'fa-cloud-sun'; }
-                else if (code === 3) { conditionText = 'Nhiều mây'; conditionIcon = 'fa-cloud'; }
-                else if (code === 45 || code === 48) { conditionText = 'Sương mù'; conditionIcon = 'fa-smog'; }
-                else if (code >= 51 && code <= 57) { conditionText = 'Mưa phùn'; conditionIcon = 'fa-cloud-rain'; }
-                else if (code >= 61 && code <= 67) { conditionText = 'Mưa'; conditionIcon = 'fa-cloud-rain'; }
-                else if (code >= 80 && code <= 82) { conditionText = 'Mưa rào'; conditionIcon = 'fa-cloud-showers-heavy'; }
-                else if (code >= 95) { conditionText = 'Có dông'; conditionIcon = 'fa-cloud-bolt'; }
-
-                var weatherLocation = document.getElementById('home-weather-location');
-                var weatherTemperature = document.getElementById('home-weather-temperature');
-                if (weatherLocation) weatherLocation.textContent = city.name + ' · ' + conditionText;
-                if (weatherTemperature) weatherTemperature.textContent = Math.round(current.temperature_2m) + '°C';
-                var icon = document.getElementById('home-weather-icon');
-                if (icon) icon.className = 'weather-widget-icon fa-solid ' + conditionIcon;
-            })
-            .catch(function () {
-                var weatherLocation = document.getElementById('home-weather-location');
-                if (weatherLocation) weatherLocation.textContent = city.name + ' · Chưa thể cập nhật';
+            }).then(function (data) {
+                if (!data.daily || !data.daily.temperature_2m_min || !data.daily.temperature_2m_max) {
+                    throw new Error('Weather data unavailable');
+                }
+                var min = Math.round(data.daily.temperature_2m_min[0]);
+                var max = Math.round(data.daily.temperature_2m_max[0]);
+                var chip = document.getElementById(city.element);
+                if (chip) chip.textContent = city.name + ' ' + min + '° - ' + max + '°C';
+                return { city: city, conditionCode: data.daily.weather_code[0] };
             });
+        })).then(function (forecasts) {
+            currentWeatherCode = Number(forecasts[0].conditionCode);
+            var condition = conditionFor();
+            if (title) title.textContent = condition.text + ' tại ' + forecasts[0].city.name + ' hôm nay';
+            if (icon) icon.className = 'fa-solid ' + condition.icon;
+            if (status) status.textContent = 'Dự báo nhiệt độ trong ngày · Dữ liệu Open-Meteo';
+        }).catch(function () {
+            if (status) status.textContent = 'Không thể tải dữ liệu dự báo lúc này.';
+            cities.forEach(function (city) {
+                var chip = document.getElementById(city.element);
+                if (chip && chip.textContent.indexOf('—') !== -1) chip.textContent = city.name + ' —';
+            });
+        });
     }());
 </script>

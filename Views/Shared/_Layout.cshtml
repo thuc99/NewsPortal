@@ -580,31 +580,34 @@
 
         .back-to-top {
             position: fixed;
-            right: 22px;
-            bottom: 22px;
+            right: max(28px, env(safe-area-inset-right));
+            bottom: max(28px, env(safe-area-inset-bottom));
             z-index: 1000;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            min-height: 46px;
-            padding: 0 15px;
-            border: 1px solid #b91c32;
-            border-radius: 7px;
-            background: #fff;
-            color: #b91c32;
+            min-width: 56px;
+            min-height: 56px;
+            padding: 0 18px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            background: #b91c32;
+            color: #fff;
             cursor: pointer;
-            font-size: 12px;
-            font-weight: 750;
+            font-size: 13px;
+            font-weight: 800;
             letter-spacing: .04em;
             line-height: 1;
-            transition: color .2s, background .2s, transform .2s;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, .3);
+            transition: background .2s, transform .2s, box-shadow .2s;
         }
 
             .back-to-top:hover {
-                background: #b91c32;
+                background: #861b2b;
                 color: #fff;
-                transform: translateY(-2px);
+                transform: translateY(-3px);
+                box-shadow: 0 7px 20px rgba(15, 23, 42, .35);
             }
 
             .back-to-top svg {
@@ -1250,7 +1253,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
             <path d="M12 19V5M5 12l7-7 7 7"></path>
         </svg>
-        <span>TOP</span>
     </button>
 
     <!-- JAVASCRIPT TÀI KHOẢN -->

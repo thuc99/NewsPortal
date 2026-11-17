@@ -456,6 +456,17 @@
         margin: 22px 0;
     }
 
+    .pagination-direction {
+        min-width: 64px;
+        text-align: center;
+    }
+
+    .pagination-direction.disabled {
+        padding: 7px 11px;
+        background: #f8fafc;
+        color: #a0a5ae;
+    }
+
         .pagination a {
             padding: 7px 11px;
             border-radius: 6px;
@@ -635,7 +646,7 @@
         </form>
     </div>
 
-    <div class="management-card">
+    <div class="management-card" id="article-results">
         <table class="management-table">
             <thead>
                 <tr>
@@ -863,10 +874,20 @@
     @if (totalPages > 1)
     {
         <nav class="pagination">
+            @if (currentPage > 1)
+            {
+                <a class="pagination-direction"
+                   href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Index", searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage - 1 }) : Url.Action("Index", "Articles", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage - 1 }))#article-results">Trước</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Trước</span>
+            }
+
             @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
             {
                 <a class="@(pageNumber == currentPage ? "active" : "")"
-                   href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new {
+                   href="@((isAdminManagement ? Url.RouteUrl("AdminArticles", new {
                         action = "Index",
                         searchString = ViewBag.SearchString,
                         categoryId = ViewBag.CategoryId,
@@ -883,9 +904,19 @@
                         fromDate = ViewBag.FromDate,
                         toDate = ViewBag.ToDate,
                         page = pageNumber
-                    }))">
+                    })) + "#article-results")">
                     @pageNumber
                 </a>
+            }
+
+            @if (currentPage < totalPages)
+            {
+                <a class="pagination-direction"
+                   href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Index", searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage + 1 }) : Url.Action("Index", "Articles", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, status = ViewBag.Status, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage + 1 }))#article-results">Sau</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Sau</span>
             }
         </nav>
     }

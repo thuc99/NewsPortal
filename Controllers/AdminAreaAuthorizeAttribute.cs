@@ -1,4 +1,3 @@
-
 using System;
 using System.Web;
 using System.Web.Mvc;
@@ -33,7 +32,7 @@ namespace NewsPortal.Controllers
             if (session != null && session["User"] != null)
             {
                 session["AccessDeniedMessage"] =
-                    "B?n không có quy?n truy c?p khu v?c qu?n tr?.";
+                    "B\u1EA1n kh\u00F4ng c\u00F3 quy\u1EC1n truy c\u1EADp khu v\u1EF1c qu\u1EA3n tr\u1ECB.";
 
                 filterContext.Result =
                     new RedirectResult("~/Home/Index");
@@ -44,7 +43,7 @@ namespace NewsPortal.Controllers
             if (session != null)
             {
                 session["LoginMessage"] =
-                    "Vui lòng ??ng nh?p ?? truy c?p khu v?c qu?n tr?.";
+                    "Vui l\u00F2ng \u0111\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp khu v\u1EF1c qu\u1EA3n tr\u1ECB.";
             }
 
             filterContext.Result =
