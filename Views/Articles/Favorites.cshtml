@@ -16,7 +16,15 @@
     .favorite-image img { width: 100%; height: 100%; object-fit: cover; }
     .favorite-body { padding: 17px; }
     .favorite-body h2 { margin: 0 0 8px; font-size: 18px; line-height: 1.4; }
-    .favorite-body p { color: #64748b; line-height: 1.6; }
+    .favorite-body p {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 8px 0 12px;
+        color: #64748b;
+        line-height: 1.6;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+    }
     .favorite-date { color: #94a3b8; font-size: 12px; }
     .favorites-empty { padding: 36px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; }
     @@media (max-width: 700px) { .favorites-grid { grid-template-columns: 1fr; } }
@@ -32,6 +40,12 @@
         <div class="favorites-grid">
             @foreach (var article in Model)
             {
+                var excerpt = (article.Content ?? string.Empty).Trim();
+                if (excerpt.Length > 180)
+                {
+                    excerpt = excerpt.Substring(0, 180).TrimEnd() + "…";
+                }
+
                 <article class="favorite-card">
                     <a class="favorite-image" href="@Url.Action("View", "Articles", new { id = article.Id })">
                         @if (!string.IsNullOrWhiteSpace(article.Image))
@@ -41,7 +55,7 @@
                     </a>
                     <div class="favorite-body">
                         <h2><a href="@Url.Action("View", "Articles", new { id = article.Id })">@article.Title</a></h2>
-                        <p>@article.Content</p>
+                        <p>@excerpt</p>
                         <div class="favorite-date">@article.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
                     </div>
                 </article>

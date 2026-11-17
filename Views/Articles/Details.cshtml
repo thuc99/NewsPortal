@@ -396,6 +396,17 @@
         line-height: 1.4;
     }
 
+    .recommendation-excerpt {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 7px 0 0;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+    }
+
     .recommendation-date {
         display: block;
         margin-top: 8px;
@@ -490,7 +501,7 @@
                                 title="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")"
                                 aria-label="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")">
                             <i class="@(ViewBag.IsFavorite == true ? "fa-solid" : "fa-regular") fa-bookmark" aria-hidden="true"></i>
-                            <span>@(ViewBag.IsFavorite == true ? "Đã lưu" : "Lưu bài viết")</span>
+                            <span>@(ViewBag.IsFavorite == true ? "Đã lưu" : "Lưu")</span>
                         </button>
                     }
                 </div>
@@ -615,6 +626,12 @@
             <div class="recommendations-grid">
                 @foreach (var recommendation in recommendedArticles)
                 {
+                    var recommendationExcerpt = (recommendation.Content ?? string.Empty).Trim();
+                    if (recommendationExcerpt.Length > 120)
+                    {
+                        recommendationExcerpt = recommendationExcerpt.Substring(0, 120).TrimEnd() + "…";
+                    }
+
                     <article class="recommendation-item">
                         <a class="recommendation-image" href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">
                             @if (!string.IsNullOrWhiteSpace(recommendation.ImageUrl))
@@ -624,6 +641,10 @@
                         </a>
                         <div class="recommendation-body">
                             <h4><a href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">@recommendation.Title</a></h4>
+                            @if (!string.IsNullOrWhiteSpace(recommendationExcerpt))
+                            {
+                                <p class="recommendation-excerpt">@recommendationExcerpt</p>
+                            }
                             <span class="recommendation-date">@recommendation.CreatedDate.ToString("dd/MM/yyyy")</span>
                         </div>
                     </article>

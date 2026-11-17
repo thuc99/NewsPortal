@@ -63,8 +63,8 @@
         .top-inner {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
+            justify-content: space-between;
+            gap: 16px;
         }
 
         .weather-strip {
@@ -84,13 +84,14 @@
         .weather-summary {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 9px;
             padding: 2px 0;
             border: 0;
             background: transparent;
             color: #fff;
             font: inherit;
             cursor: pointer;
+            white-space: nowrap;
         }
 
         .weather-summary:hover,
@@ -102,12 +103,19 @@
             padding-right: 12px;
             border-right: 1px solid rgba(255, 255, 255, .45);
             color: rgba(255, 255, 255, .9);
+            white-space: nowrap;
         }
 
         .weather-summary-city {
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            white-space: nowrap;
+        }
+
+        .top-inner > span {
+            font-size: 12px;
+            white-space: nowrap;
         }
 
         .weather-summary-temp {
@@ -846,13 +854,15 @@
 
             .nav-links {
                 flex: 1;
-                gap: 14px;
+                gap: 4px 12px;
                 flex-wrap: wrap;
-                padding: 5px 0;
+                align-content: center;
+                padding: 3px 0;
             }
 
             .nav-links .nav-link {
-                min-height: 42px;
+                min-height: 36px;
+                padding-top: 0;
             }
 
             .nav-dropdown {
@@ -898,11 +908,11 @@
             .nav-inner {
                 min-height: 48px;
                 align-items: flex-start;
-                gap: 8px;
+                gap: 4px;
                 padding-top: 0;
             }
 
-            .nav-links { gap: 12px; }
+            .nav-links { gap: 2px 10px; }
 
             .nav-link {
                 min-height: 48px;
@@ -927,27 +937,29 @@
                 gap: 20px;
             }
 
+            .top-strip { padding: 5px 0; }
+
             .top-inner {
-                flex-direction: column;
+                justify-content: center;
                 gap: 0;
             }
 
-            .weather-strip-inner { min-height: 38px; }
+            .top-inner > span { display: none; }
 
-            .top-inner {
-                flex-direction: row;
-                align-items: center;
-                justify-content: flex-end;
-            }
+            .weather-strip { margin-right: 0; }
+
+            .weather-strip-inner { min-height: 30px; }
 
             .weather-summary {
-                gap: 7px;
-                padding: 5px 0;
-                font-size: 13px;
+                gap: 8px;
+                padding: 2px 0;
+                font-size: 11px;
             }
 
+            .weather-summary-icon { font-size: 16px; }
+
             .weather-summary-date {
-                padding-right: 8px;
+                padding-right: 9px;
             }
 
             .weather-panel {
@@ -1506,12 +1518,10 @@
 
     <style>
         /* ===== CÁCH A: góc vuông hơn trên toàn trang ===== */
-        img,
-        .card, .article-card, .news-card,
-        .article-image, .sr-item img,
-        .search-input, .search-button,
-        button, .btn, input[type="text"], input[type="password"], textarea, select {
-            border-radius: 2px !important;
+        *,
+        *::before,
+        *::after {
+            border-radius: 0 !important;
         }
 
             /* ===== CÁCH B: ảnh bớt dẹt (tỉ lệ 4:3), cắt gọn không méo ===== */
