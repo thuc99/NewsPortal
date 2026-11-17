@@ -17,58 +17,361 @@
 }
 
 <style>
-    .home-page { max-width: 1160px; margin: 0 auto; }
-    .section-heading { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #252830; margin-bottom: 22px; padding-bottom: 10px; }
-    .section-title { font-size: 21px; font-weight: 800; margin: 0; }
-    .section-title:before { content: ""; display: inline-block; width: 5px; height: 23px; background: #b91c32; margin-right: 10px; vertical-align: -5px; }
-    .result-count { color: #737985; font-size: 13px; margin-bottom: 18px; }
-    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr); gap: 25px; margin-bottom: 40px; }
-    .featured-card, .latest-panel, .news-card { background: white; border: 1px solid #e9e9ed; border-radius: 6px; overflow: hidden; }
-    .featured-visual { min-height: 260px; position: relative; display: flex; align-items: flex-end; padding: 25px; background: #571323; overflow: hidden; }
-    .featured-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .8; }
-    .featured-visual:after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(20,10,15,.8), transparent); }
-    .featured-label { position: relative; z-index: 1; padding: 4px 9px; background: white; color: #a51f33; font-size: 10px; font-weight: 900; }
-    .featured-body { padding: 23px; }
-    .featured-title { font-size: clamp(22px, 3vw, 30px); line-height: 1.35; margin: 0 0 12px; }
-    .featured-summary, .news-summary { color: #656a75; line-height: 1.7; }
-    .read-more { display: inline-block; margin-top: 12px; color: #b91c32; font-weight: 700; }
-    .latest-panel { padding: 20px; align-self: start; }
-    .latest-heading { font-size: 15px; font-weight: 800; border-bottom: 1px solid #e9e9ed; padding-bottom: 12px; }
-    .latest-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid #ededf0; }
-    .latest-thumb { flex: 0 0 76px; width: 76px; height: 58px; object-fit: cover; background: #f1f5f9; }
-    .latest-copy { min-width: 0; }
-    .latest-title { display: block; font-weight: 700; margin: 0 0 5px; }
-    .article-meta { color: #858995; font-size: 12px; }
-    .news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
-    .news-card { transition: transform .18s ease, box-shadow .18s ease; }
-    .news-card:hover { transform: translateY(-3px); box-shadow: 0 9px 24px rgba(20,20,30,.08); }
-    .news-card-visual { height: 145px; background: #f5dce1; overflow: hidden; }
-    .news-card-visual img { width: 100%; height: 100%; object-fit: cover; }
-    .news-card-body { padding: 17px; }
-    .news-tag { color: #b91c32; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-    .news-card-title { font-size: 17px; line-height: 1.45; margin: 8px 0; }
-    .pagination { display: flex; justify-content: center; gap: 6px; margin: 28px 0; }
-    .pagination a { padding: 7px 11px; border-radius: 6px; background: #f1f5f9; color: #334155; text-decoration: none; }
-    .pagination a.active { background: #b91c32; color: white; }
-    .pagination-direction { min-width: 64px; text-align: center; }
-    .pagination-direction.disabled { padding: 7px 11px; color: #a0a5ae; background: #f8fafc; }
-    .empty-state { padding: 35px; border: 1px dashed #d7d8de; color: #737985; text-align: center; }
-    .weather-feature { width: 100%; margin: 18px 0 0; padding: 13px 16px; background: linear-gradient(120deg, #eaf5ff 0%, #cfe7ff 55%, #fff3df 100%); }
-    .weather-feature-heading { margin: 0 0 6px; color: #4f7fe0; font-size: 18px; font-weight: 800; }
-    .weather-feature-content { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.8); }
-    .weather-feature-copy { min-width: 0; }
-    .weather-feature-title { margin: 0 0 9px; color: #252830; font-size: 15px; line-height: 1.35; }
-    .weather-city-forecasts { display: flex; flex-wrap: wrap; gap: 5px; }
-    .weather-city-chip { padding: 5px 6px; background: rgba(255,255,255,.88); color: #4f7fe0; font-size: 10px; font-weight: 700; white-space: nowrap; }
-    .weather-feature-art { display: flex; flex: 0 0 78px; min-height: 64px; align-items: center; justify-content: center; background: linear-gradient(145deg, rgba(63,143,210,.25), rgba(255,255,255,.65)); color: #4f7fe0; }
-    .weather-feature-art i { font-size: 30px; }
-    .weather-feature-status { margin-top: 6px; color: #64748b; font-size: 10px; }
-    .latest-panel { margin-bottom: 0; }
-    .article-link { display: block; }
-    .article-link:hover { color: inherit; }
-    @@media (max-width: 760px) { .hero-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: repeat(2, 1fr); } }
-    @@media (max-width: 600px) { .weather-feature { padding: 13px 16px; } .weather-feature-title { font-size: 15px; } .weather-feature-art { display: none; } .weather-city-forecasts { gap: 5px; } .weather-city-chip { font-size: 10px; } }
-    @@media (max-width: 480px) { .news-grid { grid-template-columns: 1fr; } }
+    .home-page {
+        max-width: 1160px;
+        margin: 0 auto;
+    }
+
+    .section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #252830;
+        margin-bottom: 22px;
+        padding-bottom: 10px;
+    }
+
+    .section-title {
+        font-size: 21px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+        .section-title:before {
+            content: "";
+            display: inline-block;
+            width: 5px;
+            height: 23px;
+            background: #b91c32;
+            margin-right: 10px;
+            vertical-align: -5px;
+        }
+
+    .result-count {
+        color: #737985;
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+
+    .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+        .hero-grid.without-featured {
+            grid-template-columns: 1fr;
+        }
+
+    .featured-card, .latest-panel, .news-card {
+        background: white;
+        border: 1px solid #e9e9ed;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .featured-visual {
+        min-height: 260px;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        padding: 25px;
+        background: #571323;
+        overflow: hidden;
+    }
+
+        .featured-visual img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: .8;
+        }
+
+        .featured-visual:after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(20,10,15,.8), transparent);
+        }
+
+    .featured-label {
+        position: relative;
+        z-index: 1;
+        padding: 4px 9px;
+        background: white;
+        color: #a51f33;
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+    .featured-body {
+        padding: 23px;
+    }
+
+    .featured-title {
+        font-size: clamp(22px, 3vw, 30px);
+        line-height: 1.35;
+        margin: 0 0 12px;
+    }
+
+    .featured-summary, .news-summary {
+        color: #656a75;
+        line-height: 1.7;
+    }
+
+    .read-more {
+        display: inline-block;
+        margin-top: 12px;
+        color: #b91c32;
+        font-weight: 700;
+    }
+
+    .latest-panel {
+        padding: 20px;
+        align-self: start;
+    }
+
+    .latest-heading {
+        font-size: 15px;
+        font-weight: 800;
+        border-bottom: 1px solid #e9e9ed;
+        padding-bottom: 12px;
+    }
+
+    .latest-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #ededf0;
+    }
+
+    .latest-thumb {
+        flex: 0 0 76px;
+        width: 76px;
+        height: 58px;
+        object-fit: cover;
+        background: #f1f5f9;
+    }
+
+    .latest-copy {
+        min-width: 0;
+    }
+
+    .latest-title {
+        display: block;
+        font-weight: 700;
+        margin: 0 0 5px;
+    }
+
+    .article-meta {
+        color: #858995;
+        font-size: 12px;
+    }
+
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+    }
+
+    .news-card {
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+        .news-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 24px rgba(20,20,30,.08);
+        }
+
+    .news-card-visual {
+        height: 145px;
+        background: #f5dce1;
+        overflow: hidden;
+    }
+
+        .news-card-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .news-card-body {
+        padding: 17px;
+    }
+
+    .news-tag {
+        color: #b91c32;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .news-card-title {
+        font-size: 17px;
+        line-height: 1.45;
+        margin: 8px 0;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin: 28px 0;
+    }
+
+        .pagination a {
+            padding: 7px 11px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #334155;
+            text-decoration: none;
+        }
+
+            .pagination a.active {
+                background: #b91c32;
+                color: white;
+            }
+
+    .pagination-direction {
+        min-width: 64px;
+        text-align: center;
+    }
+
+        .pagination-direction.disabled {
+            padding: 7px 11px;
+            color: #a0a5ae;
+            background: #f8fafc;
+        }
+
+    .empty-state {
+        padding: 35px;
+        border: 1px dashed #d7d8de;
+        color: #737985;
+        text-align: center;
+    }
+
+    .weather-feature {
+        width: 100%;
+        margin: 18px 0 0;
+        padding: 13px 16px;
+        background: linear-gradient(120deg, #eaf5ff 0%, #cfe7ff 55%, #fff3df 100%);
+    }
+
+    .weather-feature-heading {
+        margin: 0 0 6px;
+        color: #4f7fe0;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .weather-feature-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 9px;
+        border-top: 1px solid rgba(255,255,255,.8);
+    }
+
+    .weather-feature-copy {
+        min-width: 0;
+    }
+
+    .weather-feature-title {
+        margin: 0 0 9px;
+        color: #252830;
+        font-size: 15px;
+        line-height: 1.35;
+    }
+
+    .weather-city-forecasts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .weather-city-chip {
+        padding: 5px 6px;
+        background: rgba(255,255,255,.88);
+        color: #4f7fe0;
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .weather-feature-art {
+        display: flex;
+        flex: 0 0 78px;
+        min-height: 64px;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(145deg, rgba(63,143,210,.25), rgba(255,255,255,.65));
+        color: #4f7fe0;
+    }
+
+        .weather-feature-art i {
+            font-size: 30px;
+        }
+
+    .weather-feature-status {
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 10px;
+    }
+
+    .latest-panel {
+        margin-bottom: 0;
+    }
+
+    .article-link {
+        display: block;
+    }
+
+        .article-link:hover {
+            color: inherit;
+        }
+
+    @@media (max-width: 760px) {
+        .hero-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .news-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .weather-feature {
+            padding: 13px 16px;
+        }
+
+        .weather-feature-title {
+            font-size: 15px;
+        }
+
+        .weather-feature-art {
+            display: none;
+        }
+
+        .weather-city-forecasts {
+            gap: 5px;
+        }
+
+        .weather-city-chip {
+            font-size: 10px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .news-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div class="home-page">
@@ -76,9 +379,9 @@
         <h2 class="section-title">Tin mới nhất</h2>
     </div>
 
-    @if (featured != null)
-    {
-        <section class="hero-grid">
+    <section class="hero-grid @(featured == null ? "without-featured" : "")">
+        @if (featured != null)
+        {
             <article class="featured-card">
                 <a class="featured-visual article-link" href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
                     @if (!string.IsNullOrWhiteSpace(featured.ImageUrl))
@@ -94,71 +397,71 @@
                     @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = featured.ArticleID }, new { @class = "read-more" })
                 </div>
             </article>
-
-            <aside>
-                <div class="latest-panel">
-                    <h3 class="latest-heading">TIN MỚI NHẤT</h3>
-                    @foreach (var item in latestArticles)
-                    {
-                        <div class="latest-item">
-                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                            {
-                                <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
-                                    <img class="latest-thumb" src="@item.ImageUrl" alt="@item.Title" />
-                                </a>
-                            }
-                            <div class="latest-copy">
-                                @Html.ActionLink(item.Title, "View", "Articles", new { id = item.ArticleID }, new { @class = "latest-title" })
-                                <span class="article-meta">@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
-                            </div>
-                        </div>
-                    }
-                </div>
-                <section class="weather-feature" aria-label="Dự báo thời tiết hôm nay">
-                    <h2 class="weather-feature-heading">Thời tiết</h2>
-                    <div class="weather-feature-content">
-                        <div class="weather-feature-copy">
-                            <h3 class="weather-feature-title" id="home-weather-title">Cập nhật dự báo thời tiết hôm nay</h3>
-                            <div class="weather-city-forecasts" aria-live="polite">
-                                <span class="weather-city-chip" id="home-weather-hcm">TP. HCM —</span>
-                                <span class="weather-city-chip" id="home-weather-hanoi">Hà Nội —</span>
-                                <span class="weather-city-chip" id="home-weather-danang">Đà Nẵng —</span>
-                            </div>
-                            <div class="weather-feature-status" id="home-weather-status">Đang tải dữ liệu dự báo…</div>
-                        </div>
-                        <div class="weather-feature-art" aria-hidden="true"><i class="fa-solid fa-cloud-sun" id="home-weather-icon"></i></div>
-                    </div>
-                </section>
-            </aside>
-        </section>
-
-        <div class="section-heading" id="other-articles">
-            <h2 class="section-title">Các bài viết khác</h2>
-        </div>
-
-        if (remaining.Any())
-        {
-            <section class="news-grid">
-                @foreach (var item in remaining)
-                {
-                    <article class="news-card">
-                        <a class="news-card-visual article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
-                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                            {
-                                <img src="@item.ImageUrl" alt="@item.Title" />
-                            }
-                        </a>
-                        <div class="news-card-body">
-                            <div class="news-tag">@(item.Categories == null ? "TIN TỨC" : item.Categories.CategoryName)</div>
-                            <h3 class="news-card-title"><a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">@item.Title</a></h3>
-                            <a class="article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })"><p class="news-summary">@item.Summary</p></a>
-                            @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = item.ArticleID }, new { @class = "read-more" })
-                        </div>
-
-                    </article>
-                }
-            </section>
         }
+
+        <aside>
+            <div class="latest-panel">
+                <h3 class="latest-heading">TIN MỚI NHẤT</h3>
+                @foreach (var item in latestArticles)
+                {
+                    <div class="latest-item">
+                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                        {
+                            <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                                <img class="latest-thumb" src="@item.ImageUrl" alt="@item.Title" />
+                            </a>
+                        }
+                        <div class="latest-copy">
+                            @Html.ActionLink(item.Title, "View", "Articles", new { id = item.ArticleID }, new { @class = "latest-title" })
+                            <span class="article-meta">@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                }
+            </div>
+            <section class="weather-feature" aria-label="Dự báo thời tiết hôm nay">
+                <h2 class="weather-feature-heading">Thời tiết</h2>
+                <div class="weather-feature-content">
+                    <div class="weather-feature-copy">
+                        <h3 class="weather-feature-title" id="home-weather-title">Cập nhật dự báo thời tiết hôm nay</h3>
+                        <div class="weather-city-forecasts" aria-live="polite">
+                            <span class="weather-city-chip" id="home-weather-hcm">TP. HCM —</span>
+                            <span class="weather-city-chip" id="home-weather-hanoi">Hà Nội —</span>
+                            <span class="weather-city-chip" id="home-weather-danang">Đà Nẵng —</span>
+                        </div>
+                        <div class="weather-feature-status" id="home-weather-status">Đang tải dữ liệu dự báo…</div>
+                    </div>
+                    <div class="weather-feature-art" aria-hidden="true"><i class="fa-solid fa-cloud-sun" id="home-weather-icon"></i></div>
+                </div>
+            </section>
+        </aside>
+    </section>
+
+    <div class="section-heading" id="other-articles">
+        <h2 class="section-title">Các bài viết khác</h2>
+    </div>
+
+    @if (remaining.Any())
+    {
+        <section class="news-grid">
+            @foreach (var item in remaining)
+            {
+                <article class="news-card">
+                    <a class="news-card-visual article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" alt="@item.Title" />
+                        }
+                    </a>
+                    <div class="news-card-body">
+                        <div class="news-tag">@(item.Categories == null ? "TIN TỨC" : item.Categories.CategoryName)</div>
+                        <h3 class="news-card-title"><a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">@item.Title</a></h3>
+                        <a class="article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })"><p class="news-summary">@item.Summary</p></a>
+                        @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = item.ArticleID }, new { @class = "read-more" })
+                    </div>
+
+                </article>
+            }
+        </section>
     }
     else
     {
@@ -198,57 +501,57 @@
 </div>
 
 <script>
-    (function () {
-        var cities = [
-            { name: 'TP. HCM', latitude: 10.8231, longitude: 106.6297, element: 'home-weather-hcm' },
-            { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342, element: 'home-weather-hanoi' },
-            { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022, element: 'home-weather-danang' }
-        ];
-        var title = document.getElementById('home-weather-title');
-        var status = document.getElementById('home-weather-status');
-        var icon = document.getElementById('home-weather-icon');
-        var currentWeatherCode = 0;
+        (function () {
+            var cities = [
+                { name: 'TP. HCM', latitude: 10.8231, longitude: 106.6297, element: 'home-weather-hcm' },
+                { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342, element: 'home-weather-hanoi' },
+                { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022, element: 'home-weather-danang' }
+            ];
+            var title = document.getElementById('home-weather-title');
+            var status = document.getElementById('home-weather-status');
+            var icon = document.getElementById('home-weather-icon');
+            var currentWeatherCode = 0;
 
-        function conditionFor() {
-            var code = currentWeatherCode;
-            if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
-            if (code <= 2) return { text: 'Có nắng, mây', icon: 'fa-cloud-sun' };
-            if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
-            if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
-            if (code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
-            if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Có mưa', icon: 'fa-cloud-showers-heavy' };
-            if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
-            return { text: 'Dự báo hôm nay', icon: 'fa-cloud' };
-        }
+            function conditionFor() {
+                var code = currentWeatherCode;
+                if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
+                if (code <= 2) return { text: 'Có nắng, mây', icon: 'fa-cloud-sun' };
+                if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
+                if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
+                if (code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
+                if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Có mưa', icon: 'fa-cloud-showers-heavy' };
+                if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
+                return { text: 'Dự báo hôm nay', icon: 'fa-cloud' };
+            }
 
-        Promise.all(cities.map(function (city) {
-            var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
-                '&longitude=' + city.longitude + '&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=1';
-            return fetch(url).then(function (response) {
-                if (!response.ok) throw new Error('Weather request failed');
-                return response.json();
-            }).then(function (data) {
-                if (!data.daily || !data.daily.temperature_2m_min || !data.daily.temperature_2m_max) {
-                    throw new Error('Weather data unavailable');
-                }
-                var min = Math.round(data.daily.temperature_2m_min[0]);
-                var max = Math.round(data.daily.temperature_2m_max[0]);
-                var chip = document.getElementById(city.element);
-                if (chip) chip.textContent = city.name + ' ' + min + '° - ' + max + '°C';
-                return { city: city, conditionCode: data.daily.weather_code[0] };
+            Promise.all(cities.map(function (city) {
+                var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
+                    '&longitude=' + city.longitude + '&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=1';
+                return fetch(url).then(function (response) {
+                    if (!response.ok) throw new Error('Weather request failed');
+                    return response.json();
+                }).then(function (data) {
+                    if (!data.daily || !data.daily.temperature_2m_min || !data.daily.temperature_2m_max) {
+                        throw new Error('Weather data unavailable');
+                    }
+                    var min = Math.round(data.daily.temperature_2m_min[0]);
+                    var max = Math.round(data.daily.temperature_2m_max[0]);
+                    var chip = document.getElementById(city.element);
+                    if (chip) chip.textContent = city.name + ' ' + min + '° - ' + max + '°C';
+                    return { city: city, conditionCode: data.daily.weather_code[0] };
+                });
+            })).then(function (forecasts) {
+                currentWeatherCode = Number(forecasts[0].conditionCode);
+                var condition = conditionFor();
+                if (title) title.textContent = condition.text + ' tại ' + forecasts[0].city.name + ' hôm nay';
+                if (icon) icon.className = 'fa-solid ' + condition.icon;
+                if (status) status.textContent = 'Dự báo nhiệt độ trong ngày · Dữ liệu Open-Meteo';
+            }).catch(function () {
+                if (status) status.textContent = 'Không thể tải dữ liệu dự báo lúc này.';
+                cities.forEach(function (city) {
+                    var chip = document.getElementById(city.element);
+                    if (chip && chip.textContent.indexOf('—') !== -1) chip.textContent = city.name + ' —';
+                });
             });
-        })).then(function (forecasts) {
-            currentWeatherCode = Number(forecasts[0].conditionCode);
-            var condition = conditionFor();
-            if (title) title.textContent = condition.text + ' tại ' + forecasts[0].city.name + ' hôm nay';
-            if (icon) icon.className = 'fa-solid ' + condition.icon;
-            if (status) status.textContent = 'Dự báo nhiệt độ trong ngày · Dữ liệu Open-Meteo';
-        }).catch(function () {
-            if (status) status.textContent = 'Không thể tải dữ liệu dự báo lúc này.';
-            cities.forEach(function (city) {
-                var chip = document.getElementById(city.element);
-                if (chip && chip.textContent.indexOf('—') !== -1) chip.textContent = city.name + ' —';
-            });
-        });
-    }());
+        }());
 </script>
