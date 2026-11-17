@@ -31,5 +31,8 @@ namespace NewsPortal.Models
         public virtual DbSet<Comments> Comments { get; set; }
         public virtual DbSet<Users> Users { get; set; }
         public virtual DbSet<ArticleRatings> ArticleRatings { get; set; }
+        public virtual DbSet<ArticleViewHistory> ArticleViewHistory { get; set; }
+        public virtual DbSet<SavedArticles> SavedArticles { get; set; }
+        public virtual DbSet<sysdiagrams> sysdiagrams { get; set; }
     }
 }

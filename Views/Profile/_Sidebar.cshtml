@@ -1,0 +1,290 @@
+﻿@model NewsPortal.Models.ProfileSidebarViewModel
+@{
+    var displayName = string.IsNullOrWhiteSpace(Model.DisplayName) ? "Người dùng" : Model.DisplayName;
+    var initial = displayName.Substring(0, 1).ToUpper();
+    var active = Model.ActiveTab ?? "Info";
+}
+
+<style>
+    .np-profile-wrap {
+        max-width: 1140px;
+        margin: 28px auto 48px;
+        padding: 0 16px;
+        display: grid;
+        grid-template-columns: 290px 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .np-sidebar {
+        background: linear-gradient(165deg, #b91c1c 0%, #7f1d1d 100%) !important;
+        border-radius: 14px !important;
+        padding: 28px 18px 22px;
+        color: #fff;
+        box-shadow: 0 10px 25px rgba(185, 28, 28, 0.22);
+    }
+
+    .np-avatar-box {
+        position: relative;
+        width: 112px;
+        height: 112px;
+        margin: 0 auto 14px;
+    }
+
+    .np-avatar-circle {
+        width: 112px;
+        height: 112px;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.22);
+        border: 3px solid rgba(255, 255, 255, 0.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 44px;
+        font-weight: 700;
+        color: #fff;
+        overflow: hidden;
+    }
+
+        .np-avatar-circle img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50% !important;
+            object-fit: cover;
+        }
+    .np-camera-btn {
+        position: absolute;
+        right: 2px;
+        bottom: 2px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50% !important;
+        background: #fff;
+        color: #b91c1c;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .np-user-name {
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 22px;
+        word-break: break-word;
+    }
+
+    .np-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .np-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.88);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+    }
+
+        .np-nav-link:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .np-nav-link.active {
+            background: rgba(255, 255, 255, 0.22);
+            color: #fff;
+            font-weight: 700;
+        }
+
+    .np-nav-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .np-content-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 28px 32px;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    }
+
+    .np-section-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 22px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .np-alert-ok {
+        padding: 12px 16px;
+        margin-bottom: 18px;
+        border-radius: 8px;
+        background: #dcfce7;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        font-weight: 600;
+    }
+
+    .np-alert-err {
+        padding: 12px 16px;
+        margin-bottom: 18px;
+        border-radius: 8px;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+        font-weight: 600;
+    }
+
+    .np-btn-primary {
+        background: #b91c1c !important;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+      .np-btn-primary:hover {
+        background: #991b1b !important;
+    }
+
+    .np-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .np-input, .np-select {
+        width: 100%;
+        height: 42px;
+        padding: 0 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #111827;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+        .np-input:focus, .np-select:focus {
+            outline: none;
+            border-color: #b91c1c;
+            box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
+        }
+
+    .np-field-err {
+        color: #dc2626;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    @@media (max-width: 820px) {
+        .np-profile-wrap {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<aside class="np-sidebar">
+    <div class="np-avatar-box">
+        <div class="np-avatar-circle">
+            @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+            {
+                <img src="@Url.Content(Model.AvatarUrl)" alt="@displayName" />
+            }
+            else
+            {
+                <span>@initial</span>
+            }
+        </div>
+        @using (Html.BeginForm("Avatar", "Profile", FormMethod.Post, new { enctype = "multipart/form-data", id = "avatarUploadForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="file" name="file" id="avatarFileInput" accept=".jpg,.jpeg,.png,.gif,.webp" style="display:none;"
+                   onchange="if(this.files && this.files.length > 0){ document.getElementById('avatarUploadForm').submit(); }" />
+            <button type="button" class="np-camera-btn" title="Đổi ảnh đại diện"
+                    onclick="document.getElementById('avatarFileInput').click();">
+                <i class="fa-solid fa-camera"></i>
+            </button>
+        }
+    </div>
+
+    <div class="np-user-name">@displayName</div>
+
+    <ul class="np-nav-list">
+        <li>
+            <a href="@Url.Action("Info", "Profile")" class="np-nav-link @(active == "Info" ? "active" : "")">
+                <span class="np-nav-icon"><i class="fa-solid fa-user"></i></span>
+                <span>Thông tin tài khoản</span>
+            </a>
+        </li>
+        <li>
+            <a href="@Url.Action("ChangePassword", "Profile")" class="np-nav-link @(active == "ChangePassword" ? "active" : "")">
+                <span class="np-nav-icon"><i class="fa-solid fa-lock"></i></span>
+                <span>Đổi mật khẩu</span>
+            </a>
+        </li>
+        <li>
+            <a href="@Url.Action("Comments", "Profile")" class="np-nav-link @(active == "Comments" ? "active" : "")">
+                <span class="np-nav-icon"><i class="fa-solid fa-comment-dots"></i></span>
+                <span>Hoạt động bình luận</span>
+            </a>
+        </li>
+        <li>
+            <a href="@Url.Action("Saved", "Profile")" class="np-nav-link @(active == "Saved" ? "active" : "")">
+                <span class="np-nav-icon"><i class="fa-solid fa-bookmark"></i></span>
+                <span>Tin đã lưu</span>
+            </a>
+        </li>
+        <li>
+            <a href="@Url.Action("History", "Profile")" class="np-nav-link @(active == "History" ? "active" : "")">
+                <span class="np-nav-icon"><i class="fa-solid fa-eye"></i></span>
+                <span>Tin đã xem</span>
+            </a>
+        </li>
+        <li>
+            @using (Html.BeginForm("Logout", "Profile", FormMethod.Post, new { style = "margin:0;" }))
+            {
+                @Html.AntiForgeryToken()
+                <button type="submit" class="np-nav-link">
+                    <span class="np-nav-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+                    <span>Đăng xuất</span>
+                </button>
+            }
+        </li>
+    </ul>
+</aside>

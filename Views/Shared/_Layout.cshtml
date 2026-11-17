@@ -1064,15 +1064,42 @@
                 </form>
 
                 <div class="account-area" id="account-area">
+                    @{
+                        var headerAvatar = Session["UserAvatar"] as string;
+                        if (string.IsNullOrEmpty(headerAvatar) && (Session["User"] != null || Session["Admin"] != null))
+                        {
+                            var _uname = (Session["User"] ?? Session["Admin"]) as string;
+                            using (var _db = new NewsPortal.Models.NewsPortalDBEntities())
+                            {
+                                var _usr = _db.Users.FirstOrDefault(x => x.Username == _uname);
+                                if (_usr != null && !string.IsNullOrEmpty(_usr.AvatarUrl))
+                                {
+                                    headerAvatar = _usr.AvatarUrl;
+                                    Session["UserAvatar"] = headerAvatar;
+                                }
+                            }
+                        }
+                    }
+
                     <button type="button"
                             class="user-toggle"
                             id="user-toggle"
                             aria-label="Mở menu tài khoản"
-                            aria-expanded="false">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <circle cx="12" cy="8" r="3.5"></circle>
-                            <path d="M5 20c.8-3.1 3.2-5 7-5s6.2 1.9 7 5"></path>
-                        </svg>
+                            aria-expanded="false"
+                            style="width:40px; height:40px; min-width:40px; border-radius:50% !important; overflow:hidden; padding:0; display:inline-flex; align-items:center; justify-content:center; border:2px solid #b91c1c; background:#f8fafc; box-shadow:0 2px 6px rgba(0,0,0,0.12); cursor:pointer;">
+                        @if (!string.IsNullOrEmpty(headerAvatar))
+                        {
+                            <img src="@Url.Content(headerAvatar)"
+                                 alt="Avatar"
+                                 style="width:100%; height:100%; display:block; object-fit:cover; border-radius:50% !important;" />
+                        }
+                        else
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px; height:20px;">
+                                <circle cx="12" cy="8" r="3.5"></circle>
+                                <path d="M5 20c.8-3.1 3.2-5 7-5s6.2 1.9 7 5"></path>
+                            </svg>
+                        }
                     </button>
 
                     <div class="account-menu" id="account-menu">
@@ -1095,7 +1122,36 @@
                             {
                                 <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })" class="account-menu-link">Quản lý bài viết</a>
                             }
-                            <a href="@Url.Action("Logout", "Account")" class="account-menu-link">Đăng xuất</a>
+                            <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
+                            <a href="@Url.Action("Info", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
+                                <i class="fa-regular fa-circle-user" style="width:18px; color:#b91c1c;"></i>
+                                <span>Thông tin tài khoản</span>
+                            </a>
+                            <a href="@Url.Action("ChangePassword", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
+                                <i class="fa-solid fa-lock" style="width:18px; color:#b91c1c;"></i>
+                                <span>Đổi mật khẩu</span>
+                            </a>
+                            <a href="@Url.Action("Comments", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
+                                <i class="fa-regular fa-comment-dots" style="width:18px; color:#b91c1c;"></i>
+                                <span>Hoạt động bình luận</span>
+                            </a>
+                            <a href="@Url.Action("Saved", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
+                                <i class="fa-regular fa-bookmark" style="width:18px; color:#b91c1c;"></i>
+                                <span>Tin đã lưu</span>
+                            </a>
+                            <a href="@Url.Action("History", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
+                                <i class="fa-regular fa-eye" style="width:18px; color:#b91c1c;"></i>
+                                <span>Tin đã xem</span>
+                            </a>
+                            <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
+                            using (Html.BeginForm("Logout", "Profile", FormMethod.Post, new { style = "margin:0;" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="account-menu-link" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; text-align:left; background:none; border:none; font:inherit; color:#b91c1c; font-weight:600; cursor:pointer;">
+                                    <i class="fa-solid fa-right-from-bracket" style="width:18px;"></i>
+                                    <span>Đăng xuất</span>
+                                </button>
+                            }
                         }
                     </div>
                 </div>

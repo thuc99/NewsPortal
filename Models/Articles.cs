@@ -19,6 +19,8 @@ namespace NewsPortal.Models
         {
             this.Comments = new HashSet<Comments>();
             this.ArticleRatings = new HashSet<ArticleRatings>();
+            this.SavedArticles = new HashSet<SavedArticles>();
+            this.ArticleViewHistory = new HashSet<ArticleViewHistory>();
         }
     
         public int ArticleID { get; set; }
@@ -32,6 +34,7 @@ namespace NewsPortal.Models
         public string Status { get; set; }
         public string ImageUrl { get; set; }
         public int ViewCount { get; set; }
+        public string Image { get; set; }
     
         public virtual Author Authors { get; set; }
         public virtual Category Categories { get; set; }
@@ -39,5 +42,9 @@ namespace NewsPortal.Models
         public virtual ICollection<Comments> Comments { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ArticleRatings> ArticleRatings { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<SavedArticles> SavedArticles { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ArticleViewHistory> ArticleViewHistory { get; set; }
     }
 }

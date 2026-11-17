@@ -14,6 +14,14 @@ namespace NewsPortal.Models
     
     public partial class Users
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public Users()
+        {
+            this.ArticleViewHistory = new HashSet<ArticleViewHistory>();
+            this.Comments = new HashSet<Comments>();
+            this.SavedArticles = new HashSet<SavedArticles>();
+        }
+    
         public int UserId { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
@@ -22,5 +30,17 @@ namespace NewsPortal.Models
         public string Role { get; set; }
         public bool IsActive { get; set; }
         public System.DateTime CreatedAt { get; set; }
+        public Nullable<System.DateTime> BirthDate { get; set; }
+        public string Gender { get; set; }
+        public string Phone { get; set; }
+        public string Address { get; set; }
+        public string AvatarUrl { get; set; }
+    
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ArticleViewHistory> ArticleViewHistory { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Comments> Comments { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<SavedArticles> SavedArticles { get; set; }
     }
 }

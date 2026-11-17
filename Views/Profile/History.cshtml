@@ -1,0 +1,47 @@
+﻿@model List<NewsPortal.Models.ViewedArticleItemViewModel>
+@{ ViewBag.Title = "Tin đã xem"; }
+
+<div class="np-profile-wrap">
+    @Html.Action("Sidebar", "Profile", new { activeTab = "History" })
+
+    <section class="np-content-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:14px; margin-bottom:22px;">
+            <h1 style="font-size:22px; font-weight:700; color:#111827; margin:0;">Tin đã xem (@Model.Count)</h1>
+            @if (Model.Count > 0)
+            {
+                using (Html.BeginForm("ClearHistory", "Profile", FormMethod.Post, new { style = "margin:0;" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" style="background:#f3f4f6; color:#374151; border:none; border-radius:6px; padding:7px 12px; font-size:13px; font-weight:600; cursor:pointer;">
+                        Xóa lịch sử xem
+                    </button>
+                }
+            }
+        </div>
+
+        @if (TempData["Success"] != null)
+        {<div class="np-alert-ok">@TempData["Success"]</div>}
+
+        @if (Model.Count == 0)
+        {
+            <p style="color:#6b7280;">Chưa có lịch sử xem bài viết nào.</p>
+        }
+        else
+        {
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                @foreach (var item in Model)
+                {
+                    <div style="border:1px solid #e5e7eb; border-radius:10px; padding:12px 16px;">
+                        <a href="@Url.Action("Details", "Articles", new { id = item.ArticleId })"
+                           style="font-size:16px; font-weight:700; color:#111827; text-decoration:none;">
+                            @item.Title
+                        </a>
+                        <div style="font-size:12px; color:#6b7280; margin-top:4px;">
+                            Xem gần nhất: @(item.ViewedAt.HasValue ? item.ViewedAt.Value.ToString("dd/MM/yyyy HH:mm") : "")
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>

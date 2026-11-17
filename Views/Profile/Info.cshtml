@@ -1,0 +1,151 @@
+﻿@model NewsPortal.Models.ProfileInfoViewModel
+@{
+    ViewBag.Title = "Thông tin tài khoản";
+    int? selDay = Model.BirthDate.HasValue ? Model.BirthDate.Value.Day : (int?)null;
+    int? selMonth = Model.BirthDate.HasValue ? Model.BirthDate.Value.Month : (int?)null;
+    int? selYear = Model.BirthDate.HasValue ? Model.BirthDate.Value.Year : (int?)null;
+}
+
+<style>
+    .np-form-row-2 {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 20px;
+        margin-bottom: 18px;
+    }
+
+    .np-form-row-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .np-gender-group {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        height: 42px;
+    }
+
+    .np-gender-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: #374151;
+        cursor: pointer;
+    }
+
+    @@media (max-width: 768px) {
+        .np-form-row-2, .np-form-row-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="np-profile-wrap">
+    @Html.Action("Sidebar", "Profile", new { activeTab = "Info" })
+
+    <section class="np-content-card">
+        <h1 class="np-section-title">Thông tin tài khoản</h1>
+
+        @if (TempData["Success"] != null)
+        {<div class="np-alert-ok">@TempData["Success"]</div>}
+        @if (TempData["Error"] != null)
+        {<div class="np-alert-err">@TempData["Error"]</div>}
+
+        @using (Html.BeginForm("Info", "Profile", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="BirthDate" id="BirthDateHidden"
+                   value="@(Model.BirthDate.HasValue ? Model.BirthDate.Value.ToString("yyyy-MM-dd") : "")" />
+
+            <div class="np-form-row-2">
+                <div>
+                    <label class="np-label" for="FullName">Tên hiển thị</label>
+                    @Html.TextBoxFor(m => m.FullName, new { @class = "np-input", placeholder = "Nhập tên hiển thị" })
+                    @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "np-field-err" })
+                </div>
+
+                <div>
+                    <label class="np-label">Giới tính</label>
+                    <div class="np-gender-group">
+                        @foreach (var g in new[] { "Nam", "Nữ", "Khác" })
+                        {
+                            <label class="np-gender-item">
+                                <input type="radio" name="Gender" value="@g" @(Model.Gender == g ? "checked" : "") />
+                                <span>@g</span>
+                            </label>
+                        }
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Gender, "", new { @class = "np-field-err" })
+                </div>
+            </div>
+
+            <div>
+                <label class="np-label">Ngày sinh</label>
+                <div class="np-form-row-3">
+                    <select id="dobDay" class="np-select" onchange="syncBirthDate()">
+                        <option value="">Ngày</option>
+                        @for (int d = 1; d <= 31; d++)
+                        {
+                            <option value="@d" @(selDay == d ? "selected" : "")>@d</option>
+                        }
+                    </select>
+                    <select id="dobMonth" class="np-select" onchange="syncBirthDate()">
+                        <option value="">Tháng</option>
+                        @for (int m = 1; m <= 12; m++)
+                        {
+                            <option value="@m" @(selMonth == m ? "selected" : "")>Tháng @m</option>
+                        }
+                    </select>
+                    <select id="dobYear" class="np-select" onchange="syncBirthDate()">
+                        <option value="">Năm</option>
+                        @for (int y = DateTime.Today.Year; y >= 1920; y--)
+                        {
+                            <option value="@y" @(selYear == y ? "selected" : "")>@y</option>
+                        }
+                    </select>
+                </div>
+                @Html.ValidationMessageFor(m => m.BirthDate, "", new { @class = "np-field-err" })
+            </div>
+
+            <div class="np-form-row-3">
+                <div>
+                    <label class="np-label" for="Email">Email</label>
+                    @Html.TextBoxFor(m => m.Email, new { @class = "np-input", type = "email", placeholder = "example@gmail.com" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "np-field-err" })
+                </div>
+                <div>
+                    <label class="np-label" for="Phone">Điện thoại</label>
+                    @Html.TextBoxFor(m => m.Phone, new { @class = "np-input", placeholder = "09xxxxxxxx" })
+                    @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "np-field-err" })
+                </div>
+                <div>
+                    <label class="np-label" for="Address">Địa chỉ</label>
+                    @Html.TextBoxFor(m => m.Address, new { @class = "np-input", placeholder = "Tỉnh / Thành phố" })
+                    @Html.ValidationMessageFor(m => m.Address, "", new { @class = "np-field-err" })
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 22px;">
+                <button type="submit" class="np-btn-primary">Lưu thay đổi</button>
+            </div>
+        }
+    </section>
+</div>
+
+<script>
+    function syncBirthDate() {
+        var d = document.getElementById('dobDay').value;
+        var m = document.getElementById('dobMonth').value;
+        var y = document.getElementById('dobYear').value;
+        var hidden = document.getElementById('BirthDateHidden');
+        if (d && m && y) {
+            hidden.value = y + '-' + (m.length === 1 ? '0' + m : m) + '-' + (d.length === 1 ? '0' + d : d);
+        } else {
+            hidden.value = '';
+        }
+    }
+</script>

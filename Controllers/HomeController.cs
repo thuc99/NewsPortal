@@ -21,6 +21,11 @@ namespace NewsPortal.Controllers
                 .Include(a => a.Authors)
                 .Where(a => a.Status == "Published");
 
+            var latestArticles = publishedArticles
+                .OrderByDescending(a => a.CreatedDate)
+                .Take(3)
+                .ToList();
+
             var featuredSince = DateTime.Now.AddDays(-7);
             var featured = publishedArticles
                 .Where(a => a.CreatedDate >= featuredSince)
@@ -28,10 +33,10 @@ namespace NewsPortal.Controllers
                 .ThenByDescending(a => a.CreatedDate)
                 .FirstOrDefault();
 
-            var latestArticles = publishedArticles
-                .OrderByDescending(a => a.CreatedDate)
-                .Take(3)
-                .ToList();
+            if (featured == null)
+            {
+                featured = latestArticles.FirstOrDefault();
+            }
 
             var query = publishedArticles;
 

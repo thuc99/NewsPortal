@@ -1,0 +1,46 @@
+﻿@model List<NewsPortal.Models.SavedArticleItemViewModel>
+@{ ViewBag.Title = "Tin đã lưu"; }
+
+<div class="np-profile-wrap">
+    @Html.Action("Sidebar", "Profile", new { activeTab = "Saved" })
+
+    <section class="np-content-card">
+        <h1 class="np-section-title">Tin đã lưu (@Model.Count)</h1>
+        @if (TempData["Success"] != null)
+        {<div class="np-alert-ok">@TempData["Success"]</div>}
+
+        @if (Model.Count == 0)
+        {
+            <p style="color:#6b7280;">Bạn chưa lưu bài viết nào.</p>
+        }
+        else
+        {
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                @foreach (var item in Model)
+                {
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; border:1px solid #e5e7eb; border-radius:10px; padding:14px 16px;">
+                        <div>
+                            <a href="@Url.Action("Details", "Articles", new { id = item.ArticleId })"
+                               style="font-size:16px; font-weight:700; color:#111827; text-decoration:none;">
+                                @item.Title
+                            </a>
+                            <div style="font-size:12px; color:#6b7280; margin-top:4px;">
+                                Đã lưu lúc: @(item.SavedAt.HasValue ? item.SavedAt.Value.ToString("dd/MM/yyyy HH:mm") : "")
+                            </div>
+                        </div>
+
+                        @using (Html.BeginForm("Unsave", "Profile", FormMethod.Post, new { style = "margin:0; flex-shrink:0;" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="articleId" value="@item.ArticleId" />
+                            <button type="submit" style="background:#fee2e2; color:#b91c1c; border:none; border-radius:6px; padding:7px 12px; font-weight:600; cursor:pointer;">
+                                Bỏ lưu
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+

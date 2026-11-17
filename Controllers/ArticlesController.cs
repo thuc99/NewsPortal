@@ -321,6 +321,36 @@ END";
 
         public ActionResult Details(int? id)
         {
+            if (id.HasValue && id.Value > 0)
+            {
+                int artId = id.Value;
+                string currentUsername = (Session["User"] ?? Session["Admin"]) as string;
+                if (!string.IsNullOrEmpty(currentUsername) && db.Articles.Any(a => a.ArticleID == artId))
+                {
+                    var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
+                    if (viewer != null)
+                    {
+                        var history = db.ArticleViewHistory.FirstOrDefault(h => h.UserId == viewer.UserId && h.ArticleID == artId);
+                        if (history != null)
+                        {
+                            history.LastViewedAt = DateTime.Now;
+                        }
+                        else
+                        {
+                            db.ArticleViewHistory.Add(new ArticleViewHistory
+                            {
+                                UserId = viewer.UserId,
+                                ArticleID = artId,
+                                LastViewedAt = DateTime.Now
+                            });
+                        }
+                        db.SaveChanges();
+
+                        ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleID == artId);
+                    }
+                }
+            }
+
             return LoadArticleDetails(id, false);
         }
 

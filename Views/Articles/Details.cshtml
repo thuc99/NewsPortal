@@ -474,39 +474,55 @@
             </div>
         }
 
-        <div class="detail-meta">
-            <div class="detail-date">
-                <i class="glyphicon glyphicon-calendar"></i>
-                Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
-            </div>
 
-            @if (ViewBag.CanComment == true)
-            {
-                <div class="article-tools">
-                    <span class="article-stat article-views">
-                        <span aria-hidden="true">👁</span>
-                        @Model.ViewCount lượt xem
-                    </span>
-                    <span class="article-stat">
-                        <strong>★ @(((double)ViewBag.AverageRating).ToString("0.0"))/5</strong>
-                        <span>(@ViewBag.RatingCount lượt đánh giá)</span>
-                    </span>
 
-                    @using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { @class = "favorite-form" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        @Html.Hidden("articleId", Model.Id)
-                        <button type="submit"
-                                class="favorite-button @(ViewBag.IsFavorite == true ? "is-saved" : "")"
-                                title="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")"
-                                aria-label="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")">
-                            <i class="@(ViewBag.IsFavorite == true ? "fa-solid" : "fa-regular") fa-bookmark" aria-hidden="true"></i>
-                            <span>@(ViewBag.IsFavorite == true ? "Đã lưu" : "Lưu")</span>
-                        </button>
-                    }
-                </div>
-            }
+    <div class="detail-meta">
+        <div class="detail-date">
+            <i class="glyphicon glyphicon-calendar"></i>
+            Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
         </div>
+
+        @if (Session["User"] != null || Session["Admin"] != null)
+        {
+            bool isSaved = ViewBag.IsSavedArticle != null && (bool)ViewBag.IsSavedArticle;
+            using (Html.BeginForm("ToggleSave", "Profile", FormMethod.Post, new { style = "display:inline-block; margin-left:12px;" }))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="articleId" value="@Model.Id" />
+                <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+                <button type="submit" style="padding:5px 14px; border-radius:6px; border:1px solid #b91c1c; background:@(isSaved ? "#b91c1c" : "#fff"); color:@(isSaved ? "#fff" : "#b91c1c"); font-weight:600; cursor:pointer;">
+                    <i class="fa-@(isSaved ? "solid" : "regular") fa-bookmark"></i> @(isSaved ? "Đã lưu tin" : "Lưu tin")
+                </button>
+            }
+        }
+
+        @if (ViewBag.CanComment == true)
+        {
+            <div class="article-tools">
+                <span class="article-stat article-views">
+                    <span aria-hidden="true">👁</span>
+                    @Model.ViewCount lượt xem
+                </span>
+                <span class="article-stat">
+                    <strong>★ @(((double)ViewBag.AverageRating).ToString("0.0"))/5</strong>
+                    <span>(@ViewBag.RatingCount lượt đánh giá)</span>
+                </span>
+
+                @using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { @class = "favorite-form" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.Hidden("articleId", Model.Id)
+                    <button type="submit"
+                            class="favorite-button @(ViewBag.IsFavorite == true ? "is-saved" : "")"
+                            title="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")"
+                            aria-label="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")">
+                        <i class="@(ViewBag.IsFavorite == true ? "fa-solid" : "fa-regular") fa-bookmark" aria-hidden="true"></i>
+                        <span>@(ViewBag.IsFavorite == true ? "Đã lưu" : "Lưu")</span>
+                    </button>
+                }
+            </div>
+        }
+    </div>
     </div>
 
     @if (!string.IsNullOrEmpty(Model.Image))
@@ -537,56 +553,76 @@
         </div>
     }
 
-    <section class="comments-card">
-        <h3 class="comments-title">Bình luận (@comments.Count())</h3>
+<section class="comments-card">
+    <h3 class="comments-title">Bình luận (@comments.Count())</h3>
 
-        @if (ViewBag.CanComment == true)
+    @if (ViewBag.CanComment == true)
+    {
+        if (TempData["CommentSuccess"] != null)
         {
-            if (TempData["CommentSuccess"] != null)
-            {
-                <div class="comment-message comment-success">@TempData["CommentSuccess"]</div>
-            }
-
-            if (TempData["CommentError"] != null)
-            {
-                <div class="comment-message comment-error">@TempData["CommentError"]</div>
-            }
-
-            using (Html.BeginForm("AddComment", "Articles", FormMethod.Post, new { @class = "comment-form" }))
-            {
-                @Html.AntiForgeryToken()
-                @Html.Hidden("articleId", Model.Id)
-
-                <input type="text" name="commenterName" class="comment-input"
-                       maxlength="100" placeholder="Tên của bạn" required />
-
-                <textarea name="content" class="comment-textarea"
-                          maxlength="1000" placeholder="Viết bình luận..." required></textarea>
-
-                <button type="submit" class="comment-submit">Gửi bình luận</button>
-            }
-        }
-        else
-        {
-            <p class="comments-readonly">Khu vực bình luận chỉ được gửi tại trang đọc bài viết.</p>
+            <div class="comment-message comment-success">@TempData["CommentSuccess"]</div>
         }
 
-        @if (comments.Any())
+        if (TempData["CommentError"] != null)
         {
-            foreach (var comment in comments)
-            {
-                <div class="comment-item">
+            <div class="comment-message comment-error">@TempData["CommentError"]</div>
+        }
+
+        using (Html.BeginForm("AddComment", "Articles", FormMethod.Post, new { @class = "comment-form" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.Hidden("articleId", Model.Id)
+
+            <input type="text" name="commenterName" class="comment-input"
+                   maxlength="100" placeholder="Tên của bạn" required />
+
+            <textarea name="content" class="comment-textarea"
+                      maxlength="1000" placeholder="Viết bình luận..." required></textarea>
+
+            <button type="submit" class="comment-submit">Gửi bình luận</button>
+        }
+    }
+    else
+    {
+        <p class="comments-readonly">Khu vực bình luận chỉ được gửi tại trang đọc bài viết.</p>
+    }
+
+    @if (comments.Any())
+    {
+        foreach (var comment in comments)
+        {   
+            
+                string cmtAvatar = (comment.Users != null && !string.IsNullOrWhiteSpace(comment.Users.AvatarUrl))
+                    ? comment.Users.AvatarUrl
+                    : null;
+                string cmtInitial = !string.IsNullOrWhiteSpace(comment.CommenterName)
+                    ? comment.CommenterName.Trim().Substring(0, 1).ToUpper()
+                    : "U";
+            
+            <div class="comment-item" style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="width:38px; height:38px; border-radius:50%; overflow:hidden; background:#b91c1c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0; margin-top:2px;">
+                    @if (cmtAvatar != null)
+                    {
+                        <img src="@Url.Content(cmtAvatar)" alt="@comment.CommenterName" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+                    }
+                    else
+                    {
+                        <span>@cmtInitial</span>
+                    }
+                </div>
+                <div style="flex:1; min-width:0;">
                     <span class="comment-author">@comment.CommenterName</span>
                     <span class="comment-date">@comment.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
                     <p class="comment-content">@comment.Content</p>
                 </div>
-            }
+            </div>
         }
-        else
-        {
-            <p class="comments-empty">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ ý kiến.</p>
-        }
-    </section>
+    }
+    else
+    {
+        <p class="comments-empty">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ ý kiến.</p>
+    }
+</section>
 
     @if (ViewBag.CanComment == true)
     {
