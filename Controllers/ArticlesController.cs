@@ -321,43 +321,47 @@ END";
 
         public ActionResult Details(int? id)
         {
-            if (id.HasValue && id.Value > 0)
-            {
-                int artId = id.Value;
-                string currentUsername = (Session["User"] ?? Session["Admin"]) as string;
-                if (!string.IsNullOrEmpty(currentUsername) && db.Articles.Any(a => a.ArticleID == artId))
-                {
-                    var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
-                    if (viewer != null)
-                    {
-                        var history = db.ArticleViewHistory.FirstOrDefault(h => h.UserId == viewer.UserId && h.ArticleID == artId);
-                        if (history != null)
-                        {
-                            history.LastViewedAt = DateTime.Now;
-                        }
-                        else
-                        {
-                            db.ArticleViewHistory.Add(new ArticleViewHistory
-                            {
-                                UserId = viewer.UserId,
-                                ArticleID = artId,
-                                LastViewedAt = DateTime.Now
-                            });
-                        }
-                        db.SaveChanges();
-
-                        ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleID == artId);
-                    }
-                }
-            }
-
+            SyncViewAndSaved(id);
             return LoadArticleDetails(id, false);
         }
 
         [ActionName("View")]
         public ActionResult ViewArticle(int? id)
         {
+            SyncViewAndSaved(id);
             return LoadArticleDetails(id, true);
+        }
+
+        private void SyncViewAndSaved(int? id)
+        {
+            if (!id.HasValue || id.Value <= 0) return;
+
+            int artId = id.Value;
+            string currentUsername = (Session["User"] ?? Session["Admin"]) as string;
+            if (!string.IsNullOrEmpty(currentUsername) && db.Articles.Any(a => a.ArticleID == artId))
+            {
+                var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
+                if (viewer != null)
+                {
+                    var history = db.ArticleViewHistory.FirstOrDefault(h => h.UserId == viewer.UserId && h.ArticleID == artId);
+                    if (history != null)
+                    {
+                        history.LastViewedAt = DateTime.Now;
+                    }
+                    else
+                    {
+                        db.ArticleViewHistory.Add(new ArticleViewHistory
+                        {
+                            UserId = viewer.UserId,
+                            ArticleID = artId,
+                            LastViewedAt = DateTime.Now
+                        });
+                    }
+                    db.SaveChanges();
+
+                    ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleID == artId);
+                }
+            }
         }
 
         private ActionResult LoadArticleDetails(int? id, bool canComment)
@@ -527,17 +531,14 @@ END";
                 return RedirectToAction("Index");
             }
 
+            int artId = articleId.Value;
+
+            // Giữ nguyên cookie của hệ thống cũ
             var favoriteIds = GetFavoriteIds();
-            if (favoriteIds.Contains(articleId.Value))
-            {
-                favoriteIds.Remove(articleId.Value);
-                TempData["FavoriteMessage"] = "Đã bỏ khỏi bài viết yêu thích.";
-            }
+            if (favoriteIds.Contains(artId))
+                favoriteIds.Remove(artId);
             else
-            {
-                favoriteIds.Add(articleId.Value);
-                TempData["FavoriteMessage"] = "Đã lưu bài viết yêu thích.";
-            }
+                favoriteIds.Add(artId);
 
             Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", favoriteIds))
             {
@@ -545,7 +546,38 @@ END";
                 HttpOnly = true
             });
 
-            return RedirectToAction("View", new { id = articleId.Value });
+            // Đồng bộ thêm vào bảng SavedArticles khi đã đăng nhập
+            string currentUsername = (Session["User"] ?? Session["Admin"]) as string;
+            if (!string.IsNullOrEmpty(currentUsername))
+            {
+                var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
+                if (viewer != null)
+                {
+                    var existing = db.SavedArticles.FirstOrDefault(s => s.UserId == viewer.UserId && s.ArticleID == artId);
+                    if (existing != null)
+                    {
+                        db.SavedArticles.Remove(existing);
+                        TempData["FavoriteMessage"] = "Đã bỏ lưu bài viết.";
+                    }
+                    else
+                    {
+                        db.SavedArticles.Add(new SavedArticles
+                        {
+                            UserId = viewer.UserId,
+                            ArticleID = artId,
+                            SavedAt = DateTime.Now
+                        });
+                        TempData["FavoriteMessage"] = "Đã lưu bài viết vào Tin đã lưu.";
+                    }
+                    db.SaveChanges();
+                }
+            }
+            else
+            {
+                TempData["FavoriteMessage"] = favoriteIds.Contains(artId) ? "Đã lưu bài viết yêu thích." : "Đã bỏ khỏi bài viết yêu thích.";
+            }
+
+            return RedirectToAction("View", new { id = artId });
         }
 
         private List<int> GetFavoriteIds()

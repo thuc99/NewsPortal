@@ -307,7 +307,7 @@ END";
             {
                 conn.Open();
                 string sql = @"
-                    SELECT UserId, Username, FullName, Email, Role, IsActive, CreatedAt AS CreatedDate
+                    SELECT UserId, Username, FullName, Email, BirthDate, Gender, Phone, Address, Role, IsActive, CreatedAt AS CreatedDate
                     FROM dbo.Users
                     WHERE (@search = N''
                         OR Username LIKE N'%' + @search + N'%'
@@ -329,6 +329,10 @@ END";
                                 Username = Convert.ToString(reader["Username"]),
                                 FullName = Convert.ToString(reader["FullName"]),
                                 Email = reader["Email"] == DBNull.Value ? "" : Convert.ToString(reader["Email"]),
+                                BirthDate = reader["BirthDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["BirthDate"]),
+                                Gender = reader["Gender"] == DBNull.Value ? "" : Convert.ToString(reader["Gender"]),
+                                Phone = reader["Phone"] == DBNull.Value ? "" : Convert.ToString(reader["Phone"]),
+                                Address = reader["Address"] == DBNull.Value ? "" : Convert.ToString(reader["Address"]),
                                 Role = Convert.ToString(reader["Role"]),
                                 IsActive = Convert.ToBoolean(reader["IsActive"]),
                                 CreatedDate = Convert.ToDateTime(reader["CreatedDate"])

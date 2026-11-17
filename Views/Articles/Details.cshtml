@@ -510,15 +510,17 @@
 
                 @using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { @class = "favorite-form" }))
                 {
-                    @Html.AntiForgeryToken()
-                    @Html.Hidden("articleId", Model.Id)
-                    <button type="submit"
-                            class="favorite-button @(ViewBag.IsFavorite == true ? "is-saved" : "")"
-                            title="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")"
-                            aria-label="@(ViewBag.IsFavorite == true ? "Bỏ lưu bài viết" : "Lưu bài viết")">
-                        <i class="@(ViewBag.IsFavorite == true ? "fa-solid" : "fa-regular") fa-bookmark" aria-hidden="true"></i>
-                        <span>@(ViewBag.IsFavorite == true ? "Đã lưu" : "Lưu")</span>
-                    </button>
+                @Html.AntiForgeryToken()
+                @Html.Hidden("articleId", Model.Id)
+                bool isLoggedIn = Session["User"] != null || Session["Admin"] != null;
+                bool isSavedSync = isLoggedIn ? (ViewBag.IsSavedArticle == true) : (ViewBag.IsFavorite == true);
+                <button type="submit"
+                        class="favorite-button @(isSavedSync ? "is-saved" : "")"
+                        title="@(isSavedSync ? "Bỏ lưu bài viết" : "Lưu bài viết")"
+                        aria-label="@(isSavedSync ? "Bỏ lưu bài viết" : "Lưu bài viết")">
+                    <i class="@(isSavedSync ? "fa-solid" : "fa-regular") fa-bookmark" aria-hidden="true"></i>
+                    <span>@(isSavedSync ? "Đã lưu" : "Lưu")</span>
+                </button>
                 }
             </div>
         }
@@ -573,8 +575,29 @@
             @Html.AntiForgeryToken()
             @Html.Hidden("articleId", Model.Id)
 
-            <input type="text" name="commenterName" class="comment-input"
-                   maxlength="100" placeholder="Tên của bạn" required />
+            string loggedInName = Convert.ToString(Session["UserFullName"]);
+            if (string.IsNullOrWhiteSpace(loggedInName) && (Session["User"] != null || Session["Admin"] != null))
+            {
+                string uname = Convert.ToString(Session["User"] ?? Session["Admin"]);
+                using (var _db = new NewsPortal.Models.NewsPortalDBEntities())
+                {
+                    var _u = _db.Users.FirstOrDefault(x => x.Username == uname);
+                    loggedInName = (_u != null && !string.IsNullOrWhiteSpace(_u.FullName)) ? _u.FullName : uname;
+                    Session["UserFullName"] = loggedInName;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(loggedInName))
+            {
+                <input type="text" name="commenterName" class="comment-input"
+                       value="@loggedInName" readonly
+                       style="background-color:#f3f4f6; color:#1f2937; font-weight:600; cursor:not-allowed;" />
+            }
+            else
+            {
+                <input type="text" name="commenterName" class="comment-input"
+                       maxlength="100" placeholder="Tên của bạn" required />
+            }
 
             <textarea name="content" class="comment-textarea"
                       maxlength="1000" placeholder="Viết bình luận..." required></textarea>
@@ -590,15 +613,15 @@
     @if (comments.Any())
     {
         foreach (var comment in comments)
-        {   
-            
-                string cmtAvatar = (comment.Users != null && !string.IsNullOrWhiteSpace(comment.Users.AvatarUrl))
-                    ? comment.Users.AvatarUrl
-                    : null;
-                string cmtInitial = !string.IsNullOrWhiteSpace(comment.CommenterName)
-                    ? comment.CommenterName.Trim().Substring(0, 1).ToUpper()
-                    : "U";
-            
+        {
+
+            string cmtAvatar = (comment.Users != null && !string.IsNullOrWhiteSpace(comment.Users.AvatarUrl))
+                ? comment.Users.AvatarUrl
+                : null;
+            string cmtInitial = !string.IsNullOrWhiteSpace(comment.CommenterName)
+                ? comment.CommenterName.Trim().Substring(0, 1).ToUpper()
+                : "U";
+
             <div class="comment-item" style="display:flex; align-items:flex-start; gap:12px;">
                 <div style="width:38px; height:38px; border-radius:50%; overflow:hidden; background:#b91c1c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0; margin-top:2px;">
                     @if (cmtAvatar != null)

@@ -220,6 +220,10 @@
                     <th>Tài khoản</th>
                     <th>Họ tên</th>
                     <th>Email</th>
+                    <th>Giới tính</th>
+                    <th>Ngày sinh</th>
+                    <th>Điện thoại</th>
+                    <th>Địa chỉ</th>
                     <th>Vai trò</th>
                     <th>Ngày tạo</th>
                     <th>Trạng thái</th>
@@ -236,6 +240,10 @@
                             <td style="font-weight:700;">@u.Username</td>
                             <td>@u.FullName</td>
                             <td>@(string.IsNullOrEmpty(u.Email) ? "---" : u.Email)</td>
+                            <td>@(string.IsNullOrEmpty(u.Gender) ? "---" : u.Gender)</td>
+                            <td>@(u.BirthDate.HasValue ? u.BirthDate.Value.ToString("dd/MM/yyyy") : "---")</td>
+                            <td>@(string.IsNullOrEmpty(u.Phone) ? "---" : u.Phone)</td>
+                            <td>@(string.IsNullOrEmpty(u.Address) ? "---" : u.Address)</td>
                             <td>
                                 @if (u.CanChangeRole)
                                 {
@@ -289,7 +297,7 @@
                 }
                 else
                 {
-                    <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:24px;">Không tìm thấy tài khoản phù hợp.</td></tr>
+                    <tr><td colspan="12" style="text-align:center; color:var(--muted); padding:24px;">Không tìm thấy tài khoản phù hợp.</td></tr>
                 }
             </tbody>
         </table>
