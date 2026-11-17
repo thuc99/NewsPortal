@@ -16,6 +16,14 @@ namespace NewsPortal.Controllers
     [AdminAreaAuthorize]
     public class AdminController : Controller
     {
+        private static readonly string[] ValidStatuses = new[]
+        {
+            "Draft", "Pending", "Published", "Rejected", "Archived"
+        };
+
+        private static bool _statusConstraintChecked = false;
+        private static readonly object _constraintLock = new object();
+
         private SqlConnection CreateConnection()
         {
             foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
@@ -34,6 +42,57 @@ namespace NewsPortal.Controllers
                 }
             }
             throw new InvalidOperationException("Không tìm thấy chuỗi kết nối NewsPortalDB trong Web.config.");
+        }
+
+        private void EnsureWorkflowStatusConstraint(SqlConnection conn)
+        {
+            if (_statusConstraintChecked) return;
+
+            lock (_constraintLock)
+            {
+                if (_statusConstraintChecked) return;
+                try
+                {
+                    const string sql = @"
+IF OBJECT_ID(N'dbo.Articles', N'U') IS NOT NULL
+   AND NOT EXISTS (
+       SELECT 1 FROM sys.check_constraints
+       WHERE name = N'CK_Articles_Status_Workflow'
+         AND parent_object_id = OBJECT_ID(N'dbo.Articles')
+   )
+BEGIN
+    DECLARE @dropSql NVARCHAR(MAX) = N'';
+    SELECT @dropSql = @dropSql + N'ALTER TABLE dbo.Articles DROP CONSTRAINT [' + REPLACE(cc.name, N']', N']]') + N'];'
+    FROM sys.check_constraints cc
+    LEFT JOIN sys.columns col
+        ON col.object_id = cc.parent_object_id
+       AND col.column_id = cc.parent_column_id
+    WHERE cc.parent_object_id = OBJECT_ID(N'dbo.Articles')
+      AND (col.name = N'Status' OR (cc.parent_column_id = 0 AND cc.definition LIKE N'%Draft%' AND cc.definition LIKE N'%Published%'));
+
+    IF LEN(@dropSql) > 0
+        EXEC sp_executesql @dropSql;
+
+    UPDATE dbo.Articles
+    SET Status = N'Draft'
+    WHERE Status IS NULL
+       OR Status NOT IN (N'Draft', N'Pending', N'Published', N'Rejected', N'Archived');
+
+    ALTER TABLE dbo.Articles WITH CHECK
+    ADD CONSTRAINT [CK_Articles_Status_Workflow]
+    CHECK ([Status] IN (N'Draft', N'Pending', N'Published', N'Rejected', N'Archived'));
+END";
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    _statusConstraintChecked = true;
+                }
+                catch
+                {
+                    // Không chặn trang nếu quyền DDL hạn chế
+                }
+            }
         }
 
         private string ComputeSha256(string rawText)
@@ -62,15 +121,23 @@ namespace NewsPortal.Controllers
                 StatusFilter = status ?? ""
             };
 
+            int pendingArticles = 0;
+            int rejectedArticles = 0;
+            int archivedArticles = 0;
+
             using (var conn = CreateConnection())
             {
                 conn.Open();
+                EnsureWorkflowStatusConstraint(conn);
 
                 string statsSql = @"
                     SELECT 
                         (SELECT COUNT(*) FROM dbo.Articles) AS TotalArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Published') AS PublishedArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Draft') AS DraftArticles,
+                        (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Pending') AS PendingArticles,
+                        (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Rejected') AS RejectedArticles,
+                        (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Archived') AS ArchivedArticles,
                         (SELECT ISNULL(SUM(ViewCount), 0) FROM dbo.Articles) AS TotalViews,
                         (SELECT COUNT(*) FROM dbo.Categories) AS TotalCategories,
                         (SELECT COUNT(*) FROM dbo.Authors) AS TotalAuthors,
@@ -84,6 +151,9 @@ namespace NewsPortal.Controllers
                         model.TotalArticles = Convert.ToInt32(reader["TotalArticles"]);
                         model.PublishedArticles = Convert.ToInt32(reader["PublishedArticles"]);
                         model.DraftArticles = Convert.ToInt32(reader["DraftArticles"]);
+                        pendingArticles = Convert.ToInt32(reader["PendingArticles"]);
+                        rejectedArticles = Convert.ToInt32(reader["RejectedArticles"]);
+                        archivedArticles = Convert.ToInt32(reader["ArchivedArticles"]);
                         model.TotalViews = Convert.ToInt32(reader["TotalViews"]);
                         model.TotalCategories = Convert.ToInt32(reader["TotalCategories"]);
                         model.TotalAuthors = Convert.ToInt32(reader["TotalAuthors"]);
@@ -92,7 +162,7 @@ namespace NewsPortal.Controllers
                 }
 
                 string listSql = @"
-                    SELECT TOP 20 
+                    SELECT TOP 50 
                         a.ArticleID,
                         a.Title,
                         ISNULL(c.CategoryName, N'Chưa phân loại') AS CategoryName,
@@ -105,7 +175,8 @@ namespace NewsPortal.Controllers
                     LEFT JOIN dbo.Authors au ON a.AuthorID = au.AuthorID
                     WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
                       AND (@status = N'' OR a.Status = @status)
-                    ORDER BY a.CreatedDate DESC;";
+                    ORDER BY CASE WHEN a.Status = N'Pending' THEN 0 ELSE 1 END,
+                             a.CreatedDate DESC;";
 
                 using (var cmd = new SqlCommand(listSql, conn))
                 {
@@ -131,7 +202,69 @@ namespace NewsPortal.Controllers
                 }
             }
 
+            ViewBag.PendingArticles = pendingArticles;
+            ViewBag.RejectedArticles = rejectedArticles;
+            ViewBag.ArchivedArticles = archivedArticles;
+
             return View(model);
+        }
+
+        // POST: /Admin/UpdateArticleStatus
+        [AdminAuthorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateArticleStatus(int id, string newStatus, string search = "", string status = "")
+        {
+            newStatus = (newStatus ?? "").Trim();
+            if (!ValidStatuses.Contains(newStatus))
+            {
+                TempData["AdminError"] = "Trạng thái bài viết không hợp lệ.";
+                return RedirectToAction("Index", new { search = search, status = status });
+            }
+
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                EnsureWorkflowStatusConstraint(conn);
+
+                const string sql = @"
+                    UPDATE dbo.Articles
+                    SET Status = @newStatus,
+                        UpdatedDate = GETDATE()
+                    WHERE ArticleID = @id;";
+
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@newStatus", newStatus);
+                    cmd.Parameters.AddWithValue("@id", id);
+                    if (cmd.ExecuteNonQuery() == 0)
+                    {
+                        TempData["AdminError"] = "Không tìm thấy bài viết #" + id + ".";
+                        return RedirectToAction("Index", new { search = search, status = status });
+                    }
+                }
+            }
+
+            switch (newStatus)
+            {
+                case "Published":
+                    TempData["AdminMessage"] = "Đã duyệt và xuất bản bài viết #" + id + " lên trang chủ (Published).";
+                    break;
+                case "Rejected":
+                    TempData["AdminMessage"] = "Đã từ chối bài viết #" + id + " — trả về cho phóng viên chỉnh sửa và gửi duyệt lại (Rejected).";
+                    break;
+                case "Archived":
+                    TempData["AdminMessage"] = "Đã chuyển bài viết #" + id + " vào kho lưu trữ (Archived).";
+                    break;
+                case "Pending":
+                    TempData["AdminMessage"] = "Đã chuyển bài viết #" + id + " sang trạng thái Chờ duyệt (Pending).";
+                    break;
+                default:
+                    TempData["AdminMessage"] = "Đã chuyển bài viết #" + id + " về Bản nháp (Draft).";
+                    break;
+            }
+
+            return RedirectToAction("Index", new { search = search, status = status });
         }
 
         // POST: /Admin/ToggleStatus
@@ -143,6 +276,8 @@ namespace NewsPortal.Controllers
             using (var conn = CreateConnection())
             {
                 conn.Open();
+                EnsureWorkflowStatusConstraint(conn);
+
                 string sql = @"
                     UPDATE dbo.Articles
                     SET Status = CASE WHEN Status = N'Published' THEN N'Draft' ELSE N'Published' END,

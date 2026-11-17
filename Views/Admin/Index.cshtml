@@ -1,6 +1,9 @@
 ﻿@model NewsPortal.Models.AdminDashboardViewModel
 @{
     ViewBag.Title = "Bảng điều khiển Admin";
+    int pendingCount = ViewBag.PendingArticles == null ? 0 : (int)ViewBag.PendingArticles;
+    int rejectedCount = ViewBag.RejectedArticles == null ? 0 : (int)ViewBag.RejectedArticles;
+    int archivedCount = ViewBag.ArchivedArticles == null ? 0 : (int)ViewBag.ArchivedArticles;
 }
 
 @section styles {
@@ -47,6 +50,7 @@
             border: 1px solid transparent;
             cursor: pointer;
             transition: .2s;
+            text-decoration: none !important;
         }
 
         .adm-btn-white {
@@ -58,44 +62,11 @@
                 background: #ffe4e6;
             }
 
-        .adm-btn-ghost {
-            background: rgba(255, 255, 255, .15);
-            color: #fff !important;
-            border-color: rgba(255, 255, 255, .3);
-        }
-
-            .adm-btn-ghost:hover {
-                background: rgba(255, 255, 255, .25);
-            }
-
-        .adm-menu {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 22px;
-        }
-
-        .adm-tab {
-            padding: 9px 16px;
-            border-radius: 8px;
-            background: var(--soft);
-            border: 1px solid var(--line);
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--ink);
-        }
-
-            .adm-tab.active, .adm-tab:hover {
-                background: #fff1f2;
-                border-color: var(--red);
-                color: var(--red);
-            }
-
         .adm-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .adm-card {
@@ -104,6 +75,10 @@
             border-left: 4px solid var(--red);
             border-radius: 12px;
             padding: 18px 20px;
+        }
+
+        .adm-card-pending {
+            border-left-color: #2563eb;
         }
 
         .adm-card-label {
@@ -125,6 +100,30 @@
             color: var(--muted);
         }
 
+        .adm-wf-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .adm-wf-pill {
+            padding: 6px 13px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--soft);
+            color: var(--ink) !important;
+            font-size: 12.5px;
+            font-weight: 700;
+            text-decoration: none !important;
+        }
+
+            .adm-wf-pill.active, .adm-wf-pill:hover {
+                background: #fff1f2;
+                border-color: var(--red);
+                color: var(--red) !important;
+            }
+
         .adm-panel {
             background: #fff;
             border: 1px solid var(--line);
@@ -138,7 +137,7 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .adm-filter {
@@ -177,34 +176,52 @@
                 vertical-align: middle;
             }
 
-        .badge-pub {
+        .badge-status {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 4px 10px;
             border-radius: 99px;
             font-size: 12px;
             font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-pub {
             background: #dcfce7;
             color: #166534;
         }
 
         .badge-draft {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 99px;
-            font-size: 12px;
-            font-weight: 700;
             background: #fef3c7;
             color: #92400e;
         }
 
+        .badge-pending {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-rejected {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge-archived {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
         .btn-mini {
+            display: inline-block;
             padding: 5px 10px;
+            margin: 1px;
             border-radius: 6px;
             border: 1px solid var(--line);
             background: #fff;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
+            text-decoration: none !important;
+            color: var(--ink);
         }
 
             .btn-mini:hover {
@@ -212,12 +229,53 @@
                 color: var(--red);
             }
 
+        .btn-approve {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534 !important;
+        }
+
+            .btn-approve:hover {
+                background: #bbf7d0;
+                border-color: #16a34a;
+                color: #14532d !important;
+            }
+
+        .btn-reject {
+            background: #fff7ed;
+            border-color: #fed7aa;
+            color: #c2410c !important;
+        }
+
+            .btn-reject:hover {
+                background: #ffedd5;
+                border-color: #ea580c;
+                color: #9a3412 !important;
+            }
+
+        .btn-archive {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #475569 !important;
+        }
+
         .adm-alert {
             padding: 12px 16px;
             border-radius: 8px;
             background: #ecfdf5;
             border: 1px solid #a7f3d0;
             color: #065f46;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .adm-alert-err {
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
             margin-bottom: 16px;
             font-size: 14px;
             font-weight: 600;
@@ -230,6 +288,11 @@
         <div class="adm-sub"><i class="fa-solid fa-shield-halved"></i> Hệ thống Quản trị TinNhanh</div>
         <h1>Xin chào, @Session["Admin"]!</h1>
     </div>
+    <div class="adm-actions">
+        <a class="adm-btn adm-btn-white" href="@Url.RouteUrl("AdminArticles", new { action = "Index" })">
+            Quản lý tất cả bài viết
+        </a>
+    </div>
 </div>
 
 @if (TempData["AdminMessage"] != null)
@@ -238,18 +301,31 @@
         <i class="fa-solid fa-circle-check"></i> @TempData["AdminMessage"]
     </div>
 }
+@if (TempData["AdminError"] != null)
+{
+    <div class="adm-alert-err">
+        <i class="fa-solid fa-triangle-exclamation"></i> @TempData["AdminError"]
+    </div>
+}
 
 <div class="adm-stats">
     <div class="adm-card">
         <div class="adm-card-label">Tổng số bài viết</div>
         <div class="adm-card-val">@Model.TotalArticles</div>
-        <div class="adm-card-foot">Đã đăng: <strong>@Model.PublishedArticles</strong> &bull; Nháp: <strong>@Model.DraftArticles</strong></div>
+        <div class="adm-card-foot">
+            Đã đăng: <strong>@Model.PublishedArticles</strong> &bull;
+            Nháp: <strong>@Model.DraftArticles</strong> &bull;
+            Lưu trữ: <strong>@archivedCount</strong>
+        </div>
     </div>
 
-    <div class="adm-card">
-        <div class="adm-card-label">Tổng lượt đọc</div>
-        <div class="adm-card-val">@Model.TotalViews</div>
-        <div class="adm-card-foot">Thống kê toàn trang</div>
+    <div class="adm-card adm-card-pending">
+        <div class="adm-card-label">Hàng đợi duyệt bài</div>
+        <div class="adm-card-val">@pendingCount</div>
+        <div class="adm-card-foot">
+            <a href="@Url.Action("Index", "Admin", new { status = "Pending" })">Chờ duyệt: <strong>@pendingCount</strong></a> &bull;
+            Từ chối: <strong>@rejectedCount</strong>
+        </div>
     </div>
 
     <div class="adm-card">
@@ -257,7 +333,8 @@
         <div class="adm-card-val">@Model.TotalCategories / @Model.TotalAuthors</div>
         <div class="adm-card-foot">
             <a href="@Url.RouteUrl("AdminCategories", new { action = "Index" })">Danh mục</a> &bull;
-            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index" })">Tác giả</a>
+            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index" })">Tác giả</a> &bull;
+            Lượt đọc: <strong>@Model.TotalViews</strong>
         </div>
     </div>
 
@@ -272,14 +349,17 @@
 
 <div class="adm-panel">
     <div class="adm-toolbar">
-        <h3 style="margin:0;"><i class="fa-solid fa-list-check" style="color:var(--red);"></i> Kiểm duyệt &amp; Quản lý nhanh bài viết</h3>
+        <h3 style="margin:0;"><i class="fa-solid fa-list-check" style="color:var(--red);"></i> Kiểm duyệt &amp; Xuất bản bài viết</h3>
 
         <form method="get" action="@Url.Action("Index", "Admin")" class="adm-filter">
             <input type="text" name="search" value="@Model.SearchQuery" placeholder="Tìm theo tiêu đề..." />
             <select name="status">
                 <option value="" @(Model.StatusFilter == "" ? "selected" : "")>Tất cả trạng thái</option>
-                <option value="Published" @(Model.StatusFilter == "Published" ? "selected" : "")>Đã xuất bản</option>
-                <option value="Draft" @(Model.StatusFilter == "Draft" ? "selected" : "")>Bản nháp</option>
+                <option value="Pending" @(Model.StatusFilter == "Pending" ? "selected" : "")>Pending - Chờ duyệt (@pendingCount)</option>
+                <option value="Published" @(Model.StatusFilter == "Published" ? "selected" : "")>Published - Đã xuất bản (@Model.PublishedArticles)</option>
+                <option value="Draft" @(Model.StatusFilter == "Draft" ? "selected" : "")>Draft - Bản nháp (@Model.DraftArticles)</option>
+                <option value="Rejected" @(Model.StatusFilter == "Rejected" ? "selected" : "")>Rejected - Bị từ chối (@rejectedCount)</option>
+                <option value="Archived" @(Model.StatusFilter == "Archived" ? "selected" : "")>Archived - Đã lưu trữ (@archivedCount)</option>
             </select>
             <button type="submit" class="search-button">Lọc</button>
             @if (!string.IsNullOrEmpty(Model.SearchQuery) || !string.IsNullOrEmpty(Model.StatusFilter))
@@ -287,6 +367,15 @@
                 <a href="@Url.Action("Index", "Admin")" class="search-reset">Xóa lọc</a>
             }
         </form>
+    </div>
+
+    <div class="adm-wf-pills">
+        <a class="adm-wf-pill @(Model.StatusFilter == "" ? "active" : "")" href="@Url.Action("Index", "Admin")">Tất cả (@Model.TotalArticles)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Pending" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Pending" })">Chờ duyệt (@pendingCount)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Published" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Published" })">Đã xuất bản (@Model.PublishedArticles)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Rejected" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Rejected" })">Bị từ chối (@rejectedCount)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Draft" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Draft" })">Bản nháp (@Model.DraftArticles)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Archived" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Archived" })">Đã lưu trữ (@archivedCount)</a>
     </div>
 
     <div style="overflow-x:auto;">
@@ -300,7 +389,7 @@
                     <th>Lượt xem</th>
                     <th>Trạng thái</th>
                     <th>Ngày đăng</th>
-                    <th style="text-align:right;">Thao tác</th>
+                    <th style="text-align:right;">Thao tác kiểm duyệt</th>
                 </tr>
             </thead>
             <tbody>
@@ -318,8 +407,8 @@
                     {
                         <tr>
                             <td>#@item.ArticleID</td>
-                            <td style="font-weight:700; max-width:310px;">
-                                <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">@item.Title</a>
+                            <td style="font-weight:700; max-width:300px;">
+                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Details", id = item.ArticleID })">@item.Title</a>
                             </td>
                             <td>@item.CategoryName</td>
                             <td>@item.AuthorName</td>
@@ -327,24 +416,110 @@
                             <td>
                                 @if (item.Status == "Published")
                                 {
-                                    <span class="badge-pub">Đã đăng</span>
+                                    <span class="badge-status badge-pub">Đã xuất bản (Published)</span>
+                                }
+                                else if (item.Status == "Pending")
+                                {
+                                    <span class="badge-status badge-pending">Chờ duyệt (Pending)</span>
+                                }
+                                else if (item.Status == "Rejected")
+                                {
+                                    <span class="badge-status badge-rejected">Bị từ chối (Rejected)</span>
+                                }
+                                else if (item.Status == "Archived")
+                                {
+                                    <span class="badge-status badge-archived">Đã lưu trữ (Archived)</span>
                                 }
                                 else
                                 {
-                                    <span class="badge-draft">Bản nháp</span>
+                                    <span class="badge-status badge-draft">Bản nháp (Draft)</span>
                                 }
                             </td>
                             <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
                             <td style="text-align:right; white-space:nowrap;">
-                                @using (Html.BeginForm("ToggleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                @if (item.Status == "Pending")
                                 {
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@item.ArticleID" />
-                                    <input type="hidden" name="search" value="@Model.SearchQuery" />
-                                    <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                    <button type="submit" class="btn-mini">
-                                        @(item.Status == "Published" ? "Hạ nháp" : "Duyệt đăng")
-                                    </button>
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Published" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini btn-approve">Duyệt đăng</button>
+                                    }
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Rejected" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini btn-reject">Từ chối</button>
+                                    }
+                                }
+                                else if (item.Status == "Published")
+                                {
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Archived" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini btn-archive">Lưu trữ</button>
+                                    }
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Rejected" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini btn-reject">Trả lại</button>
+                                    }
+                                }
+                                else if (item.Status == "Archived")
+                                {
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Published" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini btn-approve">Xuất bản lại</button>
+                                    }
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Draft" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini">Về nháp</button>
+                                    }
+                                }
+                                else
+                                {
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Published" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini btn-approve">Duyệt đăng</button>
+                                    }
+                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.ArticleID" />
+                                        <input type="hidden" name="newStatus" value="Archived" />
+                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
+                                        <button type="submit" class="btn-mini btn-archive">Lưu trữ</button>
+                                    }
                                 }
                                 <a class="btn-mini" href="@Url.RouteUrl("AdminArticles", new { action = "Edit", id = item.ArticleID })">Sửa</a>
                                 <a class="btn-mini" style="color:var(--red);" href="@Url.RouteUrl("AdminArticles", new { action = "Delete", id = item.ArticleID })">Xóa</a>
