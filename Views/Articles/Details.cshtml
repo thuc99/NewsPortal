@@ -182,6 +182,82 @@
         border-radius: 12px;
         margin: 0 0 25px;
     }
+    .detail-content {
+        color: #334155;
+        font-size: 16px;
+        line-height: 1.8;
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+
+        .detail-content p {
+            margin: 0 0 16px;
+        }
+
+        .detail-content h1,
+        .detail-content h2,
+        .detail-content h3,
+        .detail-content h4 {
+            color: #1e293b;
+            font-weight: 700;
+            line-height: 1.4;
+            margin: 24px 0 12px;
+        }
+
+        .detail-content ul,
+        .detail-content ol {
+            padding-left: 28px;
+            margin: 12px 0 18px;
+        }
+
+        .detail-content li {
+            margin-bottom: 6px;
+        }
+
+        .detail-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .detail-content table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+        }
+
+        .detail-content th,
+        .detail-content td {
+            border: 1px solid #cbd5e1;
+            padding: 9px 12px;
+            text-align: left;
+        }
+
+        .detail-content th {
+            background: #f1f5f9;
+            font-weight: 700;
+        }
+
+        .detail-content blockquote {
+            margin: 18px 0;
+            padding: 12px 18px;
+            border-left: 4px solid #b91c1c;
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .detail-content a {
+            color: #b91c1c;
+            text-decoration: underline;
+        }
+
+        .detail-content pre,
+        .detail-content code {
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
 
     .rating-submit {
         padding: 7px 12px;
@@ -534,9 +610,14 @@
              alt="Hình ảnh bài viết" />
     }
 
-    <div class="detail-content">
-        @Model.Content
-    </div>
+<div class="detail-content">
+    @{
+        var sanitizer = new Ganss.Xss.HtmlSanitizer();
+        var safeContent = sanitizer.Sanitize(Model.Content ?? string.Empty);
+    }
+
+    @Html.Raw(safeContent)
+</div>
 
     @if (ViewBag.CanManageArticles == true)
     {

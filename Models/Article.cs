@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Web.Mvc;
 
 namespace NewsPortal.Models
 {
@@ -17,6 +18,7 @@ namespace NewsPortal.Models
         [StringLength(20000, MinimumLength = 50, ErrorMessage = "Nội dung từ 50 đến 20000 ký tự")]
         [Display(Name = "Nội dung")]
         [DataType(DataType.MultilineText)]
+        [AllowHtml]
         public string Content { get; set; }
 
         [Display(Name = "Hình ảnh")]

@@ -6,11 +6,35 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using NewsPortal.Models;
+using Ganss.Xss;
+using System.Text.RegularExpressions;
 
 namespace NewsPortal.Controllers
 {
+    
     public class ArticlesController : Controller
     {
+        private string SanitizeArticleContent(string content)
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            // Cho phép giữ định dạng chữ, căn lề và màu sắc từ TinyMCE
+            sanitizer.AllowedAttributes.Add("style");
+
+            return sanitizer.Sanitize(content ?? string.Empty);
+        }
+
+        private string GetPlainText(string html)
+        {
+            if (string.IsNullOrWhiteSpace(html))
+                return string.Empty;
+
+            string text = Regex.Replace(html, "<[^>]*>", " ");
+            text = HttpUtility.HtmlDecode(text);
+            text = Regex.Replace(text, @"\s+", " ");
+
+            return text.Trim();
+        }
         private readonly NewsPortalDBEntities db = new NewsPortalDBEntities();
 
         private static readonly string[] ValidStatuses = new[]
@@ -147,7 +171,11 @@ END";
             return CheckArticlePermission("quản lý");
         }
 
-        private void ValidateArticleInput(Article article, HttpPostedFileBase imageFile, bool checkStatus = false)
+        private void ValidateArticleInput(
+      Article article,
+      HttpPostedFileBase imageFile,
+      bool checkStatus = false,
+      bool requireImage = false)
         {
             if (article == null)
             {
@@ -167,25 +195,48 @@ END";
             else if (article.Title.Length < 10 || article.Title.Length > 250)
                 ModelState.AddModelError("Title", "Tiêu đề phải từ 10 đến 250 ký tự.");
 
-            if (string.IsNullOrWhiteSpace(article.Content))
+            string plainContent = GetPlainText(article.Content);
+
+            if (string.IsNullOrWhiteSpace(plainContent))
                 ModelState.AddModelError("Content", "Nội dung bài viết không được để trống.");
-            else if (article.Content.Length < 50 || article.Content.Length > 20000)
+            else if (plainContent.Length < 50 || plainContent.Length > 20000)
                 ModelState.AddModelError("Content", "Nội dung bài viết phải từ 50 đến 20000 ký tự.");
 
-            if (checkStatus && !string.IsNullOrEmpty(article.Status) && !ValidStatuses.Contains(article.Status))
+            if (checkStatus &&
+                !string.IsNullOrEmpty(article.Status) &&
+                !ValidStatuses.Contains(article.Status))
             {
                 ModelState.AddModelError("Status", "Trạng thái bài viết không hợp lệ.");
             }
 
-            // Kiểm tra ảnh tải lên (không bắt buộc có ảnh)
+            // Bắt buộc ảnh khi tạo bài viết mới
+            if (requireImage &&
+                (imageFile == null || imageFile.ContentLength <= 0))
+            {
+                ModelState.AddModelError("", "Vui lòng chọn ảnh đại diện cho bài viết.");
+                return;
+            }
+
+            // Kiểm tra ảnh nếu người dùng tải lên
             if (imageFile != null && imageFile.ContentLength > 0)
             {
-                var ext = (Path.GetExtension(imageFile.FileName) ?? string.Empty).ToLowerInvariant();
+                var ext = (Path.GetExtension(imageFile.FileName) ?? string.Empty)
+                    .ToLowerInvariant();
+
                 var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+
                 if (!allowed.Contains(ext))
-                    ModelState.AddModelError("", "Chỉ chấp nhận định dạng ảnh .jpg, .jpeg, .png, .gif, .webp.");
+                {
+                    ModelState.AddModelError(
+                        "",
+                        "Chỉ chấp nhận định dạng ảnh .jpg, .jpeg, .png, .gif, .webp.");
+                }
                 else if (imageFile.ContentLength > 2 * 1024 * 1024)
-                    ModelState.AddModelError("", "Dung lượng ảnh tối đa là 2MB.");
+                {
+                    ModelState.AddModelError(
+                        "",
+                        "Dung lượng ảnh tối đa là 2MB.");
+                }
             }
         }
 
@@ -625,6 +676,7 @@ END";
         }
 
         [HttpPost]
+        [ValidateInput(false)]
         [ValidateAntiForgeryToken]
         public ActionResult Create(Article article, HttpPostedFileBase imageFile, string submitAction)
         {
@@ -637,7 +689,12 @@ END";
             ViewBag.IsAdminManagement = true;
             ViewBag.IsAdminUser = isAdmin;
 
-            ValidateArticleInput(article, imageFile);
+            if (article != null)
+            {
+                article.Content = SanitizeArticleContent(article.Content);
+            }
+
+            ValidateArticleInput(article, imageFile, false, true);
 
             if (!ModelState.IsValid)
                 return View(article);
@@ -668,6 +725,14 @@ END";
                     targetStatus = "Published";
             }
 
+            string imageUrl = SaveImage(imageFile);
+
+            if (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                ModelState.AddModelError("", "Không thể lưu ảnh đại diện. Vui lòng chọn lại ảnh.");
+                return View(article);
+            }
+
             db.Articles.Add(new Articles
             {
                 CategoryID = category.CategoryID,
@@ -677,7 +742,7 @@ END";
                 Content = article.Content,
                 CreatedDate = DateTime.Now,
                 Status = targetStatus,
-                ImageUrl = SaveImage(imageFile),
+                ImageUrl = imageUrl,
                 ViewCount = 0
             });
             db.SaveChanges();
@@ -726,6 +791,7 @@ END";
         }
 
         [HttpPost]
+        [ValidateInput(false)]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Article article, HttpPostedFileBase imageFile, string submitAction)
         {
@@ -749,6 +815,11 @@ END";
             {
                 TempData["Error"] = "Bài viết đã xuất bản hoặc lưu trữ, phóng viên không thể chỉnh sửa trực tiếp.";
                 return RedirectToArticleManagement();
+            }
+
+            if (article != null)
+            {
+                article.Content = SanitizeArticleContent(article.Content);
             }
 
             ValidateArticleInput(article, imageFile, isAdmin);
@@ -953,11 +1024,12 @@ END";
 
         private string CreateSummary(string content)
         {
-            if (string.IsNullOrWhiteSpace(content))
-                return string.Empty;
+            string text = GetPlainText(content);
 
-            var text = content.Trim();
-            return text.Length <= 180 ? text : text.Substring(0, 180) + "...";
+            if (text.Length <= 180)
+                return text;
+
+            return text.Substring(0, 180) + "...";
         }
 
         private string SaveImage(HttpPostedFileBase imageFile)

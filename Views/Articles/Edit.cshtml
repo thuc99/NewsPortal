@@ -6,9 +6,11 @@
     bool isAdminUser = ViewBag.IsAdminUser == true;
 
     string currentImageSrc = null;
+
     if (!string.IsNullOrWhiteSpace(Model.Image))
     {
-        if (Model.Image.StartsWith("http", System.StringComparison.OrdinalIgnoreCase) || Model.Image.StartsWith("/"))
+        if (Model.Image.StartsWith("http", System.StringComparison.OrdinalIgnoreCase) ||
+            Model.Image.StartsWith("/"))
         {
             currentImageSrc = Model.Image;
         }
@@ -92,11 +94,30 @@
         font-weight: 700;
     }
 
-    .status-pill-draft { background: #fef3c7; color: #92400e; }
-    .status-pill-pending { background: #dbeafe; color: #1e40af; }
-    .status-pill-published { background: #dcfce7; color: #166534; }
-    .status-pill-rejected { background: #fee2e2; color: #b91c1c; }
-    .status-pill-archived { background: #f1f5f9; color: #475569; }
+    .status-pill-draft {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-pill-pending {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-pill-published {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-pill-rejected {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .status-pill-archived {
+        background: #f1f5f9;
+        color: #475569;
+    }
 
     .field {
         margin-bottom: 24px;
@@ -141,6 +162,22 @@
             background: #f8fafc;
             color: #64748b;
         }
+
+    /* TinyMCE */
+    .tox-tinymce {
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 9px !important;
+        overflow: hidden;
+    }
+
+    .tox .tox-toolbar,
+    .tox .tox-toolbar__primary {
+        background: #f8fafc !important;
+    }
+
+    .tox .tox-edit-area::before {
+        border: none !important;
+    }
 
     /* Bộ đếm ký tự */
     .title-counter {
@@ -350,24 +387,32 @@
     <div class="form-card">
 
         <h2>Chỉnh sửa bài viết</h2>
+
         <p class="form-sub">
-            @(isAdminUser ? "Cập nhật nội dung và trạng thái kiểm duyệt bài viết." : "Chỉnh sửa nội dung để lưu nháp hoặc gửi Admin xét duyệt.")
+            @(isAdminUser
+                ? "Cập nhật nội dung và trạng thái kiểm duyệt bài viết."
+                : "Chỉnh sửa nội dung để lưu nháp hoặc gửi Admin xét duyệt.")
         </p>
 
         @if (Model.Status == "Rejected")
         {
             <div class="rejected-banner">
-                <strong>Bài viết này đã bị Admin từ chối (Rejected).</strong> Vui lòng chỉnh sửa lại nội dung rồi bấm <strong>Gửi duyệt lại</strong> để chuyển về hàng đợi chờ Admin duyệt.
+                <strong>Bài viết này đã bị Admin từ chối (Rejected).</strong>
+                Vui lòng chỉnh sửa lại nội dung rồi bấm
+                <strong>Gửi duyệt lại</strong> để chuyển về hàng đợi chờ Admin duyệt.
             </div>
         }
         else if (!isAdminUser && Model.Status == "Pending")
         {
             <div class="pending-banner">
-                <strong>Bài viết đang chờ Admin duyệt (Pending).</strong> Bạn có thể cập nhật nội dung và tiếp tục giữ ở hàng đợi duyệt hoặc lưu tạm về bản nháp.
+                <strong>Bài viết đang chờ Admin duyệt (Pending).</strong>
+                Bạn có thể cập nhật nội dung và tiếp tục giữ ở hàng đợi duyệt
+                hoặc lưu tạm về bản nháp.
             </div>
         }
 
-        <form action="@Url.RouteUrl("AdminArticles", new { action = "Edit" })"
+        <form id="editArticleForm"
+              action="@Url.RouteUrl("AdminArticles", new { action = "Edit" })"
               method="post"
               enctype="multipart/form-data">
 
@@ -380,14 +425,17 @@
                 @class = "validation-summary-errors"
             })
 
+            <!-- Mã bài viết -->
             <div class="field">
                 @Html.LabelFor(m => m.Id, "Mã bài viết")
+
                 @Html.TextBoxFor(m => m.Id, new
                 {
                     @readonly = "readonly"
                 })
             </div>
 
+            <!-- Tiêu đề -->
             <div class="field">
                 @Html.LabelFor(m => m.Title, "Tiêu đề bài viết")
 
@@ -415,11 +463,13 @@
                 <div class="title-warning"></div>
             </div>
 
+            <!-- Nội dung TinyMCE -->
             <div class="field">
                 @Html.LabelFor(m => m.Content, "Nội dung bài viết")
 
                 @Html.TextAreaFor(m => m.Content, new
                 {
+                    id = "Content",
                     placeholder = "Nhập nội dung bài viết..."
                 })
 
@@ -429,37 +479,48 @@
                 })
             </div>
 
+            <!-- Trạng thái -->
             @if (isAdminUser)
             {
                 <div class="field">
                     @Html.LabelFor(m => m.Status, "Trạng thái bài viết")
 
-                    @Html.DropDownListFor(m => m.Status,
+                    @Html.DropDownListFor(
+                             m => m.Status,
                              new SelectList(statusItems, "Value", "Text", Model.Status))
                 </div>
             }
             else
             {
                 @Html.HiddenFor(m => m.Status)
+
                 <div class="field">
                     <label>Trạng thái hiện tại</label>
+
                     <div>
                         @if (Model.Status == "Rejected")
                         {
-                            <span class="status-pill status-pill-rejected">Bị từ chối (Rejected)</span>
+                            <span class="status-pill status-pill-rejected">
+                                Bị từ chối (Rejected)
+                            </span>
                         }
                         else if (Model.Status == "Pending")
                         {
-                            <span class="status-pill status-pill-pending">Chờ duyệt (Pending)</span>
+                            <span class="status-pill status-pill-pending">
+                                Chờ duyệt (Pending)
+                            </span>
                         }
                         else
                         {
-                            <span class="status-pill status-pill-draft">Bản nháp (Draft)</span>
+                            <span class="status-pill status-pill-draft">
+                                Bản nháp (Draft)
+                            </span>
                         }
                     </div>
                 </div>
             }
 
+            <!-- Ảnh đại diện -->
             <div class="field">
                 <label for="imageFile">Ảnh bài viết</label>
 
@@ -487,23 +548,33 @@
                     <input type="file"
                            name="imageFile"
                            id="imageFile"
-                           accept="image/*" />
+                           accept=".jpg,.jpeg,.png,.gif,.webp" />
 
                     <p class="upload-description" id="fileName">
-                        @(string.IsNullOrWhiteSpace(currentImageSrc) ? "Chọn hình ảnh từ thiết bị của bạn" : "Đang dùng ảnh hiện tại (chọn ảnh mới nếu muốn thay thế)")
+                        @(string.IsNullOrWhiteSpace(currentImageSrc)
+                            ? "Chưa có ảnh đại diện. Bạn có thể chọn ảnh mới."
+                            : "Đang sử dụng ảnh hiện tại. Chọn ảnh mới nếu muốn thay thế.")
                     </p>
 
                     <div class="image-preview">
                         <img id="previewImage"
                              src="@(currentImageSrc ?? "")"
-                             style="@(string.IsNullOrWhiteSpace(currentImageSrc) ? "display:none;" : "display:inline-block;")"
+                             style="@(string.IsNullOrWhiteSpace(currentImageSrc)
+                                ? "display:none;"
+                                : "display:inline-block;")"
                              alt="Ảnh xem trước" />
                     </div>
 
+                    <p class="upload-description">
+                        Không bắt buộc chọn ảnh mới. Định dạng JPG, PNG, GIF, WEBP,
+                        tối đa 2MB.
+                    </p>
                 </div>
             </div>
 
+            <!-- Nút thao tác -->
             <div class="form-actions">
+
                 @if (isAdminUser)
                 {
                     <button type="submit" class="btn-save">
@@ -512,29 +583,67 @@
                 }
                 else
                 {
-                    <button type="submit" name="submitAction" value="Pending" class="btn-save">
-                        @(Model.Status == "Rejected" ? "Gửi duyệt lại" : "Gửi Admin duyệt")
+                    <button type="submit"
+                            name="submitAction"
+                            value="Pending"
+                            class="btn-save">
+                        @(Model.Status == "Rejected"
+                            ? "Gửi duyệt lại"
+                            : "Gửi Admin duyệt")
                     </button>
 
-                    <button type="submit" name="submitAction" value="Draft" class="btn-draft">
+                    <button type="submit"
+                            name="submitAction"
+                            value="Draft"
+                            class="btn-draft">
                         Lưu bản nháp
                     </button>
                 }
 
-                @Html.RouteLink("Quay lại",
+                @Html.RouteLink(
+                         "Quay lại",
                          "AdminArticles",
                          new { action = "Index" },
                          new { @class = "btn-back" })
+
             </div>
 
         </form>
     </div>
 </div>
 
+<!-- TinyMCE -->
+<script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        // Đếm ký tự tiêu đề
+        // Khởi tạo trình soạn thảo TinyMCE
+        tinymce.init({
+            selector: "#Content",
+            height: 500,
+            menubar: "file edit view insert format tools table",
+            plugins: "lists link table code fullscreen wordcount",
+            toolbar:
+                "undo redo | blocks | bold italic underline strikethrough | " +
+                "forecolor backcolor | alignleft aligncenter alignright alignjustify | " +
+                "bullist numlist | outdent indent | link table | removeformat | " +
+                "code fullscreen",
+            toolbar_mode: "sliding",
+            resize: true,
+            branding: false,
+            promotion: false,
+            license_key: "gpl",
+            content_style:
+                "body { font-family: Arial, sans-serif; font-size: 15px; line-height: 1.7; padding: 12px; }",
+            setup: function (editor) {
+                editor.on("change keyup", function () {
+                    editor.save();
+                });
+            }
+        });
+
+        // Bộ đếm ký tự tiêu đề
         const input = document.getElementById("Title");
         const count = document.querySelector(".title-counter .count");
         const bar = document.querySelector(".title-progress-bar");
@@ -573,7 +682,7 @@
             updateCounter();
         }
 
-        // Xem trước hình ảnh
+        // Xem trước ảnh mới
         const imageInput = document.getElementById("imageFile");
         const preview = document.getElementById("previewImage");
         const fileName = document.getElementById("fileName");
@@ -588,23 +697,46 @@
                 currentImageUrl = null;
             }
 
-            if (file && file.type.startsWith("image/")) {
-                currentImageUrl = URL.createObjectURL(file);
-
-                preview.src = currentImageUrl;
-                preview.style.display = "inline-block";
-
-                fileName.textContent = "Đã chọn: " + file.name;
-                fileName.style.color = "#b91c1c";
-                fileName.style.fontWeight = "700";
+            // Không chọn ảnh mới: giữ ảnh cũ
+            if (!file) {
+                return;
             }
-            else {
-                preview.removeAttribute("src");
-                preview.style.display = "none";
 
-                fileName.textContent = "Chọn hình ảnh từ thiết bị của bạn";
-                fileName.style.color = "#64748b";
-                fileName.style.fontWeight = "400";
+            const allowedTypes = [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/webp"
+            ];
+
+            if (!allowedTypes.includes(file.type)) {
+                alert("Định dạng ảnh không hợp lệ. Vui lòng chọn JPG, PNG, GIF hoặc WEBP.");
+                imageInput.value = "";
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert("Ảnh vượt quá dung lượng 2MB. Vui lòng chọn ảnh khác.");
+                imageInput.value = "";
+                return;
+            }
+
+            currentImageUrl = URL.createObjectURL(file);
+
+            preview.src = currentImageUrl;
+            preview.style.display = "inline-block";
+
+            fileName.textContent = "Đã chọn ảnh mới: " + file.name;
+            fileName.style.color = "#b91c1c";
+            fileName.style.fontWeight = "700";
+        });
+
+        // Đồng bộ nội dung TinyMCE trước khi gửi form
+        const form = document.getElementById("editArticleForm");
+
+        form.addEventListener("submit", function () {
+            if (typeof tinymce !== "undefined") {
+                tinymce.triggerSave();
             }
         });
     });
