@@ -20,6 +20,7 @@ namespace NewsPortal.Models
         public string Content { get; set; }
         public System.DateTime CreatedDate { get; set; }
         public Nullable<int> UserId { get; set; }
+        public string Status { get; set; }
     
         public virtual Articles Articles { get; set; }
         public virtual Users Users { get; set; }

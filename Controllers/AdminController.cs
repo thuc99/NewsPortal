@@ -622,5 +622,170 @@ END";
             TempData["AdminMessage"] = "Đã cập nhật trạng thái tài khoản.";
             return RedirectToAction("Users");
         }
+
+        // GET: /Admin/Comments
+        [AdminAuthorize]
+        public ActionResult Comments(string search, string status)
+        {
+            search = (search ?? string.Empty).Trim();
+            status = (status ?? string.Empty).Trim();
+
+            var comments = new List<AdminCommentRow>();
+            int totalCount = 0, pendingCount = 0, approvedCount = 0, hiddenCount = 0;
+
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+
+                string countSql = @"
+                    SELECT
+                        COUNT(*) AS TotalCount,
+                        SUM(CASE WHEN Status = N'Pending' THEN 1 ELSE 0 END) AS PendingCount,
+                        SUM(CASE WHEN Status = N'Approved' THEN 1 ELSE 0 END) AS ApprovedCount,
+                        SUM(CASE WHEN Status = N'Hidden' THEN 1 ELSE 0 END) AS HiddenCount
+                    FROM dbo.Comments;";
+
+                using (var countCmd = new SqlCommand(countSql, conn))
+                using (var r = countCmd.ExecuteReader())
+                {
+                    if (r.Read())
+                    {
+                        totalCount = r["TotalCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["TotalCount"]);
+                        pendingCount = r["PendingCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["PendingCount"]);
+                        approvedCount = r["ApprovedCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["ApprovedCount"]);
+                        hiddenCount = r["HiddenCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["HiddenCount"]);
+                    }
+                }
+
+                string sql = @"
+                    SELECT
+                        c.CommentID,
+                        c.ArticleID,
+                        a.Title AS ArticleTitle,
+                        c.UserId,
+                        u.Username,
+                        c.CommenterName,
+                        c.Content,
+                        c.CreatedDate,
+                        c.Status
+                    FROM dbo.Comments c
+                    LEFT JOIN dbo.Articles a ON c.ArticleID = a.ArticleID
+                    LEFT JOIN dbo.Users u ON c.UserId = u.UserId
+                    WHERE (@status = N'' OR c.Status = @status)
+                      AND (@search = N''
+                           OR c.CommenterName LIKE N'%' + @search + N'%'
+                           OR c.Content LIKE N'%' + @search + N'%'
+                           OR a.Title LIKE N'%' + @search + N'%'
+                           OR u.Username LIKE N'%' + @search + N'%')
+                    ORDER BY
+                        CASE WHEN c.Status = N'Pending' THEN 0
+                             WHEN c.Status = N'Approved' THEN 1
+                             ELSE 2 END,
+                        c.CreatedDate DESC;";
+
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@status", status);
+                    cmd.Parameters.AddWithValue("@search", search);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int articleId = Convert.ToInt32(reader["ArticleID"]);
+                            comments.Add(new AdminCommentRow
+                            {
+                                CommentID = Convert.ToInt32(reader["CommentID"]),
+                                ArticleID = articleId,
+                                ArticleTitle = reader["ArticleTitle"] == DBNull.Value
+                                    ? ("Bài viết #" + articleId)
+                                    : Convert.ToString(reader["ArticleTitle"]),
+                                UserID = reader["UserId"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["UserId"]),
+                                Username = reader["Username"] == DBNull.Value ? "" : Convert.ToString(reader["Username"]),
+                                CommenterName = reader["CommenterName"] == DBNull.Value ? "" : Convert.ToString(reader["CommenterName"]),
+                                Content = reader["Content"] == DBNull.Value ? "" : Convert.ToString(reader["Content"]),
+                                CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
+                                Status = reader["Status"] == DBNull.Value ? "Pending" : Convert.ToString(reader["Status"])
+                            });
+                        }
+                    }
+                }
+            }
+
+            ViewBag.Search = search;
+            ViewBag.StatusFilter = status;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.PendingCount = pendingCount;
+            ViewBag.ApprovedCount = approvedCount;
+            ViewBag.HiddenCount = hiddenCount;
+
+            return View(comments);
+        }
+
+        // POST: /Admin/ApproveComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize]
+        public ActionResult ApproveComment(int id, string search, string status)
+        {
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                using (var cmd = new SqlCommand("UPDATE dbo.Comments SET Status = N'Approved' WHERE CommentID = @id;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    int rows = cmd.ExecuteNonQuery();
+                    if (rows > 0)
+                        TempData["AdminMessage"] = "Đã duyệt bình luận #" + id + " hiển thị công khai.";
+                    else
+                        TempData["AdminError"] = "Không tìm thấy bình luận cần duyệt.";
+                }
+            }
+            return RedirectToAction("Comments", new { search = search, status = status });
+        }
+
+        // POST: /Admin/HideComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize]
+        public ActionResult HideComment(int id, string search, string status)
+        {
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                using (var cmd = new SqlCommand("UPDATE dbo.Comments SET Status = N'Hidden' WHERE CommentID = @id;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    int rows = cmd.ExecuteNonQuery();
+                    if (rows > 0)
+                        TempData["AdminMessage"] = "Đã ẩn bình luận #" + id + " khỏi trang công khai.";
+                    else
+                        TempData["AdminError"] = "Không tìm thấy bình luận cần ẩn.";
+                }
+            }
+            return RedirectToAction("Comments", new { search = search, status = status });
+        }
+
+        // POST: /Admin/DeleteComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize]
+        public ActionResult DeleteComment(int id, string search, string status)
+        {
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                using (var cmd = new SqlCommand("DELETE FROM dbo.Comments WHERE CommentID = @id;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    int rows = cmd.ExecuteNonQuery();
+                    if (rows > 0)
+                        TempData["AdminMessage"] = "Đã xóa vĩnh viễn bình luận #" + id + ".";
+                    else
+                        TempData["AdminError"] = "Không tìm thấy bình luận cần xóa.";
+                }
+            }
+            return RedirectToAction("Comments", new { search = search, status = status });
+        }
     }
 }

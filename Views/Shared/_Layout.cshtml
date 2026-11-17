@@ -1065,8 +1065,9 @@
 
                 <div class="account-area" id="account-area">
                     @{
-                        var headerAvatar = Session["UserAvatar"] as string;
-                        if (string.IsNullOrEmpty(headerAvatar) && (Session["User"] != null || Session["Admin"] != null))
+                        bool isHeaderLoggedIn = Session["User"] != null || Session["Admin"] != null;
+                        var headerAvatar = isHeaderLoggedIn ? (Session["UserAvatar"] as string) : null;
+                        if (isHeaderLoggedIn && string.IsNullOrEmpty(headerAvatar))
                         {
                             var _uname = (Session["User"] ?? Session["Admin"]) as string;
                             using (var _db = new NewsPortal.Models.NewsPortalDBEntities())

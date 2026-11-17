@@ -68,6 +68,7 @@
           <Property Name="Content" Type="nvarchar" MaxLength="1000" Nullable="false" />
           <Property Name="CreatedDate" Type="datetime" Nullable="false" />
           <Property Name="UserId" Type="int" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
         </EntityType>
         <EntityType Name="SavedArticles">
           <Key>
@@ -343,9 +344,9 @@
           <Property Name="ImageUrl" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
           <Property Name="ViewCount" Type="Int32" Nullable="false" />
           <NavigationProperty Name="ArticleRatings" Relationship="NewsPortalDBModel.FK_ArticleRatings_Articles" FromRole="Articles" ToRole="ArticleRatings" />
-          <Property Name="Image" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="SavedArticles" Relationship="NewsPortalDBModel.FK_Saved_Articles" FromRole="Articles" ToRole="SavedArticles" />
           <NavigationProperty Name="ArticleViewHistory" Relationship="NewsPortalDBModel.FK_VH_Articles" FromRole="Articles" ToRole="ArticleViewHistory" />
+          <Property Name="Image" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Author">
           <Key>
@@ -402,6 +403,7 @@
           <NavigationProperty Name="Articles" Relationship="NewsPortalDBModel.FK_Comments_Articles" FromRole="Comments" ToRole="Articles" />
           <Property Name="UserId" Type="Int32" />
           <NavigationProperty Name="Users" Relationship="NewsPortalDBModel.FK_Comments_Users" FromRole="Comments" ToRole="Users" />
+          <Property Name="Status" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Users">
           <Key>
@@ -609,6 +611,7 @@
           <EntitySetMapping Name="Comments">
             <EntityTypeMapping TypeName="NewsPortalDBModel.Comments">
               <MappingFragment StoreEntitySet="Comments">
+                <ScalarProperty Name="Status" ColumnName="Status" />
                 <ScalarProperty Name="UserId" ColumnName="UserId" />
                 <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
                 <ScalarProperty Name="Content" ColumnName="Content" />

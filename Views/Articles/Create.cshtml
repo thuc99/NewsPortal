@@ -87,7 +87,6 @@
         line-height: 1.7;
     }
 
-    /* Bộ đếm ký tự */
     .title-counter {
         display: flex;
         justify-content: space-between;
@@ -129,6 +128,22 @@
         color: #c2410c;
         font-size: 12px;
         font-weight: 600;
+    }
+
+    /* TinyMCE */
+    .tox-tinymce {
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 9px !important;
+        overflow: hidden;
+    }
+
+    .tox .tox-toolbar,
+    .tox .tox-toolbar__primary {
+        background: #f8fafc !important;
+    }
+
+    .tox .tox-edit-area::before {
+        border: none !important;
     }
 
     /* Khu vực chọn ảnh */
@@ -306,17 +321,24 @@
 
     <div class="create-header">
         <h2>@(isAdminUser ? "Thêm bài viết mới" : "Soạn bài viết mới")</h2>
-        <p>Điền thông tin bên dưới để @(isAdminUser ? "tạo và xuất bản bài viết." : "lưu nháp hoặc gửi Admin phê duyệt.")</p>
+        <p>
+            Điền thông tin bên dưới để
+            @(isAdminUser ? "tạo và xuất bản bài viết." : "lưu nháp hoặc gửi Admin phê duyệt.")
+        </p>
     </div>
 
     @if (!isAdminUser)
     {
         <div class="workflow-notice">
-            <strong>Quy trình duyệt bài:</strong> Phóng viên có thể <strong>Lưu bản nháp (Draft)</strong> để chỉnh sửa tiếp hoặc bấm <strong>Gửi Admin duyệt (Pending)</strong>. Bài viết sẽ tự động đăng lên trang chủ ngay khi được Admin chấp nhận.
+            <strong>Quy trình duyệt bài:</strong>
+            Phóng viên có thể <strong>Lưu bản nháp (Draft)</strong>
+            để chỉnh sửa tiếp hoặc bấm <strong>Gửi Admin duyệt (Pending)</strong>.
+            Bài viết sẽ tự động đăng lên trang chủ ngay khi được Admin chấp nhận.
         </div>
     }
 
-    <form action="@Url.RouteUrl("AdminArticles", new { action = "Create" })"
+    <form id="createArticleForm"
+          action="@Url.RouteUrl("AdminArticles", new { action = "Create" })"
           method="post"
           enctype="multipart/form-data">
 
@@ -327,6 +349,7 @@
             @class = "text-danger"
         })
 
+        <!-- Tiêu đề -->
         <div class="form-group-custom">
             <label class="form-label" for="Title">
                 Tiêu đề bài viết
@@ -357,6 +380,7 @@
             <div class="title-warning"></div>
         </div>
 
+        <!-- Nội dung TinyMCE -->
         <div class="form-group-custom">
             <label class="form-label" for="Content">
                 Nội dung bài viết
@@ -365,8 +389,9 @@
             @Html.TextAreaFor(m => m.Content, new
             {
                 @class = "form-control-custom",
-                rows = 8,
-                placeholder = "Nhập nội dung bài viết..."
+                rows = 15,
+                id = "Content",
+                placeholder = "Bắt đầu soạn nội dung bài viết..."
             })
 
             @Html.ValidationMessageFor(m => m.Content, "", new
@@ -375,9 +400,10 @@
             })
         </div>
 
+        <!-- Ảnh đại diện -->
         <div class="form-group-custom">
             <label class="form-label" for="imageFile">
-                Hình ảnh bài viết
+                Hình ảnh đại diện bài viết <span style="color:#dc2626;">*</span>
             </label>
 
             <div class="image-upload">
@@ -404,60 +430,112 @@
                 <input type="file"
                        name="imageFile"
                        id="imageFile"
-                       accept="image/*" />
+                       accept=".jpg,.jpeg,.png,.gif,.webp"
+                       required />
 
                 <p class="upload-description" id="fileName">
-                    Chọn hình ảnh từ thiết bị của bạn
+                    Bắt buộc chọn ảnh JPG, PNG, GIF hoặc WEBP (tối đa 2MB)
                 </p>
 
                 <div class="image-preview">
                     <img id="previewImage" alt="Ảnh xem trước" />
                 </div>
 
+                @Html.ValidationMessage("imageFile", "", new
+                {
+                    @class = "text-danger"
+                })
             </div>
         </div>
 
+        <!-- Nút thao tác -->
         <div class="create-actions">
+
             @if (isAdminUser)
             {
-                <button type="submit" name="submitAction" value="Published" class="btn-create btn-save">
+                <button type="submit"
+                        name="submitAction"
+                        value="Published"
+                        class="btn-create btn-save">
                     <i class="glyphicon glyphicon-ok"></i>
                     Xuất bản ngay
                 </button>
 
-                <button type="submit" name="submitAction" value="Pending" class="btn-create btn-pending">
+                <button type="submit"
+                        name="submitAction"
+                        value="Pending"
+                        class="btn-create btn-pending">
                     Lưu chờ duyệt (Pending)
                 </button>
 
-                <button type="submit" name="submitAction" value="Draft" class="btn-create btn-draft">
+                <button type="submit"
+                        name="submitAction"
+                        value="Draft"
+                        class="btn-create btn-draft">
                     Lưu bản nháp (Draft)
                 </button>
             }
             else
             {
-                <button type="submit" name="submitAction" value="Pending" class="btn-create btn-save">
+                <button type="submit"
+                        name="submitAction"
+                        value="Pending"
+                        class="btn-create btn-save">
                     <i class="glyphicon glyphicon-send"></i>
                     Gửi Admin duyệt
                 </button>
 
-                <button type="submit" name="submitAction" value="Draft" class="btn-create btn-draft">
+                <button type="submit"
+                        name="submitAction"
+                        value="Draft"
+                        class="btn-create btn-draft">
                     Lưu bản nháp
                 </button>
             }
 
-            @Html.RouteLink("Quay lại danh sách",
+            @Html.RouteLink(
+                     "Quay lại danh sách",
                      "AdminArticles",
                      new { action = "Index" },
                      new { @class = "btn-create btn-back" })
+
         </div>
 
     </form>
 </div>
 
+<!-- TinyMCE -->
+<script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        // Đếm ký tự tiêu đề
+        // Khởi tạo TinyMCE
+        tinymce.init({
+            selector: "#Content",
+            height: 500,
+            menubar: "file edit view insert format tools table",
+            plugins: "lists link table code fullscreen wordcount",
+            toolbar:
+                "undo redo | blocks | bold italic underline strikethrough | " +
+                "forecolor backcolor | alignleft aligncenter alignright alignjustify | " +
+                "bullist numlist | outdent indent | link table | removeformat | " +
+                "code fullscreen",
+            toolbar_mode: "sliding",
+            resize: true,
+            branding: false,
+            promotion: false,
+            license_key: "gpl",
+            content_style:
+                "body { font-family: Arial, sans-serif; font-size: 15px; line-height: 1.7; padding: 12px; }",
+            setup: function (editor) {
+                editor.on("change keyup", function () {
+                    editor.save();
+                });
+            }
+        });
+
+        // Bộ đếm ký tự tiêu đề
         const input = document.getElementById("Title");
         const count = document.querySelector(".title-counter .count");
         const bar = document.querySelector(".title-progress-bar");
@@ -496,7 +574,7 @@
             updateCounter();
         }
 
-        // Xem trước hình ảnh
+        // Xem trước ảnh đại diện
         const imageInput = document.getElementById("imageFile");
         const preview = document.getElementById("previewImage");
         const fileName = document.getElementById("fileName");
@@ -511,23 +589,60 @@
                 currentImageUrl = null;
             }
 
-            if (file && file.type.startsWith("image/")) {
-                currentImageUrl = URL.createObjectURL(file);
+            preview.removeAttribute("src");
+            preview.style.display = "none";
 
-                preview.src = currentImageUrl;
-                preview.style.display = "inline-block";
-
-                fileName.textContent = "Đã chọn: " + file.name;
-                fileName.style.color = "#b91c1c";
-                fileName.style.fontWeight = "700";
-            }
-            else {
-                preview.removeAttribute("src");
-                preview.style.display = "none";
-
-                fileName.textContent = "Chọn hình ảnh từ thiết bị của bạn";
+            if (!file) {
+                fileName.textContent =
+                    "Bắt buộc chọn ảnh JPG, PNG, GIF hoặc WEBP (tối đa 2MB)";
                 fileName.style.color = "#64748b";
                 fileName.style.fontWeight = "400";
+                return;
+            }
+
+            const allowedTypes = [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/webp"
+            ];
+
+            if (!allowedTypes.includes(file.type)) {
+                alert("Định dạng ảnh không hợp lệ. Vui lòng chọn JPG, PNG, GIF hoặc WEBP.");
+                imageInput.value = "";
+                fileName.textContent = "Vui lòng chọn lại ảnh hợp lệ.";
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert("Ảnh vượt quá dung lượng 2MB. Vui lòng chọn ảnh khác.");
+                imageInput.value = "";
+                fileName.textContent = "Ảnh vượt quá dung lượng cho phép.";
+                return;
+            }
+
+            currentImageUrl = URL.createObjectURL(file);
+
+            preview.src = currentImageUrl;
+            preview.style.display = "inline-block";
+
+            fileName.textContent = "Đã chọn: " + file.name;
+            fileName.style.color = "#b91c1c";
+            fileName.style.fontWeight = "700";
+        });
+
+        // Đồng bộ nội dung TinyMCE trước khi gửi form
+        const form = document.getElementById("createArticleForm");
+
+        form.addEventListener("submit", function (event) {
+            if (typeof tinymce !== "undefined") {
+                tinymce.triggerSave();
+            }
+
+            if (!imageInput.files || imageInput.files.length === 0) {
+                event.preventDefault();
+                alert("Vui lòng chọn ảnh đại diện cho bài viết.");
+                imageInput.focus();
             }
         });
     });

@@ -1,0 +1,361 @@
+﻿@model IEnumerable<NewsPortal.Models.AdminCommentRow>
+@{
+    ViewBag.Title = "Kiểm duyệt Bình luận - Admin";
+    string currentSearch = ViewBag.Search as string ?? "";
+    string currentStatus = ViewBag.StatusFilter as string ?? "";
+}
+
+@section styles {
+    <style>
+        .usr-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .usr-box {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .cmt-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .cmt-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--soft);
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+            .cmt-tab.active {
+                border-color: var(--red);
+                background: #fff1f2;
+                color: var(--red);
+            }
+
+        .usr-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            max-width: 620px;
+        }
+
+            .usr-search input {
+                flex: 1 1 320px;
+                width: 320px;
+                max-width: 100%;
+                min-width: 0;
+                height: 40px;
+                padding: 0 12px;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                font-size: 13px;
+            }
+
+            .usr-search .search-button,
+            .usr-search .filter-reset {
+                flex: 0 0 auto;
+                height: 40px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 14px;
+                white-space: nowrap;
+            }
+
+            .usr-search .search-button {
+                border: 0;
+                border-radius: 8px;
+                background: var(--red);
+                color: #fff;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            .usr-search .filter-reset {
+                border-radius: 8px;
+                background: var(--soft);
+                color: var(--ink);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+        .usr-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+            .usr-table th {
+                text-align: left;
+                padding: 11px 10px;
+                background: var(--soft);
+                border-bottom: 2px solid var(--line);
+                font-size: 12px;
+                text-transform: uppercase;
+                color: var(--muted);
+                white-space: nowrap;
+            }
+
+            .usr-table td {
+                padding: 12px 10px;
+                border-bottom: 1px solid var(--line);
+                vertical-align: top;
+            }
+
+        .cmt-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .cmt-pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .cmt-approved {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .cmt-hidden {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .cmt-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-act {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: #fff;
+            white-space: nowrap;
+        }
+
+        .btn-approve {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+            .btn-approve:hover {
+                background: #16a34a;
+                color: #fff;
+            }
+
+        .btn-hide {
+            border-color: #d97706;
+            color: #b45309;
+        }
+
+            .btn-hide:hover {
+                background: #d97706;
+                color: #fff;
+            }
+
+        .btn-del {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+
+            .btn-del:hover {
+                background: #dc2626;
+                color: #fff;
+            }
+
+        .msg-ok {
+            padding: 11px 15px;
+            border-radius: 8px;
+            background: #ecfdf5;
+            color: #065f46;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .msg-err {
+            padding: 11px 15px;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #b91c1c;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+    </style>
+}
+
+<div class="usr-head">
+    <div>
+        <a href="@Url.Action("Index", "Admin")" style="color:var(--red); font-weight:700; font-size:13px;">
+            &larr; Quay lại Bảng điều khiển Admin
+        </a>
+        <h2 style="margin:6px 0 0;">Kiểm duyệt Bình luận</h2>
+    </div>
+</div>
+
+@if (TempData["AdminMessage"] != null)
+{
+    <div class="msg-ok"><i class="fa-solid fa-circle-check"></i> @TempData["AdminMessage"]</div>
+}
+@if (TempData["AdminError"] != null)
+{
+    <div class="msg-err"><i class="fa-solid fa-triangle-exclamation"></i> @TempData["AdminError"]</div>
+}
+
+<div class="usr-box" style="overflow-x:auto;">
+    <div class="cmt-tabs">
+        <a href="@Url.Action("Comments", "Admin", new { search = currentSearch })"
+           class="cmt-tab @(string.IsNullOrEmpty(currentStatus) ? "active" : "")">
+            Tất cả (@ViewBag.TotalCount)
+        </a>
+        <a href="@Url.Action("Comments", "Admin", new { status = "Pending", search = currentSearch })"
+           class="cmt-tab @(currentStatus == "Pending" ? "active" : "")">
+            Chờ duyệt (@ViewBag.PendingCount)
+        </a>
+        <a href="@Url.Action("Comments", "Admin", new { status = "Approved", search = currentSearch })"
+           class="cmt-tab @(currentStatus == "Approved" ? "active" : "")">
+            Đã duyệt (@ViewBag.ApprovedCount)
+        </a>
+        <a href="@Url.Action("Comments", "Admin", new { status = "Hidden", search = currentSearch })"
+           class="cmt-tab @(currentStatus == "Hidden" ? "active" : "")">
+            Đã ẩn (@ViewBag.HiddenCount)
+        </a>
+    </div>
+
+    <form method="get" action="@Url.Action("Comments", "Admin")" class="usr-search">
+        <input type="hidden" name="status" value="@currentStatus" />
+        <input type="search" name="search" value="@currentSearch" placeholder="Tìm nội dung, người bình luận hoặc tiêu đề bài viết..." />
+        <button type="submit" class="search-button">Tìm kiếm</button>
+        @if (!string.IsNullOrWhiteSpace(currentSearch) || !string.IsNullOrWhiteSpace(currentStatus))
+        {
+            <a href="@Url.Action("Comments", "Admin")" class="filter-reset">Xóa lọc</a>
+        }
+    </form>
+
+    <table class="usr-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Bài viết</th>
+                <th>Người gửi</th>
+                <th>Nội dung bình luận</th>
+                <th>Thời gian</th>
+                <th>Trạng thái</th>
+                <th style="text-align:right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var c in Model)
+                {
+                    <tr>
+                        <td>@c.CommentID</td>
+                        <td style="max-width:220px;">
+                            <a href="@Url.Action("Details", "Articles", new { id = c.ArticleID })" target="_blank" style="font-weight:700; color:var(--ink); text-decoration:none;">
+                                @c.ArticleTitle
+                            </a>
+                        </td>
+                        <td>
+                            <div style="font-weight:700;">@c.CommenterName</div>
+                            @if (!string.IsNullOrEmpty(c.Username))
+                            {
+                                <div style="font-size:12px; color:var(--muted);">@@@c.Username</div>
+                            }
+                        </td>
+                        <td style="max-width:340px; white-space:pre-line; word-break:break-word;">@c.Content</td>
+                        <td style="white-space:nowrap;">@c.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (c.Status == "Approved")
+                            {
+                                <span class="cmt-badge cmt-approved">Đã duyệt</span>
+                            }
+                            else if (c.Status == "Hidden")
+                            {
+                                <span class="cmt-badge cmt-hidden">Đã ẩn</span>
+                            }
+                            else
+                            {
+                                <span class="cmt-badge cmt-pending">Chờ duyệt</span>
+                            }
+                        </td>
+                        <td style="text-align:right;">
+                            <div class="cmt-actions">
+                                @if (c.Status != "Approved")
+                                {
+                                    using (Html.BeginForm("ApproveComment", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.CommentID" />
+                                        <input type="hidden" name="search" value="@currentSearch" />
+                                        <input type="hidden" name="status" value="@currentStatus" />
+                                        <button type="submit" class="btn-act btn-approve">Duyệt</button>
+                                    }
+                                }
+
+                                @if (c.Status != "Hidden")
+                                {
+                                    using (Html.BeginForm("HideComment", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.CommentID" />
+                                        <input type="hidden" name="search" value="@currentSearch" />
+                                        <input type="hidden" name="status" value="@currentStatus" />
+                                        <button type="submit" class="btn-act btn-hide">Ẩn</button>
+                                    }
+                                }
+
+                                @using (Html.BeginForm("DeleteComment", "Admin", FormMethod.Post, new { style = "display:inline;", onsubmit = "return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn bình luận #" + c.CommentID + " không?');" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@c.CommentID" />
+                                    <input type="hidden" name="search" value="@currentSearch" />
+                                    <input type="hidden" name="status" value="@currentStatus" />
+                                    <button type="submit" class="btn-act btn-del">Xóa</button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">
+                        Không có bình luận nào phù hợp.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -397,6 +397,7 @@ namespace NewsPortal.Controllers
             Session.Remove("Admin");
             Session.Remove("User");
             Session.Remove("UserFullName");
+            Session.Remove("UserAvatar");
             Session.Remove("Role");
             Session.Remove("LockUntil");
             Session.Remove("FailCount");

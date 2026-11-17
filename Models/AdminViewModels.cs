@@ -31,6 +31,19 @@ namespace NewsPortal.Models
         public bool CanChangeRole { get; set; }
     }
 
+    public class AdminCommentRow
+    {
+        public int CommentID { get; set; }
+        public int ArticleID { get; set; }
+        public string ArticleTitle { get; set; }
+        public int? UserID { get; set; }
+        public string Username { get; set; }
+        public string CommenterName { get; set; }
+        public string Content { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string Status { get; set; }
+    }
+
     public class AdminDashboardViewModel
     {
         public int TotalArticles { get; set; }
