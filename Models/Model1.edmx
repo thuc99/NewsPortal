@@ -30,6 +30,11 @@
           <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="ImageUrl" Type="nvarchar" MaxLength="1000" />
           <Property Name="ViewCount" Type="int" Nullable="false" />
+<<<<<<< HEAD
+=======
+          <Property Name="Images" Type="nvarchar(max)" />
+          <Property Name="UserId" Type="int" />
+>>>>>>> 0597ecc6e3d808c21c35d7f7297c1959cc0c499a
           <Property Name="Image" Type="nvarchar(max)" />
         </EntityType>
         <EntityType Name="ArticleViewHistory">
@@ -316,6 +321,11 @@
           <Property Name="ImageUrl" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
           <Property Name="ViewCount" Type="Int32" Nullable="false" />
           <NavigationProperty Name="ArticleRatings" Relationship="NewsPortalDBModel.FK_ArticleRatings_Articles" FromRole="Articles" ToRole="ArticleRatings" />
+<<<<<<< HEAD
+=======
+          <Property Name="Images" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="UserId" Type="Int32" />
+>>>>>>> 0597ecc6e3d808c21c35d7f7297c1959cc0c499a
           <Property Name="Image" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="ArticleViewHistory" Relationship="NewsPortalDBModel.FK_ArticleViewHistory_Articles" FromRole="Articles" ToRole="ArticleViewHistory" />
           <NavigationProperty Name="SavedArticles" Relationship="NewsPortalDBModel.FK_SavedArticles_Articles" FromRole="Articles" ToRole="SavedArticles" />
@@ -537,6 +547,11 @@
             <EntityTypeMapping TypeName="NewsPortalDBModel.Articles">
               <MappingFragment StoreEntitySet="Articles">
                 <ScalarProperty Name="Image" ColumnName="Image" />
+<<<<<<< HEAD
+=======
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Images" ColumnName="Images" />
+>>>>>>> 0597ecc6e3d808c21c35d7f7297c1959cc0c499a
                 <ScalarProperty Name="ViewCount" ColumnName="ViewCount" />
                 <ScalarProperty Name="ImageUrl" ColumnName="ImageUrl" />
                 <ScalarProperty Name="Status" ColumnName="Status" />

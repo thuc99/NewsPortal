@@ -18,7 +18,11 @@ namespace NewsPortal.Models
         public int UserId { get; set; }
         public int ArticleId { get; set; }
         public Nullable<System.DateTime> ViewedDate { get; set; }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 0597ecc6e3d808c21c35d7f7297c1959cc0c499a
         public virtual Articles Articles { get; set; }
         public virtual Users Users { get; set; }
     }

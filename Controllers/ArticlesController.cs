@@ -52,15 +52,9 @@ namespace NewsPortal.Controllers
             lock (_constraintLock)
             {
                 if (_statusConstraintChecked) return;
-                try
-                {
-                    const string sql = @"
+
+                const string sql = @"
 IF OBJECT_ID(N'dbo.Articles', N'U') IS NOT NULL
-   AND NOT EXISTS (
-       SELECT 1 FROM sys.check_constraints
-       WHERE name = N'CK_Articles_Status_Workflow'
-         AND parent_object_id = OBJECT_ID(N'dbo.Articles')
-   )
 BEGIN
     DECLARE @dropSql NVARCHAR(MAX) = N'';
     SELECT @dropSql = @dropSql + N'ALTER TABLE dbo.Articles DROP CONSTRAINT [' + REPLACE(cc.name, N']', N']]') + N'];'
@@ -69,7 +63,7 @@ BEGIN
         ON col.object_id = cc.parent_object_id
        AND col.column_id = cc.parent_column_id
     WHERE cc.parent_object_id = OBJECT_ID(N'dbo.Articles')
-      AND (col.name = N'Status' OR (cc.parent_column_id = 0 AND cc.definition LIKE N'%Draft%' AND cc.definition LIKE N'%Published%'));
+      AND (col.name = N'Status' OR cc.definition LIKE N'%Status%' OR cc.name IN (N'CK_Articles_Status', N'CK_Articles_Status_Workflow'));
 
     IF LEN(@dropSql) > 0
         EXEC sp_executesql @dropSql;
@@ -83,13 +77,8 @@ BEGIN
     ADD CONSTRAINT [CK_Articles_Status_Workflow]
     CHECK ([Status] IN (N'Draft', N'Pending', N'Published', N'Rejected', N'Archived'));
 END";
-                    db.Database.ExecuteSqlCommand(sql);
-                    _statusConstraintChecked = true;
-                }
-                catch
-                {
-                    // Giữ an toàn nếu tài khoản SQL bị giới hạn quyền DDL
-                }
+                db.Database.ExecuteSqlCommand(sql);
+                _statusConstraintChecked = true;
             }
         }
 
@@ -209,12 +198,22 @@ END";
                 ModelState.AddModelError("Status", "Trạng thái bài viết không hợp lệ.");
             }
 
-            // Bắt buộc ảnh khi tạo bài viết mới
-            if (requireImage &&
-                (imageFile == null || imageFile.ContentLength <= 0))
+            bool hasUploadedImage = imageFile != null && imageFile.ContentLength > 0;
+            article.ImageUrl = (article.ImageUrl ?? string.Empty).Trim();
+
+            if (requireImage && !hasUploadedImage && string.IsNullOrWhiteSpace(article.ImageUrl))
             {
-                ModelState.AddModelError("", "Vui lòng chọn ảnh đại diện cho bài viết.");
-                return;
+                ModelState.AddModelError("ImageUrl", "Vui lòng tải ảnh lên hoặc nhập URL ảnh đại diện.");
+            }
+            else if (!hasUploadedImage && !string.IsNullOrWhiteSpace(article.ImageUrl))
+            {
+                Uri imageUri;
+                if (article.ImageUrl.Length > 1000 ||
+                    !Uri.TryCreate(article.ImageUrl, UriKind.Absolute, out imageUri) ||
+                    (imageUri.Scheme != Uri.UriSchemeHttp && imageUri.Scheme != Uri.UriSchemeHttps))
+                {
+                    ModelState.AddModelError("ImageUrl", "URL ảnh phải bắt đầu bằng http:// hoặc https:// và tối đa 1000 ký tự.");
+                }
             }
 
             // Kiểm tra ảnh nếu người dùng tải lên
@@ -751,10 +750,12 @@ END";
             }
 
             string imageUrl = SaveImage(imageFile);
+            if (string.IsNullOrWhiteSpace(imageUrl))
+                imageUrl = article.ImageUrl;
 
             if (string.IsNullOrWhiteSpace(imageUrl))
             {
-                ModelState.AddModelError("", "Không thể lưu ảnh đại diện. Vui lòng chọn lại ảnh.");
+                ModelState.AddModelError("ImageUrl", "Vui lòng chọn ảnh đại diện hoặc nhập URL ảnh hợp lệ.");
                 return View(article);
             }
 

@@ -34,6 +34,11 @@ namespace NewsPortal.Models
         public string Status { get; set; }
         public string ImageUrl { get; set; }
         public int ViewCount { get; set; }
+<<<<<<< HEAD
+=======
+        public string Images { get; set; }
+        public Nullable<int> UserId { get; set; }
+>>>>>>> 0597ecc6e3d808c21c35d7f7297c1959cc0c499a
         public string Image { get; set; }
     
         public virtual Author Authors { get; set; }
