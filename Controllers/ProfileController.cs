@@ -341,6 +341,19 @@ namespace NewsPortal.Controllers
             }
             db.SaveChanges();
 
+            // Đồng bộ lại Cookie NewsPortalFavorites theo dữ liệu mới nhất trong SQL
+            var syncedIds = db.SavedArticles
+                .Where(s => s.UserId == uid)
+                .OrderByDescending(s => s.SavedDate)
+                .Select(s => s.ArticleId)
+                .ToList();
+
+            Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", syncedIds))
+            {
+                Expires = DateTime.Now.AddYears(1),
+                HttpOnly = true
+            });
+
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 

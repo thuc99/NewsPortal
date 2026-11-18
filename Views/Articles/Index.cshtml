@@ -630,13 +630,23 @@
                 </select>
             }
 
-            <input type="date"
-                   name="fromDate"
-                   value="@(ViewBag.FromDate == null ? "" : ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd"))" />
+            <div style="position: relative; display: inline-block;">
+                <span style="position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 5px; font-size: 11px; font-weight: 600; color: #b91c1c; line-height: 1; z-index: 1;">
+                    Từ ngày
+                </span>
+                <input type="date"
+                       name="fromDate"
+                       value="@(ViewBag.FromDate == null ? "" : ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd"))" />
+            </div>
 
-            <input type="date"
-                   name="toDate"
-                   value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
+            <div style="position: relative; display: inline-block;">
+                <span style="position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 5px; font-size: 11px; font-weight: 600; color: #b91c1c; line-height: 1; z-index: 1;">
+                    Đến ngày
+                </span>
+                <input type="date"
+                       name="toDate"
+                       value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
+            </div>
 
             <button type="submit" class="filter-submit">
                 Lọc

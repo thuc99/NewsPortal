@@ -37,6 +37,22 @@ namespace NewsPortal
                 }
             );
 
+            // Route mặc định (đặt trước các route Admin để menu công khai luôn sinh link chuẩn)
+            routes.MapRoute(
+                name: "Default",
+                url: "{controller}/{action}/{id}",
+                defaults: new
+                {
+                    controller = "Home",
+                    action = "Index",
+                    id = UrlParameter.Optional
+                },
+                constraints: new
+                {
+                    controller = @"^(?!Admin$).*$"
+                }
+            );
+
             // Quản lý bài viết
             routes.MapRoute(
                 name: "AdminArticles",
@@ -87,22 +103,6 @@ namespace NewsPortal
                     id = UrlParameter.Optional
                 },
                 namespaces: new[] { "NewsPortal.Controllers" }
-            );
-
-            // Route mặc định
-            routes.MapRoute(
-                name: "Default",
-                url: "{controller}/{action}/{id}",
-                defaults: new
-                {
-                    controller = "Home",
-                    action = "Index",
-                    id = UrlParameter.Optional
-                },
-                constraints: new
-                {
-                    controller = @"^(?!Admin$).*$"
-                }
             );
         }
     }

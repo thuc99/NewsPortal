@@ -263,11 +263,11 @@ namespace NewsPortal.Controllers
                     return RedirectToRoute(
                         "AdminArticles",
                         new { action = "Index" });
-                }
+                }     
 
                 Session["Role"] = "User";
 
-                return RedirectToAction("Index", "Articles");
+                return RedirectToRoute("Default", new { controller = "Articles", action = "Index" });
             }
 
             // Đăng nhập Admin cũ

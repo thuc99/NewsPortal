@@ -1058,9 +1058,12 @@
                       class="search-form">
                     <input type="search"
                            name="searchString"
+                           value="@Request.QueryString["searchString"]"
                            class="search-input"
-                           placeholder="Tìm kiếm bài viết..." />
-                    <button type="submit" class="search-button">Tìm kiếm</button>
+                           placeholder="Tìm kiếm" />
+                    <button type="submit" class="search-button" title="Tìm kiếm" aria-label="Tìm kiếm">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
                 </form>
 
                 <div class="account-area" id="account-area">
@@ -1132,18 +1135,7 @@
                                 <i class="fa-solid fa-lock" style="width:18px; color:#b91c1c;"></i>
                                 <span>Đổi mật khẩu</span>
                             </a>
-                            <a href="@Url.Action("Comments", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
-                                <i class="fa-regular fa-comment-dots" style="width:18px; color:#b91c1c;"></i>
-                                <span>Hoạt động bình luận</span>
-                            </a>
-                            <a href="@Url.Action("Saved", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
-                                <i class="fa-regular fa-bookmark" style="width:18px; color:#b91c1c;"></i>
-                                <span>Tin đã lưu</span>
-                            </a>
-                            <a href="@Url.Action("History", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
-                                <i class="fa-regular fa-eye" style="width:18px; color:#b91c1c;"></i>
-                                <span>Tin đã xem</span>
-                            </a>
+                          
                             <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
                             using (Html.BeginForm("Logout", "Profile", FormMethod.Post, new { style = "margin:0;" }))
                             {
@@ -1165,8 +1157,10 @@
         <div class="container nav-inner">
             <div class="nav-links">
                 <a class="nav-link @(currentController == "Home" && !isFavoritesPage ? "active" : "")"
-                   href="@Url.Action("Index", "Home")">
-                    Trang chủ
+                   href="@Url.Action("Index", "Home")"
+                   title="Trang chủ"
+                   aria-label="Trang chủ">
+                    <i class="fa-solid fa-house" style="font-size: 16px;"></i>
                 </a>
 
                 @Html.Action("Navigation", "Categories", new
