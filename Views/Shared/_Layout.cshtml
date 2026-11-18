@@ -1132,18 +1132,7 @@
                                 <i class="fa-solid fa-lock" style="width:18px; color:#b91c1c;"></i>
                                 <span>Đổi mật khẩu</span>
                             </a>
-                            <a href="@Url.Action("Comments", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
-                                <i class="fa-regular fa-comment-dots" style="width:18px; color:#b91c1c;"></i>
-                                <span>Hoạt động bình luận</span>
-                            </a>
-                            <a href="@Url.Action("Saved", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
-                                <i class="fa-regular fa-bookmark" style="width:18px; color:#b91c1c;"></i>
-                                <span>Tin đã lưu</span>
-                            </a>
-                            <a href="@Url.Action("History", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
-                                <i class="fa-regular fa-eye" style="width:18px; color:#b91c1c;"></i>
-                                <span>Tin đã xem</span>
-                            </a>
+                          
                             <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
                             using (Html.BeginForm("Logout", "Profile", FormMethod.Post, new { style = "margin:0;" }))
                             {
