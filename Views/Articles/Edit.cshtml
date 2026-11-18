@@ -163,20 +163,30 @@
             color: #64748b;
         }
 
-    /* TinyMCE */
-    .tox-tinymce {
-        border: 1.5px solid #e2e8f0 !important;
-        border-radius: 9px !important;
-        overflow: hidden;
+    /* CKEditor 5 */
+    .ck.ck-editor {
+        width: 100%;
     }
 
-    .tox .tox-toolbar,
-    .tox .tox-toolbar__primary {
+    .ck.ck-toolbar {
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 9px 9px 0 0 !important;
         background: #f8fafc !important;
     }
 
-    .tox .tox-edit-area::before {
-        border: none !important;
+    .ck.ck-editor__main > .ck-editor__editable {
+        min-height: 350px;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 0 0 9px 9px !important;
+        font-family: Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .ck.ck-editor__main > .ck-editor__editable:focus {
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 3px rgba(220,38,38,.08) !important;
     }
 
     /* Bộ đếm ký tự */
@@ -463,7 +473,7 @@
                 <div class="title-warning"></div>
             </div>
 
-            <!-- Nội dung TinyMCE -->
+            <!-- Nội dung CKEditor 5 -->
             <div class="field">
                 @Html.LabelFor(m => m.Content, "Nội dung bài viết")
 
@@ -612,36 +622,91 @@
     </div>
 </div>
 
-<!-- TinyMCE -->
-<script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js"></script>
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const contentTextarea = document.getElementById("Content");
+        const form = document.getElementById("editArticleForm");
+        const uploadUrl = "@Url.RouteUrl("AdminArticles", new { action = "UploadContentImage" })";
+        const antiForgeryToken = form
+            ? form.querySelector('input[name="__RequestVerificationToken"]')?.value
+            : "";
 
-        // Khởi tạo trình soạn thảo TinyMCE
-        tinymce.init({
-            selector: "#Content",
-            height: 500,
-            menubar: "file edit view insert format tools table",
-            plugins: "lists link table code fullscreen wordcount",
-            toolbar:
-                "undo redo | blocks | bold italic underline strikethrough | " +
-                "forecolor backcolor | alignleft aligncenter alignright alignjustify | " +
-                "bullist numlist | outdent indent | link table | removeformat | " +
-                "code fullscreen",
-            toolbar_mode: "sliding",
-            resize: true,
-            branding: false,
-            promotion: false,
-            license_key: "gpl",
-            content_style:
-                "body { font-family: Arial, sans-serif; font-size: 15px; line-height: 1.7; padding: 12px; }",
-            setup: function (editor) {
-                editor.on("change keyup", function () {
-                    editor.save();
-                });
+        // Adapter tải ảnh lên máy chủ và chèn ảnh vào nội dung bài viết.
+        class ArticleImageUploadAdapter {
+            constructor(loader) {
+                this.loader = loader;
+                this.xhr = null;
             }
-        });
+
+            upload() {
+                return this.loader.file.then(file => new Promise((resolve, reject) => {
+                    const xhr = this.xhr = new XMLHttpRequest();
+                    xhr.open("POST", uploadUrl, true);
+                    xhr.responseType = "json";
+
+                    xhr.addEventListener("error", () => reject("Không thể tải ảnh lên máy chủ."));
+                    xhr.addEventListener("abort", () => reject("Đã hủy tải ảnh."));
+                    xhr.addEventListener("load", () => {
+                        const response = xhr.response;
+                        if (xhr.status >= 200 && xhr.status < 300 &&
+                            response && response.uploaded && response.url) {
+                            resolve({ default: response.url });
+                        } else {
+                            reject(response && response.error
+                                ? response.error
+                                : "Tải ảnh thất bại. Vui lòng thử lại.");
+                        }
+                    });
+
+                    const data = new FormData();
+                    data.append("upload", file);
+                    data.append("__RequestVerificationToken", antiForgeryToken);
+                    xhr.send(data);
+                }));
+            }
+
+            abort() {
+                if (this.xhr) this.xhr.abort();
+            }
+        }
+
+        let articleEditor = null;
+
+        if (contentTextarea && window.ClassicEditor) {
+            ClassicEditor.create(contentTextarea, {
+                toolbar: {
+                    items: [
+                        "undo", "redo", "|",
+                        "heading", "|",
+                        "bold", "italic", "|",
+                        "bulletedList", "numberedList", "outdent", "indent", "|",
+                        "link", "uploadImage", "insertTable", "|",
+                        "blockQuote"
+                    ],
+                    shouldNotGroupWhenFull: true
+                },
+                image: {
+                    toolbar: [
+                        "imageTextAlternative",
+                        "imageStyle:full",
+                        "imageStyle:side"
+                    ]
+                },
+                table: {
+                    contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"]
+                }
+            }).then(editor => {
+                articleEditor = editor;
+                editor.plugins.get("FileRepository").createUploadAdapter = loader =>
+                    new ArticleImageUploadAdapter(loader);
+            }).catch(error => {
+                console.error("Không thể khởi tạo CKEditor 5:", error);
+                alert("Không thể tải trình soạn thảo CKEditor 5. Vui lòng kiểm tra kết nối Internet.");
+            });
+        }
 
         // Bộ đếm ký tự tiêu đề
         const input = document.getElementById("Title");
@@ -650,11 +715,10 @@
         const warning = document.querySelector(".title-warning");
 
         function updateCounter() {
-            if (!input) return;
+            if (!input || !count || !bar || !warning) return;
 
             const length = input.value.length;
             const percent = Math.min(length / 150 * 100, 100);
-
             count.textContent = length + "/150";
             bar.style.width = percent + "%";
 
@@ -663,14 +727,12 @@
                 count.style.color = "#dc2626";
                 warning.textContent = "Bạn đã đạt giới hạn 150 ký tự.";
                 warning.style.display = "block";
-            }
-            else if (length >= 135) {
+            } else if (length >= 135) {
                 bar.style.background = "#f59e0b";
                 count.style.color = "#d97706";
                 warning.textContent = "Bạn sắp đạt giới hạn ký tự.";
                 warning.style.display = "block";
-            }
-            else {
+            } else {
                 bar.style.background = "#16a34a";
                 count.style.color = "#64748b";
                 warning.style.display = "none";
@@ -682,62 +744,53 @@
             updateCounter();
         }
 
-        // Xem trước ảnh mới
+        // Xem trước ảnh đại diện mới; nếu không chọn ảnh thì giữ ảnh hiện tại.
         const imageInput = document.getElementById("imageFile");
         const preview = document.getElementById("previewImage");
         const fileName = document.getElementById("fileName");
-
         let currentImageUrl = null;
 
-        imageInput.addEventListener("change", function () {
-            const file = this.files[0];
+        if (imageInput && preview && fileName) {
+            imageInput.addEventListener("change", function () {
+                const file = this.files && this.files[0];
 
-            if (currentImageUrl) {
-                URL.revokeObjectURL(currentImageUrl);
-                currentImageUrl = null;
-            }
+                if (currentImageUrl) {
+                    URL.revokeObjectURL(currentImageUrl);
+                    currentImageUrl = null;
+                }
 
-            // Không chọn ảnh mới: giữ ảnh cũ
-            if (!file) {
-                return;
-            }
+                // Không chọn ảnh mới: không thay đổi ảnh hiện tại.
+                if (!file) return;
 
-            const allowedTypes = [
-                "image/jpeg",
-                "image/png",
-                "image/gif",
-                "image/webp"
-            ];
+                const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+                if (!allowedTypes.includes(file.type)) {
+                    alert("Định dạng ảnh không hợp lệ. Vui lòng chọn JPG, PNG, GIF hoặc WEBP.");
+                    imageInput.value = "";
+                    return;
+                }
 
-            if (!allowedTypes.includes(file.type)) {
-                alert("Định dạng ảnh không hợp lệ. Vui lòng chọn JPG, PNG, GIF hoặc WEBP.");
-                imageInput.value = "";
-                return;
-            }
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("Ảnh vượt quá dung lượng 2MB. Vui lòng chọn ảnh khác.");
+                    imageInput.value = "";
+                    return;
+                }
 
-            if (file.size > 2 * 1024 * 1024) {
-                alert("Ảnh vượt quá dung lượng 2MB. Vui lòng chọn ảnh khác.");
-                imageInput.value = "";
-                return;
-            }
+                currentImageUrl = URL.createObjectURL(file);
+                preview.src = currentImageUrl;
+                preview.style.display = "inline-block";
+                fileName.textContent = "Đã chọn ảnh mới: " + file.name;
+                fileName.style.color = "#b91c1c";
+                fileName.style.fontWeight = "700";
+            });
+        }
 
-            currentImageUrl = URL.createObjectURL(file);
-
-            preview.src = currentImageUrl;
-            preview.style.display = "inline-block";
-
-            fileName.textContent = "Đã chọn ảnh mới: " + file.name;
-            fileName.style.color = "#b91c1c";
-            fileName.style.fontWeight = "700";
-        });
-
-        // Đồng bộ nội dung TinyMCE trước khi gửi form
-        const form = document.getElementById("editArticleForm");
-
-        form.addEventListener("submit", function () {
-            if (typeof tinymce !== "undefined") {
-                tinymce.triggerSave();
-            }
-        });
+        // Đồng bộ nội dung CKEditor vào textarea trước khi gửi form.
+        if (form) {
+            form.addEventListener("submit", function () {
+                if (articleEditor) {
+                    articleEditor.updateSourceElement();
+                }
+            });
+        }
     });
 </script>

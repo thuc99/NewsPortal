@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace NewsPortal.Controllers
 {
-    
+
     public class ArticlesController : Controller
     {
         private string SanitizeArticleContent(string content)
@@ -667,6 +667,112 @@ END";
                 .ToList();
 
             return View(articles);
+        }
+
+        // Upload ảnh được chèn trực tiếp trong nội dung bài viết bằng CKEditor 5.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UploadContentImage(HttpPostedFileBase upload)
+        {
+            var denied = CheckArticlePermission("tải ảnh lên");
+            if (denied != null)
+            {
+                Response.StatusCode = 403;
+                return Json(new
+                {
+                    uploaded = false,
+                    error = "Bạn không có quyền tải ảnh lên."
+                });
+            }
+
+            if (upload == null || upload.ContentLength <= 0)
+            {
+                Response.StatusCode = 400;
+                return Json(new
+                {
+                    uploaded = false,
+                    error = "Vui lòng chọn ảnh cần tải lên."
+                });
+            }
+
+            // Ảnh trong nội dung được giới hạn 5MB.
+            if (upload.ContentLength > 5 * 1024 * 1024)
+            {
+                Response.StatusCode = 400;
+                return Json(new
+                {
+                    uploaded = false,
+                    error = "Dung lượng ảnh tối đa là 5MB."
+                });
+            }
+
+            string extension = (Path.GetExtension(upload.FileName) ?? string.Empty)
+                .ToLowerInvariant();
+
+            string[] allowedExtensions =
+            {
+                ".jpg", ".jpeg", ".png", ".gif", ".webp"
+            };
+
+            if (!allowedExtensions.Contains(extension))
+            {
+                Response.StatusCode = 400;
+                return Json(new
+                {
+                    uploaded = false,
+                    error = "Chỉ chấp nhận ảnh JPG, JPEG, PNG, GIF hoặc WEBP."
+                });
+            }
+
+            // Kiểm tra MIME type để hạn chế tệp giả dạng ảnh.
+            string contentType = (upload.ContentType ?? string.Empty).ToLowerInvariant();
+            string[] allowedContentTypes =
+            {
+                "image/jpeg", "image/png", "image/gif", "image/webp"
+            };
+
+            if (!allowedContentTypes.Contains(contentType))
+            {
+                Response.StatusCode = 400;
+                return Json(new
+                {
+                    uploaded = false,
+                    error = "Loại tệp tải lên không phải định dạng ảnh được hỗ trợ."
+                });
+            }
+
+            try
+            {
+                string relativeFolder = "~/Content/Images/Articles/Content/";
+                string folder = Server.MapPath(relativeFolder);
+
+                if (string.IsNullOrWhiteSpace(folder))
+                    throw new IOException("Không xác định được thư mục lưu ảnh.");
+
+                Directory.CreateDirectory(folder);
+
+                string fileName = Guid.NewGuid().ToString("N") + extension;
+                string filePath = Path.Combine(folder, fileName);
+
+                upload.SaveAs(filePath);
+
+                string imageUrl = Url.Content(relativeFolder + fileName);
+
+                return Json(new
+                {
+                    uploaded = true,
+                    url = imageUrl
+                });
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 500;
+                return Json(new
+                {
+                    uploaded = false,
+                    error = "Không thể lưu ảnh lên máy chủ. Vui lòng thử lại."
+                });
+            }
         }
 
         public ActionResult Create()
