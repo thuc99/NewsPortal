@@ -4,11 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-<<<<<<< HEAD
       <Diagram DiagramId="f1728136d5564b349e949f5fa88f8b6f" Name="Diagram1" ZoomLevel="61" >
-=======
-      <Diagram DiagramId="f1728136d5564b349e949f5fa88f8b6f" Name="Diagram1" ZoomLevel="95" >
->>>>>>> 0597ecc6e3d808c21c35d7f7297c1959cc0c499a
         <EntityTypeShape EntityType="NewsPortalDBModel.Articles" Width="1.5" PointX="2.875" PointY="0.5" />
         <EntityTypeShape EntityType="NewsPortalDBModel.Author" Width="1.5" PointX="0.5" PointY="0.5" />
         <EntityTypeShape EntityType="NewsPortalDBModel.Category" Width="1.5" PointX="0.625" PointY="2.75" />

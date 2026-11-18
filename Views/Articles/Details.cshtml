@@ -591,17 +591,6 @@
     </div>
     </div>
 
-    @if (!string.IsNullOrEmpty(Model.Image))
-    {
-        <img src="@(Model.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-            ? Model.Image
-            : Url.Content(Model.Image.StartsWith("/", StringComparison.Ordinal) || Model.Image.StartsWith("~/", StringComparison.Ordinal)
-                ? Model.Image
-                : "~/Content/Images/" + Model.Image))"
-             class="detail-image"
-             alt="Hình ảnh bài viết" />
-    }
-
 <div class="detail-content">
     @{
         var sanitizer = new Ganss.Xss.HtmlSanitizer();
