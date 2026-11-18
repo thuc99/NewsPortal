@@ -1,6 +1,7 @@
 ﻿
 @model NewsPortal.Models.Article
 
+
 @{
     ViewBag.Title = "Thêm bài viết";
     bool isAdminUser = ViewBag.IsAdminUser == true;
@@ -337,17 +338,26 @@
         </div>
     }
 
-    <form id="createArticleForm"
-          action="@Url.RouteUrl("AdminArticles", new { action = "Create" })"
-          method="post"
-          enctype="multipart/form-data">
-
+    @using (Html.BeginRouteForm("AdminArticles", new { action = "Create" }, FormMethod.Post,
+        new { id = "createArticleForm", enctype = "multipart/form-data" }))
+    {
         @Html.AntiForgeryToken()
 
         @Html.ValidationSummary(true, "", new
         {
             @class = "text-danger"
         })
+
+        <!-- Danh mục -->
+        <div class="form-group-custom">
+            <label class="form-label" for="CategoryId">Danh mục</label>
+            @Html.DropDownListFor(
+                m => m.CategoryId,
+                (SelectList)ViewBag.CategoryId,
+                "Chọn danh mục",
+                new { @class = "form-control-custom" })
+            @Html.ValidationMessageFor(m => m.CategoryId, "", new { @class = "text-danger" })
+        </div>
 
         <!-- Tiêu đề -->
         <div class="form-group-custom">
@@ -430,11 +440,10 @@
                 <input type="file"
                        name="imageFile"
                        id="imageFile"
-                       accept=".jpg,.jpeg,.png,.gif,.webp"
-                       required />
+                       accept=".jpg,.jpeg,.png,.gif,.webp" />
 
                 <p class="upload-description" id="fileName">
-                    Bắt buộc chọn ảnh JPG, PNG, GIF hoặc WEBP (tối đa 2MB)
+                    Chọn ảnh JPG, PNG, GIF hoặc WEBP (tối đa 2MB), hoặc nhập URL bên dưới.
                 </p>
 
                 <div class="image-preview">
@@ -447,6 +456,25 @@
                 })
             </div>
         </div>
+
+        <div class="form-group-custom">
+            <label class="form-label" for="ImageUrl">Hoặc nhập đường dẫn ảnh (URL)</label>
+            @Html.EditorFor(model => model.ImageUrl, new
+            {
+                htmlAttributes = new
+                {
+                    @class = "form-control-custom",
+                    placeholder = "https://...",
+                    type = "url"
+                }
+            })
+            @Html.ValidationMessageFor(model => model.ImageUrl, "", new { @class = "text-danger" })
+        </div>
+
+        <img src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "about:blank" : Url.Content(Model.ImageUrl))"
+             alt="@Model.Title"
+             class="img-fluid rounded mb-3"
+             style="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "display:none;" : "")" />
 
         <!-- Nút thao tác -->
         <div class="create-actions">
@@ -500,8 +528,7 @@
                      new { @class = "btn-create btn-back" })
 
         </div>
-
-    </form>
+    }
 </div>
 
 <!-- TinyMCE -->
@@ -509,31 +536,28 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const tinyMce = Reflect.get(window, "tinymce");
 
-        // Khởi tạo TinyMCE
-        tinymce.init({
-            selector: "#Content",
-            height: 500,
-            menubar: "file edit view insert format tools table",
-            plugins: "lists link table code fullscreen wordcount",
-            toolbar:
-                "undo redo | blocks | bold italic underline strikethrough | " +
-                "forecolor backcolor | alignleft aligncenter alignright alignjustify | " +
-                "bullist numlist | outdent indent | link table | removeformat | " +
-                "code fullscreen",
-            toolbar_mode: "sliding",
-            resize: true,
-            branding: false,
-            promotion: false,
-            license_key: "gpl",
-            content_style:
-                "body { font-family: Arial, sans-serif; font-size: 15px; line-height: 1.7; padding: 12px; }",
-            setup: function (editor) {
-                editor.on("change keyup", function () {
-                    editor.save();
-                });
-            }
-        });
+        if (tinyMce) {
+            tinyMce.init({
+                selector: "#Content",
+                height: 500,
+                menubar: "file edit view insert format tools table",
+                plugins: "lists link table code fullscreen wordcount",
+                toolbar:
+                    "undo redo | blocks | bold italic underline strikethrough | " +
+                    "forecolor backcolor | alignleft aligncenter alignright alignjustify | " +
+                    "bullist numlist | outdent indent | link table | removeformat | " +
+                    "code fullscreen",
+                toolbar_mode: "sliding",
+                resize: true,
+                branding: false,
+                promotion: false,
+                license_key: "gpl",
+                content_style:
+                    "body { font-family: Arial, sans-serif; font-size: 15px; line-height: 1.7; padding: 12px; }"
+            });
+        }
 
         // Bộ đếm ký tự tiêu đề
         const input = document.getElementById("Title");
@@ -542,7 +566,10 @@
         const warning = document.querySelector(".title-warning");
 
         function updateCounter() {
-            if (!input) return;
+            if (!(input instanceof HTMLInputElement) ||
+                !(count instanceof HTMLElement) ||
+                !(bar instanceof HTMLElement) ||
+                !(warning instanceof HTMLElement)) return;
 
             const length = input.value.length;
             const percent = Math.min(length / 150 * 100, 100);
@@ -569,7 +596,7 @@
             }
         }
 
-        if (input) {
+        if (input instanceof HTMLInputElement) {
             input.addEventListener("input", updateCounter);
             updateCounter();
         }
@@ -578,72 +605,79 @@
         const imageInput = document.getElementById("imageFile");
         const preview = document.getElementById("previewImage");
         const fileName = document.getElementById("fileName");
+        let currentImageUrl = "";
 
-        let currentImageUrl = null;
+        if (imageInput instanceof HTMLInputElement &&
+            preview instanceof HTMLImageElement &&
+            fileName instanceof HTMLElement) {
+            imageInput.addEventListener("change", function () {
+                const file = imageInput.files ? imageInput.files[0] : null;
 
-        imageInput.addEventListener("change", function () {
-            const file = this.files[0];
+                if (currentImageUrl) {
+                    URL.revokeObjectURL(currentImageUrl);
+                    currentImageUrl = "";
+                }
 
-            if (currentImageUrl) {
-                URL.revokeObjectURL(currentImageUrl);
-                currentImageUrl = null;
-            }
+                preview.removeAttribute("src");
+                preview.style.display = "none";
 
-            preview.removeAttribute("src");
-            preview.style.display = "none";
+                if (!file) {
+                    fileName.textContent =
+                        "Chọn ảnh JPG, PNG, GIF hoặc WEBP (tối đa 2MB), hoặc nhập URL bên dưới.";
+                    fileName.style.color = "#64748b";
+                    fileName.style.fontWeight = "400";
+                    return;
+                }
 
-            if (!file) {
-                fileName.textContent =
-                    "Bắt buộc chọn ảnh JPG, PNG, GIF hoặc WEBP (tối đa 2MB)";
-                fileName.style.color = "#64748b";
-                fileName.style.fontWeight = "400";
-                return;
-            }
+                const allowedTypes = [
+                    "image/jpeg",
+                    "image/png",
+                    "image/gif",
+                    "image/webp"
+                ];
 
-            const allowedTypes = [
-                "image/jpeg",
-                "image/png",
-                "image/gif",
-                "image/webp"
-            ];
+                if (!allowedTypes.includes(file.type)) {
+                    alert("Định dạng ảnh không hợp lệ. Vui lòng chọn JPG, PNG, GIF hoặc WEBP.");
+                    imageInput.value = "";
+                    fileName.textContent = "Vui lòng chọn lại ảnh hợp lệ.";
+                    return;
+                }
 
-            if (!allowedTypes.includes(file.type)) {
-                alert("Định dạng ảnh không hợp lệ. Vui lòng chọn JPG, PNG, GIF hoặc WEBP.");
-                imageInput.value = "";
-                fileName.textContent = "Vui lòng chọn lại ảnh hợp lệ.";
-                return;
-            }
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("Ảnh vượt quá dung lượng 2MB. Vui lòng chọn ảnh khác.");
+                    imageInput.value = "";
+                    fileName.textContent = "Ảnh vượt quá dung lượng cho phép.";
+                    return;
+                }
 
-            if (file.size > 2 * 1024 * 1024) {
-                alert("Ảnh vượt quá dung lượng 2MB. Vui lòng chọn ảnh khác.");
-                imageInput.value = "";
-                fileName.textContent = "Ảnh vượt quá dung lượng cho phép.";
-                return;
-            }
+                currentImageUrl = URL.createObjectURL(file);
 
-            currentImageUrl = URL.createObjectURL(file);
+                preview.src = currentImageUrl;
+                preview.style.display = "inline-block";
 
-            preview.src = currentImageUrl;
-            preview.style.display = "inline-block";
+                fileName.textContent = "Đã chọn: " + file.name;
+                fileName.style.color = "#b91c1c";
+                fileName.style.fontWeight = "700";
+            });
+        }
 
-            fileName.textContent = "Đã chọn: " + file.name;
-            fileName.style.color = "#b91c1c";
-            fileName.style.fontWeight = "700";
-        });
-
-        // Đồng bộ nội dung TinyMCE trước khi gửi form
+        const imageUrlInput = document.getElementById("ImageUrl");
         const form = document.getElementById("createArticleForm");
+        if (form instanceof HTMLFormElement) {
+            form.addEventListener("submit", function (event) {
+                const hasUploadedFile = imageInput instanceof HTMLInputElement &&
+                    imageInput.files && imageInput.files.length > 0;
+                const hasImageUrl = imageUrlInput instanceof HTMLInputElement &&
+                    imageUrlInput.value.trim().length > 0;
 
-        form.addEventListener("submit", function (event) {
-            if (typeof tinymce !== "undefined") {
-                tinymce.triggerSave();
-            }
-
-            if (!imageInput.files || imageInput.files.length === 0) {
-                event.preventDefault();
-                alert("Vui lòng chọn ảnh đại diện cho bài viết.");
-                imageInput.focus();
-            }
-        });
+                if (!hasUploadedFile && !hasImageUrl) {
+                    event.preventDefault();
+                    alert("Vui lòng chọn ảnh đại diện hoặc nhập URL ảnh.");
+                    if (imageInput instanceof HTMLInputElement) {
+                        imageInput.focus();
+                    }
+                }
+            });
+        }
     });
 </script>

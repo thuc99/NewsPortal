@@ -102,12 +102,17 @@ namespace NewsPortal.Controllers
             return View(result);
         }
 
-        public ActionResult Details(int id)
+        public ActionResult Details(int? id)
         {
+            if (!id.HasValue || id.Value <= 0)
+            {
+                return RedirectToAction("Index");
+            }
+
             var article = db.Articles
                 .Include(a => a.Categories)
                 .Include(a => a.Authors)
-                .FirstOrDefault(a => a.ArticleID == id && a.Status == "Published");
+                .FirstOrDefault(a => a.ArticleID == id.Value && a.Status == "Published");
 
             if (article == null)
             {
@@ -115,7 +120,7 @@ namespace NewsPortal.Controllers
             }
 
             ViewBag.Comments = db.Comments
-                .Where(c => c.ArticleID == id)
+                .Where(c => c.ArticleID == id.Value)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToList();
 
@@ -160,7 +165,8 @@ namespace NewsPortal.Controllers
                 ArticleID = articleId,
                 CommenterName = commenterName,
                 Content = content,
-                CreatedDate = DateTime.Now
+                CreatedDate = DateTime.Now,
+                Status = "Pending"
             });
 
             db.SaveChanges();

@@ -30,15 +30,18 @@
           <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="ImageUrl" Type="nvarchar" MaxLength="1000" />
           <Property Name="ViewCount" Type="int" Nullable="false" />
+          <Property Name="Images" Type="nvarchar(max)" />
+          <Property Name="UserId" Type="int" />
+          <Property Name="Image" Type="nvarchar(max)" />
         </EntityType>
         <EntityType Name="ArticleViewHistory">
           <Key>
-            <PropertyRef Name="HistoryID" />
+            <PropertyRef Name="Id" />
           </Key>
-          <Property Name="HistoryID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="UserId" Type="int" Nullable="false" />
-          <Property Name="ArticleID" Type="int" Nullable="false" />
-          <Property Name="LastViewedAt" Type="datetime" Nullable="false" />
+          <Property Name="ArticleId" Type="int" Nullable="false" />
+          <Property Name="ViewedDate" Type="datetime" />
         </EntityType>
         <EntityType Name="Authors">
           <Key>
@@ -71,22 +74,12 @@
         </EntityType>
         <EntityType Name="SavedArticles">
           <Key>
-            <PropertyRef Name="SavedID" />
+            <PropertyRef Name="Id" />
           </Key>
-          <Property Name="SavedID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="UserId" Type="int" Nullable="false" />
-          <Property Name="ArticleID" Type="int" Nullable="false" />
-          <Property Name="SavedAt" Type="datetime" Nullable="false" />
-        </EntityType>
-        <EntityType Name="sysdiagrams">
-          <Key>
-            <PropertyRef Name="diagram_id" />
-          </Key>
-          <Property Name="name" Type="nvarchar" MaxLength="128" Nullable="false" />
-          <Property Name="principal_id" Type="int" Nullable="false" />
-          <Property Name="diagram_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="version" Type="int" />
-          <Property Name="definition" Type="varbinary(max)" />
+          <Property Name="ArticleId" Type="int" Nullable="false" />
+          <Property Name="SavedDate" Type="datetime" />
         </EntityType>
         <EntityType Name="Users">
           <Key>
@@ -101,10 +94,10 @@
           <Property Name="IsActive" Type="bit" Nullable="false" />
           <Property Name="CreatedAt" Type="datetime2" Precision="7" Nullable="false" />
           <Property Name="BirthDate" Type="date" />
-          <Property Name="Gender" Type="nvarchar" MaxLength="10" />
-          <Property Name="Phone" Type="nvarchar" MaxLength="20" />
-          <Property Name="Address" Type="nvarchar" MaxLength="300" />
-          <Property Name="AvatarUrl" Type="nvarchar" MaxLength="300" />
+          <Property Name="Gender" Type="nvarchar" MaxLength="20" />
+          <Property Name="Phone" Type="varchar" MaxLength="20" />
+          <Property Name="Address" Type="nvarchar" MaxLength="255" />
+          <Property Name="AvatarUrl" Type="nvarchar(max)" />
         </EntityType>
         <Association Name="FK_ArticleRatings_Articles">
           <End Role="Articles" Type="Self.Articles" Multiplicity="1">
@@ -144,6 +137,34 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_ArticleViewHistory_Articles">
+          <End Role="Articles" Type="Self.Articles" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ArticleViewHistory" Type="Self.ArticleViewHistory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Articles">
+              <PropertyRef Name="ArticleID" />
+            </Principal>
+            <Dependent Role="ArticleViewHistory">
+              <PropertyRef Name="ArticleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ArticleViewHistory_Users">
+          <End Role="Users" Type="Self.Users" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ArticleViewHistory" Type="Self.ArticleViewHistory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="UserId" />
+            </Principal>
+            <Dependent Role="ArticleViewHistory">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Comments_Articles">
           <End Role="Articles" Type="Self.Articles" Multiplicity="1">
             <OnDelete Action="Cascade" />
@@ -158,19 +179,7 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Comments_Users">
-          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
-          <End Role="Comments" Type="Self.Comments" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Users">
-              <PropertyRef Name="UserId" />
-            </Principal>
-            <Dependent Role="Comments">
-              <PropertyRef Name="UserId" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Saved_Articles">
+        <Association Name="FK_SavedArticles_Articles">
           <End Role="Articles" Type="Self.Articles" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
@@ -180,11 +189,11 @@
               <PropertyRef Name="ArticleID" />
             </Principal>
             <Dependent Role="SavedArticles">
-              <PropertyRef Name="ArticleID" />
+              <PropertyRef Name="ArticleId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Saved_Users">
+        <Association Name="FK_SavedArticles_Users">
           <End Role="Users" Type="Self.Users" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
@@ -194,34 +203,6 @@
               <PropertyRef Name="UserId" />
             </Principal>
             <Dependent Role="SavedArticles">
-              <PropertyRef Name="UserId" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_VH_Articles">
-          <End Role="Articles" Type="Self.Articles" Multiplicity="1">
-            <OnDelete Action="Cascade" />
-          </End>
-          <End Role="ArticleViewHistory" Type="Self.ArticleViewHistory" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Articles">
-              <PropertyRef Name="ArticleID" />
-            </Principal>
-            <Dependent Role="ArticleViewHistory">
-              <PropertyRef Name="ArticleID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_VH_Users">
-          <End Role="Users" Type="Self.Users" Multiplicity="1">
-            <OnDelete Action="Cascade" />
-          </End>
-          <End Role="ArticleViewHistory" Type="Self.ArticleViewHistory" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Users">
-              <PropertyRef Name="UserId" />
-            </Principal>
-            <Dependent Role="ArticleViewHistory">
               <PropertyRef Name="UserId" />
             </Dependent>
           </ReferentialConstraint>
@@ -234,7 +215,6 @@
           <EntitySet Name="Categories" EntityType="Self.Categories" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Comments" EntityType="Self.Comments" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SavedArticles" EntityType="Self.SavedArticles" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="sysdiagrams" EntityType="Self.sysdiagrams" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_ArticleRatings_Articles" Association="Self.FK_ArticleRatings_Articles">
             <End Role="Articles" EntitySet="Articles" />
@@ -248,29 +228,25 @@
             <End Role="Categories" EntitySet="Categories" />
             <End Role="Articles" EntitySet="Articles" />
           </AssociationSet>
+          <AssociationSet Name="FK_ArticleViewHistory_Articles" Association="Self.FK_ArticleViewHistory_Articles">
+            <End Role="Articles" EntitySet="Articles" />
+            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ArticleViewHistory_Users" Association="Self.FK_ArticleViewHistory_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
+          </AssociationSet>
           <AssociationSet Name="FK_Comments_Articles" Association="Self.FK_Comments_Articles">
             <End Role="Articles" EntitySet="Articles" />
             <End Role="Comments" EntitySet="Comments" />
           </AssociationSet>
-          <AssociationSet Name="FK_Comments_Users" Association="Self.FK_Comments_Users">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="Comments" EntitySet="Comments" />
-          </AssociationSet>
-          <AssociationSet Name="FK_Saved_Articles" Association="Self.FK_Saved_Articles">
+          <AssociationSet Name="FK_SavedArticles_Articles" Association="Self.FK_SavedArticles_Articles">
             <End Role="Articles" EntitySet="Articles" />
             <End Role="SavedArticles" EntitySet="SavedArticles" />
           </AssociationSet>
-          <AssociationSet Name="FK_Saved_Users" Association="Self.FK_Saved_Users">
+          <AssociationSet Name="FK_SavedArticles_Users" Association="Self.FK_SavedArticles_Users">
             <End Role="Users" EntitySet="Users" />
             <End Role="SavedArticles" EntitySet="SavedArticles" />
-          </AssociationSet>
-          <AssociationSet Name="FK_VH_Articles" Association="Self.FK_VH_Articles">
-            <End Role="Articles" EntitySet="Articles" />
-            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
-          </AssociationSet>
-          <AssociationSet Name="FK_VH_Users" Association="Self.FK_VH_Users">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
           </AssociationSet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
@@ -302,25 +278,24 @@
           </AssociationSet>
           <EntitySet Name="ArticleViewHistory" EntityType="NewsPortalDBModel.ArticleViewHistory" />
           <EntitySet Name="SavedArticles" EntityType="NewsPortalDBModel.SavedArticles" />
-          <EntitySet Name="sysdiagrams" EntityType="NewsPortalDBModel.sysdiagrams" />
-          <AssociationSet Name="FK_Saved_Articles" Association="NewsPortalDBModel.FK_Saved_Articles">
-            <End Role="Articles" EntitySet="Articles" />
-            <End Role="SavedArticles" EntitySet="SavedArticles" />
-          </AssociationSet>
-          <AssociationSet Name="FK_VH_Articles" Association="NewsPortalDBModel.FK_VH_Articles">
-            <End Role="Articles" EntitySet="Articles" />
-            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
-          </AssociationSet>
-          <AssociationSet Name="FK_VH_Users" Association="NewsPortalDBModel.FK_VH_Users">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
-          </AssociationSet>
           <AssociationSet Name="FK_Comments_Users" Association="NewsPortalDBModel.FK_Comments_Users">
             <End Role="Users" EntitySet="Users" />
             <End Role="Comments" EntitySet="Comments" />
           </AssociationSet>
           <AssociationSet Name="FK_Saved_Users" Association="NewsPortalDBModel.FK_Saved_Users">
             <End Role="Users" EntitySet="Users" />
+            <End Role="SavedArticles" EntitySet="SavedArticles" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ArticleViewHistory_Articles" Association="NewsPortalDBModel.FK_ArticleViewHistory_Articles">
+            <End Role="Articles" EntitySet="Articles" />
+            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ArticleViewHistory_Users" Association="NewsPortalDBModel.FK_ArticleViewHistory_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="ArticleViewHistory" EntitySet="ArticleViewHistory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_SavedArticles_Articles" Association="NewsPortalDBModel.FK_SavedArticles_Articles">
+            <End Role="Articles" EntitySet="Articles" />
             <End Role="SavedArticles" EntitySet="SavedArticles" />
           </AssociationSet>
         </EntityContainer>
@@ -343,9 +318,11 @@
           <Property Name="ImageUrl" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
           <Property Name="ViewCount" Type="Int32" Nullable="false" />
           <NavigationProperty Name="ArticleRatings" Relationship="NewsPortalDBModel.FK_ArticleRatings_Articles" FromRole="Articles" ToRole="ArticleRatings" />
-          <NavigationProperty Name="SavedArticles" Relationship="NewsPortalDBModel.FK_Saved_Articles" FromRole="Articles" ToRole="SavedArticles" />
-          <NavigationProperty Name="ArticleViewHistory" Relationship="NewsPortalDBModel.FK_VH_Articles" FromRole="Articles" ToRole="ArticleViewHistory" />
-          <Property Name="Image" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="Images" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="UserId" Type="Int32" />
+          <Property Name="Image" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="ArticleViewHistory" Relationship="NewsPortalDBModel.FK_ArticleViewHistory_Articles" FromRole="Articles" ToRole="ArticleViewHistory" />
+          <NavigationProperty Name="SavedArticles" Relationship="NewsPortalDBModel.FK_SavedArticles_Articles" FromRole="Articles" ToRole="SavedArticles" />
         </EntityType>
         <EntityType Name="Author">
           <Key>
@@ -417,11 +394,11 @@
           <Property Name="IsActive" Type="Boolean" Nullable="false" />
           <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="7" />
           <Property Name="BirthDate" Type="DateTime" Precision="0" />
-          <Property Name="Gender" Type="String" MaxLength="10" FixedLength="false" Unicode="true" />
-          <Property Name="Phone" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
-          <Property Name="Address" Type="String" MaxLength="300" FixedLength="false" Unicode="true" />
-          <Property Name="AvatarUrl" Type="String" MaxLength="300" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="ArticleViewHistory" Relationship="NewsPortalDBModel.FK_VH_Users" FromRole="Users" ToRole="ArticleViewHistory" />
+          <Property Name="Gender" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Phone" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="Address" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="AvatarUrl" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="ArticleViewHistory" Relationship="NewsPortalDBModel.FK_ArticleViewHistory_Users" FromRole="Users" ToRole="ArticleViewHistory" />
           <NavigationProperty Name="Comments" Relationship="NewsPortalDBModel.FK_Comments_Users" FromRole="Users" ToRole="Comments" />
           <NavigationProperty Name="SavedArticles" Relationship="NewsPortalDBModel.FK_Saved_Users" FromRole="Users" ToRole="SavedArticles" />
         </EntityType>
@@ -466,65 +443,39 @@
         </Association>
         <EntityType Name="ArticleViewHistory">
           <Key>
-            <PropertyRef Name="HistoryID" />
+            <PropertyRef Name="Id" />
           </Key>
-          <Property Name="HistoryID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="UserId" Type="Int32" Nullable="false" />
-          <Property Name="ArticleID" Type="Int32" Nullable="false" />
-          <Property Name="LastViewedAt" Type="DateTime" Nullable="false" Precision="3" />
-          <NavigationProperty Name="Articles" Relationship="NewsPortalDBModel.FK_VH_Articles" FromRole="ArticleViewHistory" ToRole="Articles" />
-          <NavigationProperty Name="Users" Relationship="NewsPortalDBModel.FK_VH_Users" FromRole="ArticleViewHistory" ToRole="Users" />
+          <Property Name="ArticleId" Type="Int32" Nullable="false" />
+          <Property Name="ViewedDate" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Articles" Relationship="NewsPortalDBModel.FK_ArticleViewHistory_Articles" FromRole="ArticleViewHistory" ToRole="Articles" />
+          <NavigationProperty Name="Users" Relationship="NewsPortalDBModel.FK_ArticleViewHistory_Users" FromRole="ArticleViewHistory" ToRole="Users" />
         </EntityType>
         <EntityType Name="SavedArticles">
           <Key>
-            <PropertyRef Name="SavedID" />
+            <PropertyRef Name="Id" />
           </Key>
-          <Property Name="SavedID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="UserId" Type="Int32" Nullable="false" />
-          <Property Name="ArticleID" Type="Int32" Nullable="false" />
-          <Property Name="SavedAt" Type="DateTime" Nullable="false" Precision="3" />
-          <NavigationProperty Name="Articles" Relationship="NewsPortalDBModel.FK_Saved_Articles" FromRole="SavedArticles" ToRole="Articles" />
+          <Property Name="ArticleId" Type="Int32" Nullable="false" />
+          <Property Name="SavedDate" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Articles" Relationship="NewsPortalDBModel.FK_SavedArticles_Articles" FromRole="SavedArticles" ToRole="Articles" />
           <NavigationProperty Name="Users" Relationship="NewsPortalDBModel.FK_Saved_Users" FromRole="SavedArticles" ToRole="Users" />
         </EntityType>
-        <EntityType Name="sysdiagrams">
-          <Key>
-            <PropertyRef Name="diagram_id" />
-          </Key>
-          <Property Name="name" Type="String" Nullable="false" MaxLength="128" FixedLength="false" Unicode="true" />
-          <Property Name="principal_id" Type="Int32" Nullable="false" />
-          <Property Name="diagram_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="version" Type="Int32" />
-          <Property Name="definition" Type="Binary" MaxLength="Max" FixedLength="false" />
-        </EntityType>
-        <Association Name="FK_Saved_Articles">
-          <End Type="NewsPortalDBModel.Articles" Role="Articles" Multiplicity="1">
-            <OnDelete Action="Cascade" />
-          </End>
-          <End Type="NewsPortalDBModel.SavedArticles" Role="SavedArticles" Multiplicity="*" />
+        <Association Name="FK_Comments_Users">
+          <End Type="NewsPortalDBModel.Users" Role="Users" Multiplicity="0..1" />
+          <End Type="NewsPortalDBModel.Comments" Role="Comments" Multiplicity="*" />
           <ReferentialConstraint>
-            <Principal Role="Articles">
-              <PropertyRef Name="ArticleID" />
+            <Principal Role="Users">
+              <PropertyRef Name="UserId" />
             </Principal>
-            <Dependent Role="SavedArticles">
-              <PropertyRef Name="ArticleID" />
+            <Dependent Role="Comments">
+              <PropertyRef Name="UserId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_VH_Articles">
-          <End Type="NewsPortalDBModel.Articles" Role="Articles" Multiplicity="1">
-            <OnDelete Action="Cascade" />
-          </End>
-          <End Type="NewsPortalDBModel.ArticleViewHistory" Role="ArticleViewHistory" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Articles">
-              <PropertyRef Name="ArticleID" />
-            </Principal>
-            <Dependent Role="ArticleViewHistory">
-              <PropertyRef Name="ArticleID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_VH_Users">
+        <Association Name="FK_ArticleViewHistory_Users">
           <End Type="NewsPortalDBModel.Users" Role="Users" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
@@ -534,18 +485,6 @@
               <PropertyRef Name="UserId" />
             </Principal>
             <Dependent Role="ArticleViewHistory">
-              <PropertyRef Name="UserId" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_Comments_Users">
-          <End Type="NewsPortalDBModel.Users" Role="Users" Multiplicity="0..1" />
-          <End Type="NewsPortalDBModel.Comments" Role="Comments" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Users">
-              <PropertyRef Name="UserId" />
-            </Principal>
-            <Dependent Role="Comments">
               <PropertyRef Name="UserId" />
             </Dependent>
           </ReferentialConstraint>
@@ -564,6 +503,34 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_ArticleViewHistory_Articles">
+          <End Type="NewsPortalDBModel.Articles" Role="Articles" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NewsPortalDBModel.ArticleViewHistory" Role="ArticleViewHistory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Articles">
+              <PropertyRef Name="ArticleID" />
+            </Principal>
+            <Dependent Role="ArticleViewHistory">
+              <PropertyRef Name="ArticleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_SavedArticles_Articles">
+          <End Type="NewsPortalDBModel.Articles" Role="Articles" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NewsPortalDBModel.SavedArticles" Role="SavedArticles" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Articles">
+              <PropertyRef Name="ArticleID" />
+            </Principal>
+            <Dependent Role="SavedArticles">
+              <PropertyRef Name="ArticleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -573,6 +540,9 @@
           <EntitySetMapping Name="Articles">
             <EntityTypeMapping TypeName="NewsPortalDBModel.Articles">
               <MappingFragment StoreEntitySet="Articles">
+                <ScalarProperty Name="Image" ColumnName="Image" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Images" ColumnName="Images" />
                 <ScalarProperty Name="ViewCount" ColumnName="ViewCount" />
                 <ScalarProperty Name="ImageUrl" ColumnName="ImageUrl" />
                 <ScalarProperty Name="Status" ColumnName="Status" />
@@ -652,31 +622,20 @@
           <EntitySetMapping Name="ArticleViewHistory">
             <EntityTypeMapping TypeName="NewsPortalDBModel.ArticleViewHistory">
               <MappingFragment StoreEntitySet="ArticleViewHistory">
-                <ScalarProperty Name="LastViewedAt" ColumnName="LastViewedAt" />
-                <ScalarProperty Name="ArticleID" ColumnName="ArticleID" />
+                <ScalarProperty Name="ViewedDate" ColumnName="ViewedDate" />
+                <ScalarProperty Name="ArticleId" ColumnName="ArticleId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="UserId" ColumnName="UserId" />
-                <ScalarProperty Name="HistoryID" ColumnName="HistoryID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="SavedArticles">
             <EntityTypeMapping TypeName="NewsPortalDBModel.SavedArticles">
               <MappingFragment StoreEntitySet="SavedArticles">
-                <ScalarProperty Name="SavedAt" ColumnName="SavedAt" />
-                <ScalarProperty Name="ArticleID" ColumnName="ArticleID" />
+                <ScalarProperty Name="SavedDate" ColumnName="SavedDate" />
+                <ScalarProperty Name="ArticleId" ColumnName="ArticleId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="UserId" ColumnName="UserId" />
-                <ScalarProperty Name="SavedID" ColumnName="SavedID" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="sysdiagrams">
-            <EntityTypeMapping TypeName="NewsPortalDBModel.sysdiagrams">
-              <MappingFragment StoreEntitySet="sysdiagrams">
-                <ScalarProperty Name="definition" ColumnName="definition" />
-                <ScalarProperty Name="version" ColumnName="version" />
-                <ScalarProperty Name="diagram_id" ColumnName="diagram_id" />
-                <ScalarProperty Name="principal_id" ColumnName="principal_id" />
-                <ScalarProperty Name="name" ColumnName="name" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
