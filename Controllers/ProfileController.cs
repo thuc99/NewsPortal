@@ -282,15 +282,15 @@ namespace NewsPortal.Controllers
             int uid = u.UserId;
             var list = db.SavedArticles
                 .Where(s => s.UserId == uid)
-                .OrderByDescending(s => s.SavedAt)
+                .OrderByDescending(s => s.SavedDate)
                 .Select(s => new SavedArticleItemViewModel
                 {
-                    SavedId = s.SavedID,
-                    ArticleId = s.ArticleID,
-                    Title = s.Articles != null ? s.Articles.Title : ("Bài viết #" + s.ArticleID),
+                    SavedId = s.Id,
+                    ArticleId = s.ArticleId,
+                    Title = s.Articles != null ? s.Articles.Title : ("Bài viết #" + s.ArticleId),
                     Summary = s.Articles != null ? s.Articles.Summary : "",
                     ImageUrl = s.Articles != null ? s.Articles.ImageUrl : null,
-                    SavedAt = s.SavedAt
+                    SavedAt = s.SavedDate
                 })
                 .ToList();
 
@@ -305,7 +305,7 @@ namespace NewsPortal.Controllers
             if (u == null) return HttpNotFound();
 
             int uid = u.UserId;
-            var item = db.SavedArticles.FirstOrDefault(s => s.UserId == uid && s.ArticleID == articleId);
+            var item = db.SavedArticles.FirstOrDefault(s => s.UserId == uid && s.ArticleId == articleId);
             if (item != null)
             {
                 db.SavedArticles.Remove(item);
@@ -323,7 +323,7 @@ namespace NewsPortal.Controllers
             if (u == null) return HttpNotFound();
 
             int uid = u.UserId;
-            var existing = db.SavedArticles.FirstOrDefault(s => s.UserId == uid && s.ArticleID == articleId);
+            var existing = db.SavedArticles.FirstOrDefault(s => s.UserId == uid && s.ArticleId == articleId);
             if (existing != null)
             {
                 db.SavedArticles.Remove(existing);
@@ -334,8 +334,8 @@ namespace NewsPortal.Controllers
                 db.SavedArticles.Add(new SavedArticles
                 {
                     UserId = uid,
-                    ArticleID = articleId,
-                    SavedAt = DateTime.Now
+                    ArticleId = articleId,
+                    SavedDate = DateTime.Now
                 });
                 TempData["Success"] = "Đã lưu bài viết vào Tin đã lưu.";
             }
@@ -356,15 +356,15 @@ namespace NewsPortal.Controllers
             int uid = u.UserId;
             var list = db.ArticleViewHistory
                 .Where(h => h.UserId == uid)
-                .OrderByDescending(h => h.LastViewedAt)
+                .OrderByDescending(h => h.ViewedDate)
                 .Select(h => new ViewedArticleItemViewModel
                 {
-                    HistoryId = h.HistoryID,
-                    ArticleId = h.ArticleID,
-                    Title = h.Articles != null ? h.Articles.Title : ("Bài viết #" + h.ArticleID),
+                    HistoryId = h.Id,
+                    ArticleId = h.ArticleId,
+                    Title = h.Articles != null ? h.Articles.Title : ("Bài viết #" + h.ArticleId),
                     Summary = h.Articles != null ? h.Articles.Summary : "",
                     ImageUrl = h.Articles != null ? h.Articles.ImageUrl : null,
-                    ViewedAt = h.LastViewedAt
+                    ViewedAt = h.ViewedDate
                 })
                 .ToList();
 

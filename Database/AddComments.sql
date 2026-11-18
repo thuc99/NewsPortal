@@ -8,6 +8,9 @@ BEGIN
 		Content NVARCHAR(1000) NOT NULL,
 		CreatedDate DATETIME NOT NULL
 			CONSTRAINT DF_Comments_CreatedDate DEFAULT (GETDATE()),
+		UserId INT NULL,
+		Status NVARCHAR(20) NOT NULL
+			CONSTRAINT DF_Comments_Status DEFAULT (N'Pending'),
 
 		CONSTRAINT PK_Comments PRIMARY KEY (CommentID),
 		CONSTRAINT FK_Comments_Articles
@@ -23,6 +26,20 @@ BEGIN
 
 	CREATE INDEX IX_Comments_ArticleID_CreatedDate
 		ON dbo.Comments (ArticleID, CreatedDate DESC);
+END
+
+IF COL_LENGTH(N'dbo.Comments', N'UserId') IS NULL
+BEGIN
+	ALTER TABLE dbo.Comments ADD UserId INT NULL;
+END
+
+IF COL_LENGTH(N'dbo.Comments', N'Status') IS NULL
+BEGIN
+	ALTER TABLE dbo.Comments
+		ADD Status NVARCHAR(20) NOT NULL
+			CONSTRAINT DF_Comments_Status DEFAULT (N'Pending') WITH VALUES;
+
+	UPDATE dbo.Comments SET Status = N'Approved';
 END
 GO
 

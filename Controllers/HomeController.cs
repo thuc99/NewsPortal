@@ -160,7 +160,8 @@ namespace NewsPortal.Controllers
                 ArticleID = articleId,
                 CommenterName = commenterName,
                 Content = content,
-                CreatedDate = DateTime.Now
+                CreatedDate = DateTime.Now,
+                Status = "Pending"
             });
 
             db.SaveChanges();

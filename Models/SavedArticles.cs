@@ -14,10 +14,10 @@ namespace NewsPortal.Models
     
     public partial class SavedArticles
     {
-        public int SavedID { get; set; }
+        public int Id { get; set; }
         public int UserId { get; set; }
-        public int ArticleID { get; set; }
-        public System.DateTime SavedAt { get; set; }
+        public int ArticleId { get; set; }
+        public Nullable<System.DateTime> SavedDate { get; set; }
     
         public virtual Articles Articles { get; set; }
         public virtual Users Users { get; set; }

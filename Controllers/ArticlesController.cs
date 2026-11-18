@@ -394,23 +394,23 @@ END";
                 var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
                 if (viewer != null)
                 {
-                    var history = db.ArticleViewHistory.FirstOrDefault(h => h.UserId == viewer.UserId && h.ArticleID == artId);
+                    var history = db.ArticleViewHistory.FirstOrDefault(h => h.UserId == viewer.UserId && h.ArticleId == artId);
                     if (history != null)
                     {
-                        history.LastViewedAt = DateTime.Now;
+                        history.ViewedDate = DateTime.Now;
                     }
                     else
                     {
                         db.ArticleViewHistory.Add(new ArticleViewHistory
                         {
                             UserId = viewer.UserId,
-                            ArticleID = artId,
-                            LastViewedAt = DateTime.Now
+                            ArticleId = artId,
+                            ViewedDate = DateTime.Now
                         });
                     }
                     db.SaveChanges();
 
-                    ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleID == artId);
+                    ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
                 }
             }
         }
@@ -536,11 +536,12 @@ END";
                 UserId = viewer != null ? (int?)viewer.UserId : null,
                 CommenterName = commenterName,
                 Content = content,
-                CreatedDate = DateTime.Now
+                CreatedDate = DateTime.Now,
+                Status = "Pending"
             });
             db.SaveChanges();
 
-            TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được gửi và đang chờ Admin phê duyệt.";
             return RedirectToAction("View", new { id = articleId.Value });
         }
 
@@ -610,7 +611,7 @@ END";
                 var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
                 if (viewer != null)
                 {
-                    var existing = db.SavedArticles.FirstOrDefault(s => s.UserId == viewer.UserId && s.ArticleID == artId);
+                    var existing = db.SavedArticles.FirstOrDefault(s => s.UserId == viewer.UserId && s.ArticleId == artId);
                     if (existing != null)
                     {
                         db.SavedArticles.Remove(existing);
@@ -621,8 +622,8 @@ END";
                         db.SavedArticles.Add(new SavedArticles
                         {
                             UserId = viewer.UserId,
-                            ArticleID = artId,
-                            SavedAt = DateTime.Now
+                            ArticleId = artId,
+                            SavedDate = DateTime.Now
                         });
                         TempData["FavoriteMessage"] = "Đã lưu bài viết vào Tin đã lưu.";
                     }
@@ -678,7 +679,17 @@ END";
 
             ViewBag.IsAdminManagement = true;
             ViewBag.IsAdminUser = IsAdminUser();
+            PopulateCreateCategories(null);
             return View(new Article());
+        }
+
+        private void PopulateCreateCategories(int? selectedCategoryId)
+        {
+            ViewBag.CategoryId = new SelectList(
+                db.Categories.OrderBy(c => c.CategoryName).ToList(),
+                "CategoryID",
+                "CategoryName",
+                selectedCategoryId);
         }
 
         [HttpPost]
@@ -700,16 +711,24 @@ END";
                 article.Content = SanitizeArticleContent(article.Content);
             }
 
+            PopulateCreateCategories(article == null ? null : article.CategoryId);
             ValidateArticleInput(article, imageFile, false, true);
 
             if (!ModelState.IsValid)
                 return View(article);
 
-            var category = db.Categories.OrderBy(c => c.CategoryID).FirstOrDefault();
+            var category = db.Categories.FirstOrDefault(c => c.CategoryID == article.CategoryId.Value);
             var author = db.Authors.OrderBy(a => a.AuthorID).FirstOrDefault();
-            if (category == null || author == null)
+            if (category == null)
             {
-                ModelState.AddModelError("", "Cần có danh mục và tác giả trước khi thêm bài viết.");
+                ModelState.AddModelError("CategoryId", "Danh mục đã chọn không tồn tại.");
+                PopulateCreateCategories(article.CategoryId);
+                return View(article);
+            }
+
+            if (author == null)
+            {
+                ModelState.AddModelError("", "Cần có tác giả trước khi thêm bài viết.");
                 return View(article);
             }
 

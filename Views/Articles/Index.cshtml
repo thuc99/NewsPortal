@@ -667,12 +667,6 @@
                 {
                     foreach (var item in Model)
                     {
-                        var excerpt = (item.Content ?? string.Empty).Trim();
-                        if (excerpt.Length > 180)
-                        {
-                            excerpt = excerpt.Substring(0, 180).TrimEnd() + "…";
-                        }
-
                         string imgSrc = null;
                         if (!string.IsNullOrWhiteSpace(item.Image))
                         {
@@ -729,9 +723,9 @@
 
                             <td class="article-title">
                                 <a href="@(isAdminManagement ? Url.RouteUrl("AdminArticles", new { action = "Details", id = item.Id }) : Url.Action("View", "Articles", new { id = item.Id }))">@item.Title</a>
-                                @if (!string.IsNullOrWhiteSpace(excerpt))
+                                @if (!string.IsNullOrWhiteSpace(item.PlainSummary))
                                 {
-                                    <p class="article-excerpt">@excerpt</p>
+                                    <div class="article-excerpt">@item.PlainSummary</div>
                                 }
                             </td>
 
