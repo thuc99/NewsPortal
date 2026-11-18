@@ -658,6 +658,46 @@ END";
         public ActionResult Favorites()
         {
             var favoriteIds = GetFavoriteIds();
+            string currentUsername = (Session["User"] ?? Session["Admin"]) as string;
+
+            if (!string.IsNullOrEmpty(currentUsername))
+            {
+                var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
+                if (viewer != null)
+                {
+                    // Gộp các bài lưu tạm trong Cookie vào bảng SavedArticles (SQL) nếu chưa có
+                    bool hasNew = false;
+                    foreach (var artId in favoriteIds)
+                    {
+                        bool exists = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
+                        if (!exists && db.Articles.Any(a => a.ArticleID == artId && a.Status == "Published"))
+                        {
+                            db.SavedArticles.Add(new SavedArticles
+                            {
+                                UserId = viewer.UserId,
+                                ArticleId = artId,
+                                SavedDate = DateTime.Now
+                            });
+                            hasNew = true;
+                        }
+                    }
+                    if (hasNew) db.SaveChanges();
+
+                    // Lấy toàn bộ bài đã lưu từ SQL và cập nhật ngược lại vào Cookie cho khớp
+                    favoriteIds = db.SavedArticles
+                        .Where(s => s.UserId == viewer.UserId)
+                        .OrderByDescending(s => s.SavedDate)
+                        .Select(s => s.ArticleId)
+                        .ToList();
+
+                    Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", favoriteIds))
+                    {
+                        Expires = DateTime.Now.AddYears(1),
+                        HttpOnly = true
+                    });
+                }
+            }
+
             var articles = db.Articles
                 .Include(a => a.Categories)
                 .Where(a => favoriteIds.Contains(a.ArticleID) && a.Status == "Published")
