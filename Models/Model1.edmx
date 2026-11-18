@@ -28,8 +28,7 @@
           <Property Name="CreatedDate" Type="datetime" Nullable="false" />
           <Property Name="UpdatedDate" Type="datetime" />
           <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
-          <Property Name="Image" Type="nvarchar" MaxLength="500" />
-          <Property Name="ImageUrl" Type="nvarchar" MaxLength="500" />
+          <Property Name="ImageUrl" Type="nvarchar" MaxLength="1000" />
           <Property Name="ViewCount" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="ArticleViewHistory">
@@ -341,7 +340,7 @@
           <NavigationProperty Name="Authors" Relationship="NewsPortalDBModel.FK_Articles_Authors" FromRole="Articles" ToRole="Authors" />
           <NavigationProperty Name="Categories" Relationship="NewsPortalDBModel.FK_Articles_Categories" FromRole="Articles" ToRole="Categories" />
           <NavigationProperty Name="Comments" Relationship="NewsPortalDBModel.FK_Comments_Articles" FromRole="Articles" ToRole="Comments" />
-          <Property Name="ImageUrl" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="ImageUrl" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
           <Property Name="ViewCount" Type="Int32" Nullable="false" />
           <NavigationProperty Name="ArticleRatings" Relationship="NewsPortalDBModel.FK_ArticleRatings_Articles" FromRole="Articles" ToRole="ArticleRatings" />
           <NavigationProperty Name="SavedArticles" Relationship="NewsPortalDBModel.FK_Saved_Articles" FromRole="Articles" ToRole="SavedArticles" />
@@ -574,7 +573,6 @@
           <EntitySetMapping Name="Articles">
             <EntityTypeMapping TypeName="NewsPortalDBModel.Articles">
               <MappingFragment StoreEntitySet="Articles">
-                <ScalarProperty Name="Image" ColumnName="Image" />
                 <ScalarProperty Name="ViewCount" ColumnName="ViewCount" />
                 <ScalarProperty Name="ImageUrl" ColumnName="ImageUrl" />
                 <ScalarProperty Name="Status" ColumnName="Status" />
