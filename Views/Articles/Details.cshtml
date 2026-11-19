@@ -603,22 +603,14 @@
     @if (ViewBag.CanManageArticles == true)
     {
         <div class="view-actions">
-            @Html.RouteLink("Chỉnh sửa bài viết", "AdminArticles",
-                new { action = "Edit", id = Model.Id },
-                new { @class = "btn-detail btn-edit-article" })
-
-            @Html.RouteLink("Xóa bài viết", "AdminArticles",
-                new { action = "Delete", id = Model.Id },
-                new { @class = "btn-detail btn-delete-article" })
-
             @Html.RouteLink("Quay lại danh sách", "AdminArticles",
                 new { action = "Index" },
                 new { @class = "btn-detail btn-back" })
         </div>
     }
 
-<section class="comments-card">
-    <h3 class="comments-title">Bình luận (@comments.Count())</h3>
+ <section class="comments-card">
+     <h3 class="comments-title">Bình luận (@comments.Count())</h3>
 
     @if (ViewBag.CanComment == true)
     {

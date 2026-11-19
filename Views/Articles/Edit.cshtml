@@ -420,6 +420,14 @@
                 hoặc lưu tạm về bản nháp.
             </div>
         }
+        else if (!isAdminUser && (Model.Status == "Published" || Model.Status == "Archived"))
+        {
+            <div class="pending-banner">
+                <strong>Bạn có thể chỉnh sửa bài viết này.</strong>
+                Khi gửi nội dung chỉnh sửa, bài sẽ chuyển sang chờ Admin duyệt;
+                chọn lưu bản nháp nếu chưa muốn gửi.
+            </div>
+        }
 
         <form id="editArticleForm"
               action="@Url.RouteUrl("AdminArticles", new { action = "Edit" })"
