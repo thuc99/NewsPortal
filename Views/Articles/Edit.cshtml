@@ -4,6 +4,7 @@
 @{
     ViewBag.Title = "Chỉnh sửa bài viết";
     bool isAdminUser = ViewBag.IsAdminUser == true;
+    string rejectionReason = ViewBag.RejectionReason as string ?? "";
 
     string currentImageSrc = null;
 
@@ -184,10 +185,10 @@
         line-height: 1.7;
     }
 
-    .ck.ck-editor__main > .ck-editor__editable:focus {
-        border-color: #dc2626 !important;
-        box-shadow: 0 0 0 3px rgba(220,38,38,.08) !important;
-    }
+        .ck.ck-editor__main > .ck-editor__editable:focus {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 3px rgba(220,38,38,.08) !important;
+        }
 
     /* Bộ đếm ký tự */
     .title-counter {
@@ -408,8 +409,16 @@
         {
             <div class="rejected-banner">
                 <strong>Bài viết này đã bị Admin từ chối (Rejected).</strong>
-                Vui lòng chỉnh sửa lại nội dung rồi bấm
-                <strong>Gửi duyệt lại</strong> để chuyển về hàng đợi chờ Admin duyệt.
+                @if (!string.IsNullOrWhiteSpace(rejectionReason))
+                {
+                    <div style="margin-top:6px;">
+                        <strong>Lý do từ chối:</strong> @rejectionReason
+                    </div>
+                }
+                <div style="margin-top:6px;">
+                    Vui lòng chỉnh sửa lại nội dung rồi bấm
+                    <strong>Gửi duyệt lại</strong> để chuyển về hàng đợi chờ Admin duyệt.
+                </div>
             </div>
         }
         else if (!isAdminUser && Model.Status == "Pending")
@@ -506,6 +515,15 @@
                     @Html.DropDownListFor(
                              m => m.Status,
                              new SelectList(statusItems, "Value", "Text", Model.Status))
+                </div>
+
+                <div class="field" id="rejectionReasonField" style="@(Model.Status == "Rejected" ? "" : "display:none;")">
+                    <label for="rejectionReason">Lý do từ chối <span style="color:#b91c1c;">*</span></label>
+                    <textarea id="rejectionReason"
+                              name="rejectionReason"
+                              maxlength="500"
+                              style="min-height:100px;"
+                              placeholder="Nhập lý do từ chối để người viết biết cần chỉnh sửa nội dung gì...">@rejectionReason</textarea>
                 </div>
             }
             else
@@ -792,11 +810,36 @@
             });
         }
 
+        // Hiển thị ô nhập lý do từ chối khi Admin chọn trạng thái Rejected.
+        const statusSelect = document.getElementById("Status");
+        const rejectionReasonField = document.getElementById("rejectionReasonField");
+        const rejectionReasonInput = document.getElementById("rejectionReason");
+
+        function toggleRejectionReasonField() {
+            if (!statusSelect || !rejectionReasonField) return;
+            const isRejected = statusSelect.value === "Rejected";
+            rejectionReasonField.style.display = isRejected ? "" : "none";
+            if (rejectionReasonInput) {
+                rejectionReasonInput.required = isRejected;
+            }
+        }
+
+        if (statusSelect && rejectionReasonField) {
+            statusSelect.addEventListener("change", toggleRejectionReasonField);
+            toggleRejectionReasonField();
+        }
+
         // Đồng bộ nội dung CKEditor vào textarea trước khi gửi form.
         if (form) {
-            form.addEventListener("submit", function () {
+            form.addEventListener("submit", function (e) {
+                if (statusSelect && statusSelect.value === "Rejected" && rejectionReasonInput && !rejectionReasonInput.value.trim()) {
+                    e.preventDefault();
+                    alert("Vui lòng nhập lý do từ chối để người viết biết cần sửa gì.");
+                    rejectionReasonInput.focus();
+                    return;
+                }
                 if (articleEditor) {
-                    articleEditor.updateSourceElement();0
+                    articleEditor.updateSourceElement();
                 }
             });
         }

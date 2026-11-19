@@ -76,10 +76,57 @@ BEGIN
     ALTER TABLE dbo.Articles WITH CHECK
     ADD CONSTRAINT [CK_Articles_Status_Workflow]
     CHECK ([Status] IN (N'Draft', N'Pending', N'Published', N'Rejected', N'Archived'));
+
+    IF COL_LENGTH(N'dbo.Articles', N'RejectionReason') IS NULL
+    BEGIN
+        ALTER TABLE dbo.Articles ADD [RejectionReason] NVARCHAR(500) NULL;
+    END
 END";
                 db.Database.ExecuteSqlCommand(sql);
                 _statusConstraintChecked = true;
             }
+        }
+
+        private class ArticleRejectionRow
+        {
+            public int ArticleID { get; set; }
+            public string RejectionReason { get; set; }
+        }
+
+        private string GetRejectionReason(int articleId)
+        {
+            return db.Database.SqlQuery<string>(
+                "SELECT RejectionReason FROM dbo.Articles WHERE ArticleID = @p0",
+                articleId).FirstOrDefault();
+        }
+
+        private void SetRejectionReason(int articleId, string reason)
+        {
+            object param = string.IsNullOrWhiteSpace(reason) ? (object)DBNull.Value : reason.Trim();
+            db.Database.ExecuteSqlCommand(
+                "UPDATE dbo.Articles SET RejectionReason = @p0 WHERE ArticleID = @p1",
+                param,
+                articleId);
+        }
+
+        private Dictionary<int, string> GetRejectionReasons(IEnumerable<int> articleIds)
+        {
+            var result = new Dictionary<int, string>();
+            var idList = articleIds == null ? new List<int>() : articleIds.Distinct().ToList();
+            if (idList.Count == 0)
+                return result;
+
+            string inClause = string.Join(",", idList);
+            var rows = db.Database.SqlQuery<ArticleRejectionRow>(
+                "SELECT ArticleID, RejectionReason FROM dbo.Articles WHERE ArticleID IN (" + inClause + ") AND RejectionReason IS NOT NULL AND LTRIM(RTRIM(RejectionReason)) <> N''"
+            ).ToList();
+
+            foreach (var row in rows)
+            {
+                result[row.ArticleID] = row.RejectionReason;
+            }
+
+            return result;
         }
 
         private bool IsAdminUser()
@@ -395,6 +442,9 @@ END";
             ViewBag.CanManageArticles = canManageArticles;
             ViewBag.IsAdminManagement = isAdminManagementRequest;
             ViewBag.IsAdminUser = isAdminUser;
+            ViewBag.RejectionReasons = canManageArticles
+                ? GetRejectionReasons(articles.Select(a => a.Id))
+                : new Dictionary<int, string>();
 
             if (!string.IsNullOrWhiteSpace(searchString) && totalArticles == 0)
             {
@@ -574,11 +624,11 @@ END";
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Pending"
+                Status = "Approved"
             });
             db.SaveChanges();
 
-            TempData["CommentSuccess"] = "Bình luận của bạn đã được gửi và đang chờ Admin phê duyệt.";
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
             return RedirectToAction("View", new { id = articleId.Value });
         }
 
@@ -1061,13 +1111,14 @@ END";
                 return RedirectToArticleManagement();
             }
 
+            ViewBag.RejectionReason = GetRejectionReason(article.ArticleID);
             return View(ToArticleViewModel(article));
         }
 
         [HttpPost]
         [ValidateInput(false)]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Article article, HttpPostedFileBase imageFile, string submitAction, string returnUrl = null)
+        public ActionResult Edit(Article article, HttpPostedFileBase imageFile, string submitAction, string returnUrl = null, string rejectionReason = "")
         {
             EnsureWorkflowStatusConstraint();
 
@@ -1086,6 +1137,10 @@ END";
                 return RedirectToArticleManagement();
             }
 
+            rejectionReason = (rejectionReason ?? string.Empty).Trim();
+            if (rejectionReason.Length > 500)
+                rejectionReason = rejectionReason.Substring(0, 500);
+
             if (article != null)
             {
                 article.Content = SanitizeArticleContent(article.Content);
@@ -1100,6 +1155,20 @@ END";
 
             ValidateArticleInput(article, imageFile, isAdmin);
 
+            string targetAdminStatus = existing.Status;
+            if (isAdmin)
+            {
+                if (!string.IsNullOrWhiteSpace(submitAction) && ValidStatuses.Contains(submitAction))
+                    targetAdminStatus = submitAction;
+                else if (article != null && !string.IsNullOrWhiteSpace(article.Status) && ValidStatuses.Contains(article.Status))
+                    targetAdminStatus = article.Status;
+
+                if (targetAdminStatus == "Rejected" && string.IsNullOrWhiteSpace(rejectionReason))
+                {
+                    ModelState.AddModelError("", "Vui lòng nhập lý do từ chối để người viết biết cần sửa gì.");
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
@@ -1109,6 +1178,10 @@ END";
                     article.Image = existing.ImageUrl;
                 if (!isAdmin)
                     article.Status = existing.Status;
+
+                ViewBag.RejectionReason = string.IsNullOrWhiteSpace(rejectionReason)
+                    ? GetRejectionReason(existing.ArticleID)
+                    : rejectionReason;
                 return View(article);
             }
 
@@ -1132,11 +1205,7 @@ END";
             }
             else
             {
-                if (!string.IsNullOrWhiteSpace(submitAction) && ValidStatuses.Contains(submitAction))
-                    existing.Status = submitAction;
-                else if (!string.IsNullOrWhiteSpace(article.Status) && ValidStatuses.Contains(article.Status))
-                    existing.Status = article.Status;
-
+                existing.Status = targetAdminStatus;
                 TempData["Success"] = "Đã cập nhật bài viết thành công (Trạng thái: " + existing.Status + ").";
             }
 
@@ -1146,13 +1215,22 @@ END";
 
             db.SaveChanges();
 
+            if (existing.Status == "Rejected")
+            {
+                SetRejectionReason(existing.ArticleID, rejectionReason);
+            }
+            else if (existing.Status == "Pending" || existing.Status == "Published" || existing.Status == "Archived")
+            {
+                SetRejectionReason(existing.ArticleID, null);
+            }
+
             // Tự động quay về trang trước đó (hoặc Trang chủ) sau khi lưu/gửi thành công
             return RedirectBackOrHome(returnUrl);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ChangeWorkflowStatus(int? id, string newStatus, string returnStatus = "")
+        public ActionResult ChangeWorkflowStatus(int? id, string newStatus, string returnStatus = "", string rejectionReason = "")
         {
             EnsureWorkflowStatusConstraint();
 
@@ -1188,9 +1266,31 @@ END";
                 }
             }
 
+            rejectionReason = (rejectionReason ?? string.Empty).Trim();
+            if (newStatus == "Rejected")
+            {
+                if (string.IsNullOrWhiteSpace(rejectionReason))
+                {
+                    TempData["Error"] = "Vui lòng nhập lý do từ chối để người viết biết cần sửa gì.";
+                    return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
+                }
+
+                if (rejectionReason.Length > 500)
+                    rejectionReason = rejectionReason.Substring(0, 500);
+            }
+
             article.Status = newStatus;
             article.UpdatedDate = DateTime.Now;
             db.SaveChanges();
+
+            if (newStatus == "Rejected")
+            {
+                SetRejectionReason(article.ArticleID, rejectionReason);
+            }
+            else
+            {
+                SetRejectionReason(article.ArticleID, null);
+            }
 
             switch (newStatus)
             {
@@ -1201,7 +1301,7 @@ END";
                     TempData["Success"] = "Đã phê duyệt và xuất bản bài viết #" + article.ArticleID + " lên trang chủ (Published).";
                     break;
                 case "Rejected":
-                    TempData["Success"] = "Đã từ chối bài viết #" + article.ArticleID + " — trả về phóng viên chỉnh sửa (Rejected).";
+                    TempData["Success"] = "Đã từ chối bài viết #" + article.ArticleID + " (Lý do: " + rejectionReason + ") — trả về phóng viên chỉnh sửa (Rejected).";
                     break;
                 case "Archived":
                     TempData["Success"] = "Đã chuyển bài viết #" + article.ArticleID + " vào kho lưu trữ (Archived).";
