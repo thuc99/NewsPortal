@@ -927,7 +927,6 @@ END";
             }
 
             var category = db.Categories.FirstOrDefault(c => c.CategoryID == article.CategoryId.Value);
-            var author = db.Authors.OrderBy(a => a.AuthorID).FirstOrDefault();
             if (category == null)
             {
                 ModelState.AddModelError("CategoryId", "Danh mục đã chọn không tồn tại.");
@@ -935,9 +934,51 @@ END";
                 return View(article);
             }
 
+            var currentUsername = Session["User"] as string ?? Session["Admin"] as string;
+            if (string.IsNullOrWhiteSpace(currentUsername))
+            {
+                ModelState.AddModelError("", "Vui lòng đăng nhập trước khi thêm bài viết.");
+                return View(article);
+            }
+
+            var currentUser = db.Users.FirstOrDefault(u => u.Username == currentUsername);
+            if (currentUser == null)
+            {
+                ModelState.AddModelError("", "Tài khoản người dùng không hợp lệ.");
+                return View(article);
+            }
+
+            var displayName = !string.IsNullOrWhiteSpace(currentUser.FullName)
+                ? currentUser.FullName
+                : currentUser.Username;
+
+            var author = db.Authors.FirstOrDefault(a =>
+                a.AuthorName == displayName ||
+                a.AuthorName == currentUser.Username ||
+                (!string.IsNullOrEmpty(currentUser.Email) && a.Email == currentUser.Email));
+
             if (author == null)
             {
-                ModelState.AddModelError("", "Cần có tác giả trước khi thêm bài viết.");
+                string authorEmail = currentUser.Email;
+                if (string.IsNullOrWhiteSpace(authorEmail))
+                {
+                    ModelState.AddModelError("", "Vui lòng cập nhật email trong hồ sơ cá nhân trước khi tạo bài viết.");
+                    return View(article);
+                }
+
+                author = new Author
+                {
+                    AuthorName = displayName,
+                    Email = authorEmail
+                };
+
+                db.Authors.Add(author);
+                db.SaveChanges();
+            }
+
+            if (author == null)
+            {
+                ModelState.AddModelError("", "Không thể tạo hoặc tìm thấy tác giả.");
                 return View(article);
             }
 
