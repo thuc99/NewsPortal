@@ -223,8 +223,8 @@
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@u.UserID" />
                                         <select name="role" style="height:32px; border:1px solid var(--line); border-radius:6px;">
-                                            <option value="Admin" @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Admin</option>
-                                            <option value="Editor" @(string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Editor</option>
+                                            <option value="Admin" @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Tổng biên tập</option>
+                                            <option value="Editor" @(string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Biên tập</option>
                                             <option value="User" @(string.Equals(u.Role, "User", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>User</option>
                                         </select>
                                         <button type="submit" style="padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer;">Lưu</button>
@@ -232,7 +232,7 @@
                                 }
                                 else
                                 {
-                                    <strong>@u.Role</strong>
+                                    <strong>@(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "Tổng biên tập" : (string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "Biên tập" : u.Role))</strong>
                                 }
                             </td>
                             <td>@u.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>

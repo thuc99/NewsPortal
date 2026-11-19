@@ -156,13 +156,13 @@ END";
 
                 string statsSql = @"
                     SELECT 
-                        (SELECT COUNT(*) FROM dbo.Articles) AS TotalArticles,
+                        (SELECT COUNT(*) FROM dbo.Articles WHERE Status <> N'Draft') AS TotalArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Published') AS PublishedArticles,
-                        (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Draft') AS DraftArticles,
+                        0 AS DraftArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Pending') AS PendingArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Rejected') AS RejectedArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Archived') AS ArchivedArticles,
-                        (SELECT ISNULL(SUM(ViewCount), 0) FROM dbo.Articles) AS TotalViews,
+                        (SELECT ISNULL(SUM(ViewCount), 0) FROM dbo.Articles WHERE Status <> N'Draft') AS TotalViews,
                         (SELECT COUNT(*) FROM dbo.Categories) AS TotalCategories,
                         (SELECT COUNT(*) FROM dbo.Authors) AS TotalAuthors,
                         (SELECT COUNT(*) FROM dbo.Users) AS TotalUsers;";
@@ -198,7 +198,8 @@ END";
                     FROM dbo.Articles a
                     LEFT JOIN dbo.Categories c ON a.CategoryID = c.CategoryID
                     LEFT JOIN dbo.Authors au ON a.AuthorID = au.AuthorID
-                    WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
+                    WHERE a.Status <> N'Draft'
+                      AND (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
                       AND (@status = N'' OR a.Status = @status)
                     ORDER BY CASE WHEN a.Status = N'Pending' THEN 0 ELSE 1 END,
                              a.CreatedDate DESC;";
@@ -248,7 +249,7 @@ END";
                         SUM(CASE WHEN a.Status = N'Archived' THEN 1 ELSE 0 END) AS ArchivedCount,
                         ISNULL(SUM(a.ViewCount), 0) AS TotalViews
                     FROM dbo.Categories c
-                    LEFT JOIN dbo.Articles a ON a.CategoryID = c.CategoryID
+                    LEFT JOIN dbo.Articles a ON a.CategoryID = c.CategoryID AND a.Status <> N'Draft'
                     GROUP BY c.CategoryID, c.CategoryName
                     ORDER BY COUNT(a.ArticleID) DESC, c.CategoryName ASC;";
 
@@ -384,12 +385,29 @@ END";
                 conn.Open();
                 EnsureWorkflowStatusConstraint(conn);
 
+                const string checkDraftSql = "SELECT Status FROM dbo.Articles WHERE ArticleID = @id;";
+                using (var checkCmd = new SqlCommand(checkDraftSql, conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@id", id);
+                    object currentStatusObj = checkCmd.ExecuteScalar();
+                    if (currentStatusObj == null || currentStatusObj == DBNull.Value)
+                    {
+                        TempData["AdminError"] = "Không tìm thấy bài viết #" + id + ".";
+                        return RedirectToAction("Index", new { search = search, status = status });
+                    }
+                    if (string.Equals(Convert.ToString(currentStatusObj), "Draft", StringComparison.OrdinalIgnoreCase))
+                    {
+                        TempData["AdminError"] = "Bài viết #" + id + " đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem và thao tác.";
+                        return RedirectToAction("Index", new { search = search, status = status });
+                    }
+                }
+
                 const string sql = @"
                     UPDATE dbo.Articles
                     SET Status = @newStatus,
                         RejectionReason = @rejectionReason,
                         UpdatedDate = GETDATE()
-                    WHERE ArticleID = @id;";
+                    WHERE ArticleID = @id AND Status <> N'Draft';";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -792,7 +810,7 @@ END";
             status = (status ?? string.Empty).Trim();
 
             var comments = new List<AdminCommentRow>();
-            int totalCount = 0, approvedCount = 0, hiddenCount = 0;
+            int totalCount = 0, pendingCount = 0, approvedCount = 0, hiddenCount = 0;
 
             using (var conn = CreateConnection())
             {
@@ -801,6 +819,7 @@ END";
                 string countSql = @"
                     SELECT
                         COUNT(*) AS TotalCount,
+                        SUM(CASE WHEN Status = N'Pending' THEN 1 ELSE 0 END) AS PendingCount,
                         SUM(CASE WHEN Status = N'Approved' THEN 1 ELSE 0 END) AS ApprovedCount,
                         SUM(CASE WHEN Status = N'Hidden' THEN 1 ELSE 0 END) AS HiddenCount
                     FROM dbo.Comments;";
@@ -811,6 +830,7 @@ END";
                     if (r.Read())
                     {
                         totalCount = r["TotalCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["TotalCount"]);
+                        pendingCount = r["PendingCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["PendingCount"]);
                         approvedCount = r["ApprovedCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["ApprovedCount"]);
                         hiddenCount = r["HiddenCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["HiddenCount"]);
                     }
@@ -837,7 +857,9 @@ END";
                            OR a.Title LIKE N'%' + @search + N'%'
                            OR u.Username LIKE N'%' + @search + N'%')
                     ORDER BY
-                        CASE WHEN c.Status = N'Approved' THEN 0 ELSE 1 END,
+                        CASE WHEN c.Status = N'Pending' THEN 0
+                             WHEN c.Status = N'Approved' THEN 1
+                             ELSE 2 END,
                         c.CreatedDate DESC;";
 
                 using (var cmd = new SqlCommand(sql, conn))
@@ -872,17 +894,40 @@ END";
             ViewBag.Search = search;
             ViewBag.StatusFilter = status;
             ViewBag.TotalCount = totalCount;
+            ViewBag.PendingCount = pendingCount;
             ViewBag.ApprovedCount = approvedCount;
             ViewBag.HiddenCount = hiddenCount;
 
             return View(comments);
         }
 
-        // POST: /Admin/MarkCommentSpam
+        // POST: /Admin/ApproveComment
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AdminAuthorize]
-        public ActionResult MarkCommentSpam(int id, string search, string status)
+        public ActionResult ApproveComment(int id, string search, string status)
+        {
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                using (var cmd = new SqlCommand("UPDATE dbo.Comments SET Status = N'Approved' WHERE CommentID = @id;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    int rows = cmd.ExecuteNonQuery();
+                    if (rows > 0)
+                        TempData["AdminMessage"] = "Đã duyệt bình luận #" + id + " hiển thị công khai.";
+                    else
+                        TempData["AdminError"] = "Không tìm thấy bình luận cần duyệt.";
+                }
+            }
+            return RedirectToAction("Comments", new { search = search, status = status });
+        }
+
+        // POST: /Admin/HideComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize]
+        public ActionResult HideComment(int id, string search, string status)
         {
             using (var conn = CreateConnection())
             {
@@ -892,9 +937,9 @@ END";
                     cmd.Parameters.AddWithValue("@id", id);
                     int rows = cmd.ExecuteNonQuery();
                     if (rows > 0)
-                        TempData["AdminMessage"] = "Đã đánh dấu spam và ẩn bình luận #" + id + ".";
+                        TempData["AdminMessage"] = "Đã ẩn bình luận #" + id + " khỏi trang công khai.";
                     else
-                        TempData["AdminError"] = "Không tìm thấy bình luận cần đánh dấu spam.";
+                        TempData["AdminError"] = "Không tìm thấy bình luận cần ẩn.";
                 }
             }
             return RedirectToAction("Comments", new { search = search, status = status });

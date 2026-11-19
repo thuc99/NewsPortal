@@ -319,31 +319,31 @@
         table-layout: fixed;
     }
 
-    .admin-articles-page .management-table th:nth-child(1),
-    .admin-articles-page .management-table td:nth-child(1) {
-        width: 110px;
-    }
+        .admin-articles-page .management-table th:nth-child(1),
+        .admin-articles-page .management-table td:nth-child(1) {
+            width: 110px;
+        }
 
-    .admin-articles-page .management-table th:nth-child(2),
-    .admin-articles-page .management-table td:nth-child(2) {
-        width: 50%;
-    }
+        .admin-articles-page .management-table th:nth-child(2),
+        .admin-articles-page .management-table td:nth-child(2) {
+            width: 50%;
+        }
 
-    .admin-articles-page .management-table th:nth-child(3),
-    .admin-articles-page .management-table td:nth-child(3) {
-        width: 110px;
-    }
+        .admin-articles-page .management-table th:nth-child(3),
+        .admin-articles-page .management-table td:nth-child(3) {
+            width: 110px;
+        }
 
-    .admin-articles-page .management-table th:nth-child(4),
-    .admin-articles-page .management-table td:nth-child(4) {
-        width: 145px;
-    }
+        .admin-articles-page .management-table th:nth-child(4),
+        .admin-articles-page .management-table td:nth-child(4) {
+            width: 145px;
+        }
 
-    .admin-articles-page .management-table th:nth-child(5),
-    .admin-articles-page .management-table td:nth-child(5) {
-        width: 240px;
-        padding-left: 28px;
-    }
+        .admin-articles-page .management-table th:nth-child(5),
+        .admin-articles-page .management-table td:nth-child(5) {
+            width: 240px;
+            padding-left: 28px;
+        }
 
     .admin-articles-page .article-title {
         min-width: 0;
@@ -354,10 +354,10 @@
         table-layout: fixed;
     }
 
-    .public-articles-page .management-table th:first-child,
-    .public-articles-page .management-table td:first-child {
-        width: 220px;
-    }
+        .public-articles-page .management-table th:first-child,
+        .public-articles-page .management-table td:first-child {
+            width: 220px;
+        }
 
     .public-articles-page .article-image {
         display: block;
@@ -374,13 +374,13 @@
         line-height: 1.5;
     }
 
-    .article-title a {
-        color: #1e293b;
-    }
+        .article-title a {
+            color: #1e293b;
+        }
 
-    .article-title a:hover {
-        color: #b91c1c;
-    }
+            .article-title a:hover {
+                color: #b91c1c;
+            }
 
     .article-excerpt {
         display: -webkit-box;
@@ -526,44 +526,25 @@
 
     .action-btn {
         display: inline-block;
-        padding: 7px 11px;
+        padding: 7px 10px;
         margin: 2px;
-        border: 1px solid transparent;
-        border-radius: 8px;
+        border: 0;
+        border-radius: 6px;
         text-decoration: none !important;
         font-size: 12.5px;
         font-weight: 600;
         white-space: nowrap;
         cursor: pointer;
-        transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
-    }
-
-    .action-btn:hover {
-        transform: translateY(-1px);
     }
 
     .btn-edit {
-        background: #fff;
-        border-color: #e8d8a8;
-        color: #755100 !important;
-    }
-
-    .btn-edit:hover {
-        background: #936b13;
-        border-color: #936b13;
-        color: #fff !important;
+        background: #fef08a;
+        color: #854d0e !important;
     }
 
     .btn-detail {
-        background: #fff;
-        border-color: #c7d7f0;
-        color: #28558f !important;
-    }
-
-    .btn-detail:hover {
-        background: #28558f;
-        border-color: #28558f;
-        color: #fff !important;
+        background: #dbeafe;
+        color: #1d4ed8 !important;
     }
 
     .btn-submit-wf {
@@ -582,15 +563,8 @@
     }
 
     .btn-delete {
-        background: #fff;
-        border-color: #e8c4c1;
-        color: #a3322b !important;
-    }
-
-    .btn-delete:hover {
-        background: #a3322b;
-        border-color: #a3322b;
-        color: #fff !important;
+        background: #fee2e2;
+        color: #b91c1c !important;
     }
 
     .empty-message {
@@ -611,24 +585,24 @@
         text-align: center;
     }
 
-    .pagination-direction.disabled {
-        padding: 7px 11px;
-        background: #f8fafc;
-        color: #a0a5ae;
-    }
-
-        .pagination a {
+        .pagination-direction.disabled {
             padding: 7px 11px;
-            border-radius: 6px;
-            background: #f1f5f9;
-            color: #334155;
-            text-decoration: none;
+            background: #f8fafc;
+            color: #a0a5ae;
         }
 
-            .pagination a.active {
-                background: #b91c1c;
-                color: white;
-            }
+    .pagination a {
+        padding: 7px 11px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #334155;
+        text-decoration: none;
+    }
+
+        .pagination a.active {
+            background: #b91c1c;
+            color: white;
+        }
 
     @@media (max-width: 850px) {
         .management-table {
@@ -708,10 +682,13 @@
                href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Pending" })">
                 Chờ duyệt (Pending) <span class="wf-count">@countPending</span>
             </a>
-            <a class="wf-tab @(currentStatusFilter == "Draft" ? "active" : "")"
-               href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Draft" })">
-                Bản nháp (Draft) <span class="wf-count">@countDraft</span>
-            </a>
+            @if (!isAdminUser)
+            {
+                <a class="wf-tab @(currentStatusFilter == "Draft" ? "active" : "")"
+                   href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Draft" })">
+                    Bản nháp (Draft) <span class="wf-count">@countDraft</span>
+                </a>
+            }
             <a class="wf-tab @(currentStatusFilter == "Published" ? "active" : "")"
                href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Published" })">
                 Đã xuất bản (Published) <span class="wf-count">@countPublished</span>
@@ -772,7 +749,10 @@
             {
                 <select name="status">
                     <option value="">Mọi trạng thái</option>
-                    <option value="Draft" @(currentStatusFilter == "Draft" ? "selected" : "")>Draft - Bản nháp</option>
+                    @if (!isAdminUser)
+                    {
+                        <option value="Draft" @(currentStatusFilter == "Draft" ? "selected" : "")>Draft - Bản nháp</option>
+                    }
                     <option value="Pending" @(currentStatusFilter == "Pending" ? "selected" : "")>Pending - Chờ duyệt</option>
                     <option value="Published" @(currentStatusFilter == "Published" ? "selected" : "")>Published - Đã xuất bản</option>
                     <option value="Rejected" @(currentStatusFilter == "Rejected" ? "selected" : "")>Rejected - Bị từ chối</option>
@@ -923,7 +903,9 @@
                                                 <button type="button"
                                                         class="action-btn btn-reject-wf js-open-wf-reject"
                                                         data-article-id="@item.Id"
-                                                        data-article-title="@item.Title">Từ chối</button>
+                                                        data-article-title="@item.Title">
+                                                    Từ chối
+                                                </button>
                                             }
                                             else if (item.Status == "Published")
                                             {
@@ -1112,67 +1094,67 @@
 }
 
 <script>
-    (function () {
-        var toggle = document.getElementById("filterToggle");
-        var filter = document.getElementById("advancedFilter");
+        (function () {
+            var toggle = document.getElementById("filterToggle");
+            var filter = document.getElementById("advancedFilter");
 
-        if (toggle && filter) {
-            toggle.addEventListener("click", function () {
-                if (!toggle || !filter) return;
-                filter.classList.toggle("is-hidden");
+            if (toggle && filter) {
+                toggle.addEventListener("click", function () {
+                    if (!toggle || !filter) return;
+                    filter.classList.toggle("is-hidden");
 
-                toggle.textContent =
-                    filter.classList.contains("is-hidden")
-                        ? "Bộ lọc nâng cao"
-                        : "Ẩn bộ lọc";
-            });
-        }
+                    toggle.textContent =
+                        filter.classList.contains("is-hidden")
+                            ? "Bộ lọc nâng cao"
+                            : "Ẩn bộ lọc";
+                });
+            }
 
-        var modal = document.getElementById("wfRejectModal");
-        var heading = document.getElementById("wfRejectHeading");
-        var titleEl = document.getElementById("wfRejectTitle");
-        var idInput = document.getElementById("wfRejectArticleId");
-        var reasonInput = document.getElementById("wfRejectReasonInput");
-        var cancelBtn = document.getElementById("wfRejectCancel");
-        var rejectForm = document.getElementById("wfRejectForm");
+            var modal = document.getElementById("wfRejectModal");
+            var heading = document.getElementById("wfRejectHeading");
+            var titleEl = document.getElementById("wfRejectTitle");
+            var idInput = document.getElementById("wfRejectArticleId");
+            var reasonInput = document.getElementById("wfRejectReasonInput");
+            var cancelBtn = document.getElementById("wfRejectCancel");
+            var rejectForm = document.getElementById("wfRejectForm");
 
-        function closeRejectModal() {
-            if (!modal) return;
-            modal.classList.remove("is-open");
-            if (reasonInput) reasonInput.value = "";
-        }
+            function closeRejectModal() {
+                if (!modal) return;
+                modal.classList.remove("is-open");
+                if (reasonInput) reasonInput.value = "";
+            }
 
-        var rejectBtns = document.querySelectorAll(".js-open-wf-reject");
-        for (var i = 0; i < rejectBtns.length; i++) {
-            rejectBtns[i].addEventListener("click", function () {
-                var articleId = this.getAttribute("data-article-id") || "";
-                var articleTitle = this.getAttribute("data-article-title") || "";
-                if (idInput) idInput.value = articleId;
-                if (heading) heading.textContent = "Từ chối bài viết #" + articleId;
-                if (titleEl) titleEl.textContent = articleTitle;
-                if (modal) modal.classList.add("is-open");
-                if (reasonInput) reasonInput.focus();
-            });
-        }
-
-        if (cancelBtn) {
-            cancelBtn.addEventListener("click", closeRejectModal);
-        }
-
-        if (modal) {
-            modal.addEventListener("click", function (e) {
-                if (e.target === modal) closeRejectModal();
-            });
-        }
-
-        if (rejectForm) {
-            rejectForm.addEventListener("submit", function (e) {
-                if (!reasonInput || !reasonInput.value.trim()) {
-                    e.preventDefault();
-                    alert("Vui lòng nhập lý do từ chối để người viết sửa lại.");
+            var rejectBtns = document.querySelectorAll(".js-open-wf-reject");
+            for (var i = 0; i < rejectBtns.length; i++) {
+                rejectBtns[i].addEventListener("click", function () {
+                    var articleId = this.getAttribute("data-article-id") || "";
+                    var articleTitle = this.getAttribute("data-article-title") || "";
+                    if (idInput) idInput.value = articleId;
+                    if (heading) heading.textContent = "Từ chối bài viết #" + articleId;
+                    if (titleEl) titleEl.textContent = articleTitle;
+                    if (modal) modal.classList.add("is-open");
                     if (reasonInput) reasonInput.focus();
-                }
-            });
-        }
-    })();
+                });
+            }
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener("click", closeRejectModal);
+            }
+
+            if (modal) {
+                modal.addEventListener("click", function (e) {
+                    if (e.target === modal) closeRejectModal();
+                });
+            }
+
+            if (rejectForm) {
+                rejectForm.addEventListener("submit", function (e) {
+                    if (!reasonInput || !reasonInput.value.trim()) {
+                        e.preventDefault();
+                        alert("Vui lòng nhập lý do từ chối để người viết sửa lại.");
+                        if (reasonInput) reasonInput.focus();
+                    }
+                });
+            }
+        })();
 </script>

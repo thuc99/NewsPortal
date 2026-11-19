@@ -504,6 +504,9 @@
         <h1>Xin chào, @Session["Admin"]!</h1>
     </div>
     <div class="adm-actions">
+        <a class="adm-btn adm-btn-white" href="@Url.Action("Index", "Home")">
+            <i class="fa-solid fa-house"></i> Quay về trang chủ
+        </a>
         <a class="adm-btn adm-btn-white" href="@Url.RouteUrl("AdminArticles", new { action = "Index" })">
             Quản lý tất cả bài viết
         </a>
@@ -529,7 +532,7 @@
         <div class="adm-card-val">@Model.TotalArticles</div>
         <div class="adm-card-foot">
             Đã đăng: <strong>@Model.PublishedArticles</strong> &bull;
-            Nháp: <strong>@Model.DraftArticles</strong> &bull;
+            Chờ duyệt: <strong>@pendingCount</strong> &bull;
             Lưu trữ: <strong>@archivedCount</strong>
         </div>
     </div>
@@ -742,7 +745,6 @@
                 <option value="" @(Model.StatusFilter == "" ? "selected" : "")>Tất cả trạng thái</option>
                 <option value="Pending" @(Model.StatusFilter == "Pending" ? "selected" : "")>Pending - Chờ duyệt (@pendingCount)</option>
                 <option value="Published" @(Model.StatusFilter == "Published" ? "selected" : "")>Published - Đã xuất bản (@Model.PublishedArticles)</option>
-                <option value="Draft" @(Model.StatusFilter == "Draft" ? "selected" : "")>Draft - Bản nháp (@Model.DraftArticles)</option>
                 <option value="Rejected" @(Model.StatusFilter == "Rejected" ? "selected" : "")>Rejected - Bị từ chối (@rejectedCount)</option>
                 <option value="Archived" @(Model.StatusFilter == "Archived" ? "selected" : "")>Archived - Đã lưu trữ (@archivedCount)</option>
             </select>
@@ -759,7 +761,6 @@
         <a class="adm-wf-pill @(Model.StatusFilter == "Pending" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Pending" })">Chờ duyệt (@pendingCount)</a>
         <a class="adm-wf-pill @(Model.StatusFilter == "Published" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Published" })">Đã xuất bản (@Model.PublishedArticles)</a>
         <a class="adm-wf-pill @(Model.StatusFilter == "Rejected" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Rejected" })">Bị từ chối (@rejectedCount)</a>
-        <a class="adm-wf-pill @(Model.StatusFilter == "Draft" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Draft" })">Bản nháp (@Model.DraftArticles)</a>
         <a class="adm-wf-pill @(Model.StatusFilter == "Archived" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Archived" })">Đã lưu trữ (@archivedCount)</a>
     </div>
 
