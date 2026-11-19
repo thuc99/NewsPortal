@@ -81,6 +81,11 @@ BEGIN
     BEGIN
         ALTER TABLE dbo.Articles ADD [RejectionReason] NVARCHAR(500) NULL;
     END
+
+    IF COL_LENGTH(N'dbo.Articles', N'UserId') IS NULL
+    BEGIN
+        ALTER TABLE dbo.Articles ADD [UserId] INT NULL;
+    END
 END";
                 db.Database.ExecuteSqlCommand(sql);
                 _statusConstraintChecked = true;
@@ -127,6 +132,59 @@ END";
             }
 
             return result;
+        }
+
+        private int? GetCurrentUserId()
+        {
+            string username = (Session["User"] ?? Session["Admin"]) as string;
+            if (string.IsNullOrWhiteSpace(username))
+                return null;
+
+            var dbUser = db.Users.FirstOrDefault(u => u.Username == username);
+            return dbUser != null ? (int?)dbUser.UserId : null;
+        }
+
+        private int? GetArticleOwnerUserId(int articleId)
+        {
+            return db.Database.SqlQuery<int?>(
+                "SELECT UserId FROM dbo.Articles WHERE ArticleID = @p0",
+                articleId).FirstOrDefault();
+        }
+
+        private void SetArticleOwnerUserId(int articleId, int? userId)
+        {
+            if (!userId.HasValue) return;
+            db.Database.ExecuteSqlCommand(
+                "UPDATE dbo.Articles SET UserId = @p0 WHERE ArticleID = @p1 AND UserId IS NULL",
+                userId.Value,
+                articleId);
+        }
+
+        private List<int> GetVisibleDraftArticleIdsForCurrentReporter()
+        {
+            int? currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return new List<int>();
+
+            return db.Database.SqlQuery<int>(
+                "SELECT ArticleID FROM dbo.Articles WHERE Status = N'Draft' AND (UserId = @p0 OR UserId IS NULL)",
+                currentUserId.Value).ToList();
+        }
+
+        private bool CanCurrentUserAccessDraft(int articleId)
+        {
+            if (IsAdminUser())
+                return false;
+
+            if (!CanManageArticles())
+                return false;
+
+            int? currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return false;
+
+            int? ownerUserId = GetArticleOwnerUserId(articleId);
+            return !ownerUserId.HasValue || ownerUserId.Value == currentUserId.Value;
         }
 
         private bool IsAdminUser()
@@ -344,14 +402,34 @@ END";
             {
                 query = query.Where(a => a.Status == "Published");
             }
-            else
+            else if (isAdminUser)
             {
-                ViewBag.CountAll = db.Articles.Count();
-                ViewBag.CountDraft = db.Articles.Count(a => a.Status == "Draft");
+                // Admin không được xem các bài viết đang ở trạng thái Bản nháp (Draft)
+                query = query.Where(a => a.Status != "Draft");
+
+                ViewBag.CountAll = db.Articles.Count(a => a.Status != "Draft");
+                ViewBag.CountDraft = 0;
                 ViewBag.CountPending = db.Articles.Count(a => a.Status == "Pending");
                 ViewBag.CountPublished = db.Articles.Count(a => a.Status == "Published");
                 ViewBag.CountRejected = db.Articles.Count(a => a.Status == "Rejected");
                 ViewBag.CountArchived = db.Articles.Count(a => a.Status == "Archived");
+            }
+            else
+            {
+                // Phóng viên chỉ xem được bài Nháp của chính mình
+                var ownDraftIds = GetVisibleDraftArticleIdsForCurrentReporter();
+                query = query.Where(a => a.Status != "Draft" || ownDraftIds.Contains(a.ArticleID));
+
+                ViewBag.CountDraft = ownDraftIds.Count;
+                ViewBag.CountPending = db.Articles.Count(a => a.Status == "Pending");
+                ViewBag.CountPublished = db.Articles.Count(a => a.Status == "Published");
+                ViewBag.CountRejected = db.Articles.Count(a => a.Status == "Rejected");
+                ViewBag.CountArchived = db.Articles.Count(a => a.Status == "Archived");
+                ViewBag.CountAll = (int)ViewBag.CountDraft
+                    + (int)ViewBag.CountPending
+                    + (int)ViewBag.CountPublished
+                    + (int)ViewBag.CountRejected
+                    + (int)ViewBag.CountArchived;
             }
 
             if (!string.IsNullOrWhiteSpace(searchString))
@@ -528,6 +606,12 @@ END";
                 return IsAdminArticleRequest() ? RedirectToArticleManagement() : RedirectToAction("Index");
             }
 
+            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            {
+                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem.";
+                return IsAdminArticleRequest() ? RedirectToArticleManagement() : RedirectToAction("Index");
+            }
+
             bool isPublished = article.Status == "Published";
             if (canComment && isPublished && !HasViewedRecently(articleId))
             {
@@ -624,11 +708,11 @@ END";
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Approved"
+                Status = "Pending"
             });
             db.SaveChanges();
 
-            TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được gửi và đang chờ Admin phê duyệt.";
             return RedirectToAction("View", new { id = articleId.Value });
         }
 
@@ -1019,7 +1103,7 @@ END";
                 return View(article);
             }
 
-            db.Articles.Add(new Articles
+            var newArticle = new Articles
             {
                 CategoryID = category.CategoryID,
                 AuthorID = author.AuthorID,
@@ -1030,8 +1114,10 @@ END";
                 Status = targetStatus,
                 ImageUrl = imageUrl,
                 ViewCount = 0
-            });
+            };
+            db.Articles.Add(newArticle);
             db.SaveChanges();
+            SetArticleOwnerUserId(newArticle.ArticleID, GetCurrentUserId());
 
             if (targetStatus == "Draft")
                 TempData["Success"] = "Đã lưu bài viết dưới dạng Bản nháp (Draft).";
@@ -1070,6 +1156,12 @@ END";
                 return RedirectToArticleManagement();
             }
 
+            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            {
+                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem và chỉnh sửa.";
+                return RedirectToArticleManagement();
+            }
+
             ViewBag.RejectionReason = GetRejectionReason(article.ArticleID);
             return View(ToArticleViewModel(article));
         }
@@ -1093,6 +1185,12 @@ END";
             if (existing == null)
             {
                 TempData["Error"] = "Bài viết cần chỉnh sửa không tồn tại hoặc đã bị xóa trước đó.";
+                return RedirectToArticleManagement();
+            }
+
+            if (existing.Status == "Draft" && !CanCurrentUserAccessDraft(existing.ArticleID))
+            {
+                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền chỉnh sửa.";
                 return RedirectToArticleManagement();
             }
 
@@ -1174,6 +1272,11 @@ END";
 
             db.SaveChanges();
 
+            if (!isAdmin && existing.Status == "Draft")
+            {
+                SetArticleOwnerUserId(existing.ArticleID, GetCurrentUserId());
+            }
+
             if (existing.Status == "Rejected")
             {
                 SetRejectionReason(existing.ArticleID, rejectionReason);
@@ -1212,6 +1315,12 @@ END";
                 return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
             }
 
+            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            {
+                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền thao tác.";
+                return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
+            }
+
             bool isAdmin = IsAdminUser();
             if (!isAdmin)
             {
@@ -1241,6 +1350,11 @@ END";
             article.Status = newStatus;
             article.UpdatedDate = DateTime.Now;
             db.SaveChanges();
+
+            if (!isAdmin && newStatus == "Draft")
+            {
+                SetArticleOwnerUserId(article.ArticleID, GetCurrentUserId());
+            }
 
             if (newStatus == "Rejected")
             {
@@ -1295,6 +1409,12 @@ END";
                 return RedirectToArticleManagement();
             }
 
+            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            {
+                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem hoặc xóa.";
+                return RedirectToArticleManagement();
+            }
+
             return View(ToArticleViewModel(article));
         }
 
@@ -1319,6 +1439,12 @@ END";
             if (article == null)
             {
                 TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa trước đó.";
+                return RedirectToArticleManagement();
+            }
+
+            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            {
+                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xóa.";
                 return RedirectToArticleManagement();
             }
 

@@ -24,7 +24,9 @@
             --admin-navy: #172033;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             min-height: 100vh;
@@ -36,8 +38,14 @@
             font-family: "Segoe UI", Arial, sans-serif;
         }
 
-        a { color: inherit; text-decoration: none; }
-        a:hover { color: var(--admin-red); }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+            a:hover {
+                color: var(--admin-red);
+            }
 
         .admin-header {
             background: var(--admin-navy);
@@ -64,7 +72,9 @@
             white-space: nowrap;
         }
 
-        .admin-brand i { color: #fb7185; }
+            .admin-brand i {
+                color: #fb7185;
+            }
 
         .admin-nav {
             display: flex;
@@ -73,18 +83,18 @@
             flex-wrap: wrap;
         }
 
-        .admin-nav a {
-            padding: 10px 12px;
-            border-radius: 7px;
-            color: #dce2ed;
-            font-size: 13px;
-            font-weight: 650;
-        }
+            .admin-nav a {
+                padding: 10px 12px;
+                border-radius: 7px;
+                color: #dce2ed;
+                font-size: 13px;
+                font-weight: 650;
+            }
 
-        .admin-nav a:hover, .admin-nav a.active {
-            background: rgba(255,255,255,.1);
-            color: #fff;
-        }
+                .admin-nav a:hover, .admin-nav a.active {
+                    background: rgba(255,255,255,.1);
+                    color: #fff;
+                }
 
         .admin-user {
             display: flex;
@@ -95,7 +105,37 @@
             white-space: nowrap;
         }
 
-        .admin-user a { color: #fff; font-weight: 700; }
+            .admin-user a {
+                color: #fff;
+                font-weight: 700;
+            }
+
+        .admin-home-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 13px;
+            border-radius: 7px;
+            background: var(--admin-red);
+            color: #fff !important;
+            font-size: 13px;
+            font-weight: 700;
+            transition: background .2s;
+        }
+
+            .admin-home-btn:hover {
+                background: var(--red-dark);
+                color: #fff !important;
+            }
+
+        .admin-role-tag {
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.14);
+            color: #f8fafc;
+            font-size: 11.5px;
+            font-weight: 700;
+        }
 
         .admin-main {
             width: min(1320px, calc(100% - 36px));
@@ -112,16 +152,40 @@
         }
 
         @@media (max-width: 900px) {
-            .admin-header-inner { padding: 14px 0; align-items: flex-start; flex-direction: column; }
-            .admin-nav { width: 100%; }
-            .admin-user { position: absolute; top: 22px; right: 18px; }
+            .admin-header-inner {
+                padding: 14px 0;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .admin-nav {
+                width: 100%;
+            }
+
+            .admin-user {
+                position: absolute;
+                top: 22px;
+                right: 18px;
+            }
         }
 
         @@media (max-width: 560px) {
-            .admin-user { position: static; }
-            .admin-header-inner { gap: 10px; }
-            .admin-nav a { padding: 8px; }
-            .admin-main { width: calc(100% - 24px); margin: 20px auto; }
+            .admin-user {
+                position: static;
+            }
+
+            .admin-header-inner {
+                gap: 10px;
+            }
+
+            .admin-nav a {
+                padding: 8px;
+            }
+
+            .admin-main {
+                width: calc(100% - 24px);
+                margin: 20px auto;
+            }
         }
     </style>
 </head>
@@ -153,7 +217,11 @@
                 }
             </nav>
             <div class="admin-user">
+                <a class="admin-home-btn" href="@Url.Action("Index", "Home")">
+                    <i class="fa-solid fa-house"></i> Quay về trang chủ
+                </a>
                 <span>@(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])</span>
+                <span class="admin-role-tag">@(isAdmin ? "Tổng biên tập" : "Biên tập")</span>
                 <a href="@Url.Action("Logout", "Account")">Đăng xuất</a>
             </div>
         </div>

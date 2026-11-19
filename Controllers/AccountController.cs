@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Configuration;
 using System.Data;
 using System.Data.Entity.Core.EntityClient;
@@ -104,16 +103,14 @@ namespace NewsPortal.Controllers
         public ActionResult Login()
         {
             if (Session["Admin"] != null)
-                return RedirectToAction("Index", "Admin");
+                return RedirectToAction("Index", "Home");
 
             if (string.Equals(
                 Convert.ToString(Session["Role"]),
                 "Editor",
                 StringComparison.OrdinalIgnoreCase))
             {
-                return RedirectToRoute(
-                    "AdminArticles",
-                    new { action = "Index" });
+                return RedirectToAction("Index", "Home");
             }
 
             if (TempData["Error"] != null)
@@ -247,7 +244,7 @@ namespace NewsPortal.Controllers
                     Session["Role"] = "Admin";
                     Session["Admin"] = databaseUsername;
 
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Index", "Home");
                 }
 
                 Session["User"] = databaseUsername;
@@ -260,10 +257,8 @@ namespace NewsPortal.Controllers
                 {
                     Session["Role"] = "Editor";
 
-                    return RedirectToRoute(
-                        "AdminArticles",
-                        new { action = "Index" });
-                }     
+                    return RedirectToAction("Index", "Home");
+                }
 
                 Session["Role"] = "User";
 
@@ -292,7 +287,7 @@ namespace NewsPortal.Controllers
                 Session["Admin"] = "admin";
                 Session["FailCount"] = 0;
 
-                return RedirectToAction("Index", "Admin");
+                return RedirectToAction("Index", "Home");
             }
 
             // Đăng nhập thất bại
