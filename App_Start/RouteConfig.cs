@@ -26,10 +26,10 @@ namespace NewsPortal
                 }
             );
 
-            // Trang chủ
+            // Trang chủ tại URL gốc
             routes.MapRoute(
-                name: "HomeDetailsWithoutId",
-                url: "Home/Details",
+                name: "HomeRoot",
+                url: "",
                 defaults: new
                 {
                     controller = "Home",

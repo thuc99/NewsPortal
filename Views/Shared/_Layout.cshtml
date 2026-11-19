@@ -1043,7 +1043,7 @@
     <header class="masthead">
         <div class="container brand-row">
             <div>
-                <a class="brand" href="@Url.Action("Index", "Home")">
+                <a class="brand" href="@Url.RouteUrl("HomeRoot")">
                     Tin<span class="brand-red">Nhanh</span>
                 </a>
 
@@ -1157,7 +1157,7 @@
         <div class="container nav-inner">
             <div class="nav-links">
                 <a class="nav-link @(currentController == "Home" && !isFavoritesPage ? "active" : "")"
-                   href="@Url.Action("Index", "Home")"
+                   href="@Url.RouteUrl("HomeRoot")"
                    title="Trang chủ"
                    aria-label="Trang chủ">
                     <i class="fa-solid fa-house" style="font-size: 16px;"></i>
@@ -1285,7 +1285,7 @@
                     <div class="footer-heading">LIÊN KẾT</div>
 
                     <div class="footer-links">
-                        <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                        <a href="@Url.RouteUrl("HomeRoot")">Trang chủ</a>
                         <a href="@Url.Action("Index", "Articles")">Tin tức</a>
                         <a href="@Url.Action("Index", "Categories")">Danh mục</a>
                         <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index" })">Tác giả</a>

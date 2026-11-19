@@ -106,7 +106,7 @@ namespace NewsPortal.Controllers
         {
             if (!id.HasValue || id.Value <= 0)
             {
-                return RedirectToAction("Index");
+                return RedirectToRoute("HomeRoot");
             }
 
             var article = db.Articles
