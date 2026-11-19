@@ -117,7 +117,7 @@ namespace NewsPortal.Controllers
         // =========================
         // DANH SÁCH TÁC GIẢ
         // =========================
-        public ActionResult Index(string search, int? id)
+        public ActionResult Index(string search, int? id, string returnUrl = null)
         {
             var denied = CheckAdminManagementAccess();
             if (denied != null) return denied;
@@ -125,6 +125,7 @@ namespace NewsPortal.Controllers
             bool isAdminManagement = IsAdminManagementRequest();
 
             ViewBag.IsAdminManagement = isAdminManagement;
+            ViewBag.ReturnUrl = returnUrl;
 
             var query = db.Authors.AsQueryable();
 
@@ -165,7 +166,8 @@ namespace NewsPortal.Controllers
                         .FirstOrDefault();
             }
 
-            if (selectedAuthorId.HasValue && !isAdminManagement)
+            // Cho phép xem chi tiết bài viết của tác giả cả ở trang ngoài lẫn trang Admin
+            if (selectedAuthorId.HasValue)
             {
                 var selectedAuthor = db.Authors.Find(selectedAuthorId.Value);
 
@@ -174,17 +176,21 @@ namespace NewsPortal.Controllers
 
                 selectedAuthor.Images = GetAuthorImage(selectedAuthor.AuthorID);
 
-                var publishedArticles = db.Articles
-                    .Where(a =>
-                        a.AuthorID == selectedAuthorId.Value &&
-                        a.Status == "Published")
+                // Nếu là Admin thì lấy TẤT CẢ bài của tác giả (kể cả Nháp, Chờ duyệt...); nếu ngoài trang chủ thì chỉ lấy Published
+                var articlesQuery = db.Articles.Where(a => a.AuthorID == selectedAuthorId.Value);
+                if (!isAdminManagement)
+                {
+                    articlesQuery = articlesQuery.Where(a => a.Status == "Published");
+                }
+
+                var authorArticles = articlesQuery
                     .OrderByDescending(a => a.CreatedDate)
                     .ToList();
 
                 ViewBag.SelectedAuthor = selectedAuthor;
                 ViewBag.ShowAuthorProfile = true;
-                ViewBag.Articles = publishedArticles;
-                ViewBag.ArticleCount = publishedArticles.Count;
+                ViewBag.Articles = authorArticles;
+                ViewBag.ArticleCount = authorArticles.Count;
 
                 var suggestedAuthors = db.Authors
                     .Where(a => a.AuthorID != selectedAuthorId.Value)

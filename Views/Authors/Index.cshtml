@@ -257,7 +257,7 @@
     }
 </style>
 
-@if (hasSelectedAuthor && !isAdminManagement)
+@if (hasSelectedAuthor && (!isAdminManagement || isAdminManagement))
 {
     <div class="author-profile-layout">
         @if (!isAdminLayout)
@@ -297,7 +297,24 @@
             </aside>
         }
         <section class="author-articles" style="@(isAdminLayout ? "grid-column: 1 / -1;" : "")">
-            <h2 class="author-articles-title">Danh sách bài viết <span>(@articleCount bài)</span></h2>
+            @if (isAdminManagement)
+            {
+                <div style="margin-bottom: 16px;">
+                    <button onclick="history.back();" style="display: inline-block; padding: 10px 16px; background: #e2e8f0; color: #334155; border: none; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit;">
+                        ← Quay lại
+                    </button>
+                </div>
+            }
+            <h2 class="author-articles-title">
+                @if (isAdminManagement)
+                {
+                    <text>Danh sách bài viết của tác giả <span>(@articleCount bài)</span></text>
+                }
+                else
+                {
+                    <text>Danh sách bài viết <span>(@articleCount bài)</span></text>
+                }
+            </h2>
             @if (!articles.Any())
             {
                 <div class="author-profile-empty">Tác giả này chưa có bài viết nào.</div>
@@ -310,7 +327,9 @@
                     <div class="author-article-grid">
                         @foreach (var article in monthGroup)
                         {
-                            var articleUrl = Url.Action("View", "Articles", new { id = article.ArticleID });
+                            var articleUrl = isAdminManagement 
+                                ? Url.RouteUrl("AdminArticles", new { action = "Edit", id = article.ArticleID })
+                                : Url.Action("View", "Articles", new { id = article.ArticleID });
                             <article class="author-article-card">
                                 <a href="@articleUrl">
                                     @if (!string.IsNullOrWhiteSpace(article.ImageUrl))
@@ -328,7 +347,13 @@
                                         <div class="author-article-category">@categoryNames[article.CategoryID]</div>
                                     }
                                     <h3 class="author-article-title"><a href="@articleUrl">@article.Title</a></h3>
-                                    <div class="author-article-date">@article.CreatedDate.ToString("dd/MM/yyyy")</div>
+                                    <div class="author-article-date">
+                                        @article.CreatedDate.ToString("dd/MM/yyyy")
+                                        @if (isAdminManagement)
+                                        {
+                                            <text> - <strong>[@article.Status]</strong></text>
+                                        }
+                                    </div>
                                 </div>
                             </article>
                         }
@@ -412,7 +437,7 @@ else
                                         : item.AuthorName.Trim().Substring(0, 1).ToUpper())
                                 </span>
 
-                                <strong><a href="@(isAdminManagement ? Url.RouteUrl("AdminAuthors", new { action = "Details", id = item.AuthorID }) : Url.RouteUrl("PublicAuthor", new { action = "Index", id = item.AuthorID }))" class="name-link">@item.AuthorName</a></strong>
+                                <strong><a href="@(isAdminManagement ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = item.AuthorID }) : Url.RouteUrl("PublicAuthor", new { action = "Index", id = item.AuthorID }))" class="name-link">@item.AuthorName</a></strong>
                             </td>
 
                             <td>
