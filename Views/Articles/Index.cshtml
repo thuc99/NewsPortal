@@ -526,25 +526,44 @@
 
     .action-btn {
         display: inline-block;
-        padding: 7px 10px;
+        padding: 7px 11px;
         margin: 2px;
-        border: 0;
-        border-radius: 6px;
+        border: 1px solid transparent;
+        border-radius: 8px;
         text-decoration: none !important;
         font-size: 12.5px;
         font-weight: 600;
         white-space: nowrap;
         cursor: pointer;
+        transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
     }
 
     .btn-edit {
-        background: #fef08a;
-        color: #854d0e !important;
+        background: #fff;
+        border-color: #e8d8a8;
+        color: #755100 !important;
+    }
+
+    .btn-edit:hover {
+        background: #936b13;
+        border-color: #936b13;
+        color: #fff !important;
     }
 
     .btn-detail {
-        background: #dbeafe;
-        color: #1d4ed8 !important;
+        background: #fff;
+        border-color: #c7d7f0;
+        color: #28558f !important;
+    }
+
+    .btn-detail:hover {
+        background: #28558f;
+        border-color: #28558f;
+        color: #fff !important;
     }
 
     .btn-submit-wf {
@@ -563,8 +582,15 @@
     }
 
     .btn-delete {
-        background: #fee2e2;
-        color: #b91c1c !important;
+        background: #fff;
+        border-color: #e8c4c1;
+        color: #a3322b !important;
+    }
+
+    .btn-delete:hover {
+        background: #a3322b;
+        border-color: #a3322b;
+        color: #fff !important;
     }
 
     .empty-message {

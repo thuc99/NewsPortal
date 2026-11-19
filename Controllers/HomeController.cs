@@ -120,7 +120,7 @@ namespace NewsPortal.Controllers
             }
 
             ViewBag.Comments = db.Comments
-                .Where(c => c.ArticleID == id.Value)
+                .Where(c => c.ArticleID == id.Value && c.Status == "Approved")
                 .OrderByDescending(c => c.CreatedDate)
                 .ToList();
 
@@ -166,7 +166,7 @@ namespace NewsPortal.Controllers
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Pending"
+                Status = "Approved"
             });
 
             db.SaveChanges();

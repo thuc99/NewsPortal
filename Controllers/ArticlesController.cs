@@ -624,11 +624,11 @@ END";
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Pending"
+                Status = "Approved"
             });
             db.SaveChanges();
 
-            TempData["CommentSuccess"] = "Bình luận của bạn đã được gửi và đang chờ Admin phê duyệt.";
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
             return RedirectToAction("View", new { id = articleId.Value });
         }
 
