@@ -1,9 +1,20 @@
 ﻿@model NewsPortal.Models.AdminDashboardViewModel
+@using System.Collections.Generic
 @{
     ViewBag.Title = "Bảng điều khiển Admin";
     int pendingCount = ViewBag.PendingArticles == null ? 0 : (int)ViewBag.PendingArticles;
     int rejectedCount = ViewBag.RejectedArticles == null ? 0 : (int)ViewBag.RejectedArticles;
     int archivedCount = ViewBag.ArchivedArticles == null ? 0 : (int)ViewBag.ArchivedArticles;
+    var rejectionReasons = ViewBag.RejectionReasons as Dictionary<int, string> ?? new Dictionary<int, string>();
+    var categoryStats = ViewBag.CategoryStats as List<NewsPortal.Controllers.AdminController.CategoryStatusStat>
+        ?? new List<NewsPortal.Controllers.AdminController.CategoryStatusStat>();
+    int totalForBar = Model.TotalArticles > 0 ? Model.TotalArticles : 1;
+    var articleRatingStats = ViewBag.ArticleRatingStats as List<NewsPortal.Controllers.AdminController.ArticleRatingStat>
+        ?? new List<NewsPortal.Controllers.AdminController.ArticleRatingStat>();
+    int totalRatings = ViewBag.TotalRatings == null ? 0 : (int)ViewBag.TotalRatings;
+    double overallAvgRating = ViewBag.OverallAverageRating == null ? 0 : (double)ViewBag.OverallAverageRating;
+    int[] starCounts = ViewBag.StarCounts as int[] ?? new int[6];
+    int totalRatingsForBar = totalRatings > 0 ? totalRatings : 1;
 }
 
 @section styles {
@@ -280,6 +291,210 @@
             font-size: 14px;
             font-weight: 600;
         }
+
+        .reject-reason-note {
+            margin-top: 6px;
+            padding: 6px 9px;
+            border-radius: 6px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.45;
+            white-space: normal;
+        }
+
+        .reject-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .55);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+            .reject-modal-overlay.is-open {
+                display: flex;
+            }
+
+        .reject-modal-card {
+            width: 100%;
+            max-width: 480px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 22px 24px;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, .25);
+        }
+
+            .reject-modal-card h4 {
+                margin: 0 0 6px;
+                font-size: 18px;
+                color: #b91c1c;
+            }
+
+        .reject-modal-title {
+            margin: 0 0 14px;
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .reject-modal-card textarea {
+            width: 100%;
+            min-height: 105px;
+            padding: 10px 12px;
+            border: 1.5px solid var(--line);
+            border-radius: 8px;
+            font: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+            .reject-modal-card textarea:focus {
+                outline: none;
+                border-color: var(--red);
+            }
+
+        .reject-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .stats-bar-wrap {
+            margin: 12px 0 18px;
+        }
+
+        .stats-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        .stats-seg-pub {
+            background: #16a34a;
+        }
+
+        .stats-seg-pending {
+            background: #2563eb;
+        }
+
+        .stats-seg-draft {
+            background: #f59e0b;
+        }
+
+        .stats-seg-rejected {
+            background: #dc2626;
+        }
+
+        .stats-seg-archived {
+            background: #94a3b8;
+        }
+
+        .stats-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        .stats-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stats-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+
+        .stats-num {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .adm-table tfoot td {
+            padding: 11px 10px;
+            background: var(--soft);
+            border-top: 2px solid var(--line);
+            font-weight: 700;
+        }
+
+        .rating-overview {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
+            align-items: center;
+            margin: 12px 0 18px;
+            padding: 16px 18px;
+            border-radius: 10px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+        }
+
+        .rating-score-box {
+            text-align: center;
+        }
+
+        .rating-score-big {
+            font-size: 34px;
+            font-weight: 800;
+            color: #b45309;
+            line-height: 1.1;
+        }
+
+        .rating-stars-gold {
+            color: #f59e0b;
+            font-size: 16px;
+            letter-spacing: 1px;
+            margin: 4px 0;
+        }
+
+        .rating-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .rating-bar-row {
+            display: grid;
+            grid-template-columns: 52px 1fr 48px;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        .rating-track {
+            height: 9px;
+            border-radius: 999px;
+            background: #fef3c7;
+            overflow: hidden;
+        }
+
+        .rating-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: #f59e0b;
+        }
+
+        @@media (max-width: 680px) {
+            .rating-overview {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
@@ -347,6 +562,176 @@
     </div>
 </div>
 
+<div class="adm-panel" style="margin-bottom:20px;">
+    <div class="adm-toolbar" style="margin-bottom:8px;">
+        <h3 style="margin:0;"><i class="fa-solid fa-chart-column" style="color:var(--red);"></i> Thống kê bài viết theo danh mục và trạng thái</h3>
+    </div>
+
+    <div class="stats-bar-wrap">
+        <div class="stats-bar" title="Tỷ lệ bài viết theo trạng thái">
+            @if (Model.PublishedArticles > 0)
+            {
+                <div class="stats-seg-pub" style="width:@((Model.PublishedArticles * 100.0 / totalForBar).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+            }
+            @if (pendingCount > 0)
+            {
+                <div class="stats-seg-pending" style="width:@((pendingCount * 100.0 / totalForBar).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+            }
+            @if (Model.DraftArticles > 0)
+            {
+                <div class="stats-seg-draft" style="width:@((Model.DraftArticles * 100.0 / totalForBar).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+            }
+            @if (rejectedCount > 0)
+            {
+                <div class="stats-seg-rejected" style="width:@((rejectedCount * 100.0 / totalForBar).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+            }
+            @if (archivedCount > 0)
+            {
+                <div class="stats-seg-archived" style="width:@((archivedCount * 100.0 / totalForBar).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+            }
+        </div>
+        <div class="stats-legend">
+            <span class="stats-legend-item"><span class="stats-dot stats-seg-pub"></span>Đã xuất bản: <strong>@Model.PublishedArticles</strong></span>
+            <span class="stats-legend-item"><span class="stats-dot stats-seg-pending"></span>Chờ duyệt: <strong>@pendingCount</strong></span>
+            <span class="stats-legend-item"><span class="stats-dot stats-seg-draft"></span>Bản nháp: <strong>@Model.DraftArticles</strong></span>
+            <span class="stats-legend-item"><span class="stats-dot stats-seg-rejected"></span>Bị từ chối: <strong>@rejectedCount</strong></span>
+            <span class="stats-legend-item"><span class="stats-dot stats-seg-archived"></span>Đã lưu trữ: <strong>@archivedCount</strong></span>
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="adm-table">
+            <thead>
+                <tr>
+                    <th>Danh mục</th>
+                    <th style="text-align:center;">Tổng bài</th>
+                    <th style="text-align:center;">Đã xuất bản</th>
+                    <th style="text-align:center;">Chờ duyệt</th>
+                    <th style="text-align:center;">Bản nháp</th>
+                    <th style="text-align:center;">Bị từ chối</th>
+                    <th style="text-align:center;">Lưu trữ</th>
+                    <th style="text-align:center;">Lượt xem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (categoryStats.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">Chưa có dữ liệu danh mục.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var stat in categoryStats)
+                    {
+                        <tr>
+                            <td style="font-weight:700;">
+                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index", categoryId = stat.CategoryID })">@stat.CategoryName</a>
+                            </td>
+                            <td class="stats-num">@stat.TotalArticles</td>
+                            <td class="stats-num" style="color:#166534;">@stat.PublishedCount</td>
+                            <td class="stats-num" style="color:#1e40af;">@stat.PendingCount</td>
+                            <td class="stats-num" style="color:#92400e;">@stat.DraftCount</td>
+                            <td class="stats-num" style="color:#b91c1c;">@stat.RejectedCount</td>
+                            <td class="stats-num" style="color:#475569;">@stat.ArchivedCount</td>
+                            <td class="stats-num">@stat.TotalViews</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Tổng cộng</td>
+                    <td class="stats-num">@Model.TotalArticles</td>
+                    <td class="stats-num" style="color:#166534;">@Model.PublishedArticles</td>
+                    <td class="stats-num" style="color:#1e40af;">@pendingCount</td>
+                    <td class="stats-num" style="color:#92400e;">@Model.DraftArticles</td>
+                    <td class="stats-num" style="color:#b91c1c;">@rejectedCount</td>
+                    <td class="stats-num" style="color:#475569;">@archivedCount</td>
+                    <td class="stats-num">@Model.TotalViews</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="adm-panel" style="margin-bottom:20px;">
+    <div class="adm-toolbar" style="margin-bottom:8px;">
+        <h3 style="margin:0;"><i class="fa-solid fa-star" style="color:#f59e0b;"></i> Thống kê đánh giá bài viết</h3>
+    </div>
+
+    <div class="rating-overview">
+        <div class="rating-score-box">
+            <div class="rating-score-big">@overallAvgRating.ToString("0.0") <span style="font-size:16px; color:var(--muted);">/ 5</span></div>
+            <div class="rating-stars-gold">
+                @for (int s = 1; s <= 5; s++)
+                {
+                    @(s <= (int)Math.Round(overallAvgRating) ? "★" : "☆")
+                }
+            </div>
+            <div style="font-size:13px; color:var(--muted);">Tổng cộng <strong>@totalRatings</strong> lượt đánh giá</div>
+        </div>
+
+        <div class="rating-bars">
+            @for (int star = 5; star >= 1; star--)
+            {
+                int count = starCounts.Length > star ? starCounts[star] : 0;
+                double pct = count * 100.0 / totalRatingsForBar;
+                <div class="rating-bar-row">
+                    <span style="font-weight:700;">@star ★</span>
+                    <div class="rating-track">
+                        <div class="rating-fill" style="width:@pct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%;"></div>
+                    </div>
+                    <span style="text-align:right; color:var(--muted); font-weight:600;">@count</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="adm-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tiêu đề bài viết</th>
+                    <th>Danh mục</th>
+                    <th style="text-align:center;">Điểm trung bình</th>
+                    <th style="text-align:center;">Lượt đánh giá</th>
+                    <th style="text-align:center;">5 sao</th>
+                    <th style="text-align:center;">1–2 sao</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (articleRatingStats.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">Chưa có bài viết nào được đánh giá.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var r in articleRatingStats)
+                    {
+                        <tr>
+                            <td>#@r.ArticleID</td>
+                            <td style="font-weight:700;">
+                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Details", id = r.ArticleID })">@r.Title</a>
+                            </td>
+                            <td>@r.CategoryName</td>
+                            <td class="stats-num" style="color:#b45309;">
+                                @r.AverageRating.ToString("0.0") <span style="color:#f59e0b;">★</span>
+                            </td>
+                            <td class="stats-num">@r.RatingCount</td>
+                            <td class="stats-num" style="color:#166534;">@r.FiveStarCount</td>
+                            <td class="stats-num" style="color:#b91c1c;">@r.LowStarCount</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <div class="adm-panel">
     <div class="adm-toolbar">
         <h3 style="margin:0;"><i class="fa-solid fa-list-check" style="color:var(--red);"></i> Kiểm duyệt &amp; Xuất bản bài viết</h3>
@@ -409,6 +794,12 @@
                             <td>#@item.ArticleID</td>
                             <td style="font-weight:700; max-width:300px;">
                                 <a href="@Url.RouteUrl("AdminArticles", new { action = "Details", id = item.ArticleID })">@item.Title</a>
+                                @if (item.Status == "Rejected" && rejectionReasons.ContainsKey(item.ArticleID))
+                                {
+                                    <div class="reject-reason-note">
+                                        <strong>Lý do từ chối:</strong> @rejectionReasons[item.ArticleID]
+                                    </div>
+                                }
                             </td>
                             <td>@item.CategoryName</td>
                             <td>@item.AuthorName</td>
@@ -448,15 +839,12 @@
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
                                         <button type="submit" class="btn-mini btn-approve">Duyệt đăng</button>
                                     }
-                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@item.ArticleID" />
-                                        <input type="hidden" name="newStatus" value="Rejected" />
-                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
-                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <button type="submit" class="btn-mini btn-reject">Từ chối</button>
-                                    }
+                                    <button type="button"
+                                            class="btn-mini btn-reject js-open-reject-modal"
+                                            data-article-id="@item.ArticleID"
+                                            data-article-title="@item.Title">
+                                        Từ chối
+                                    </button>
                                 }
                                 else if (item.Status == "Published")
                                 {
@@ -469,15 +857,12 @@
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
                                         <button type="submit" class="btn-mini btn-archive">Lưu trữ</button>
                                     }
-                                    using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@item.ArticleID" />
-                                        <input type="hidden" name="newStatus" value="Rejected" />
-                                        <input type="hidden" name="search" value="@Model.SearchQuery" />
-                                        <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <button type="submit" class="btn-mini btn-reject">Trả lại</button>
-                                    }
+                                    <button type="button"
+                                            class="btn-mini btn-reject js-open-reject-modal"
+                                            data-article-id="@item.ArticleID"
+                                            data-article-title="@item.Title">
+                                        Trả lại
+                                    </button>
                                 }
                                 else if (item.Status == "Archived")
                                 {
@@ -531,3 +916,82 @@
         </table>
     </div>
 </div>
+
+<div id="rejectModal" class="reject-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rejectModalHeading">
+    <div class="reject-modal-card">
+        <h4 id="rejectModalHeading">Từ chối bài viết</h4>
+        <p id="rejectModalArticleTitle" class="reject-modal-title"></p>
+        @using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { id = "rejectModalForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="rejectArticleId" value="" />
+            <input type="hidden" name="newStatus" value="Rejected" />
+            <input type="hidden" name="search" value="@Model.SearchQuery" />
+            <input type="hidden" name="status" value="@Model.StatusFilter" />
+            <label for="rejectReasonInput" style="display:block; font-weight:700; font-size:13px; margin-bottom:6px;">
+                Lý do từ chối <span style="color:#b91c1c;">*</span>
+            </label>
+            <textarea id="rejectReasonInput"
+                      name="rejectionReason"
+                      maxlength="500"
+                      required
+                      placeholder="Nhập lý do từ chối để người viết biết cần chỉnh sửa nội dung gì..."></textarea>
+            <div style="font-size:12px; color:var(--muted); margin-top:4px;">Tối đa 500 ký tự. Lý do sẽ hiển thị cho người viết khi sửa bài.</div>
+            <div class="reject-modal-actions">
+                <button type="button" id="rejectModalCancel" class="btn-mini">Hủy</button>
+                <button type="submit" class="btn-mini btn-reject">Xác nhận từ chối</button>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+        (function () {
+            var modal = document.getElementById("rejectModal");
+            var heading = document.getElementById("rejectModalHeading");
+            var titleEl = document.getElementById("rejectModalArticleTitle");
+            var idInput = document.getElementById("rejectArticleId");
+            var reasonInput = document.getElementById("rejectReasonInput");
+            var cancelBtn = document.getElementById("rejectModalCancel");
+            var form = document.getElementById("rejectModalForm");
+
+            function closeModal() {
+                if (!modal) return;
+                modal.classList.remove("is-open");
+                if (reasonInput) reasonInput.value = "";
+            }
+
+            var buttons = document.querySelectorAll(".js-open-reject-modal");
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].addEventListener("click", function () {
+                    var articleId = this.getAttribute("data-article-id") || "";
+                    var articleTitle = this.getAttribute("data-article-title") || "";
+                    if (idInput) idInput.value = articleId;
+                    if (heading) heading.textContent = "Từ chối bài viết #" + articleId;
+                    if (titleEl) titleEl.textContent = articleTitle;
+                    if (modal) modal.classList.add("is-open");
+                    if (reasonInput) reasonInput.focus();
+                });
+            }
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener("click", closeModal);
+            }
+
+            if (modal) {
+                modal.addEventListener("click", function (e) {
+                    if (e.target === modal) closeModal();
+                });
+            }
+
+            if (form) {
+                form.addEventListener("submit", function (e) {
+                    if (!reasonInput || !reasonInput.value.trim()) {
+                        e.preventDefault();
+                        alert("Vui lòng nhập lý do từ chối để người viết sửa lại.");
+                        if (reasonInput) reasonInput.focus();
+                    }
+                });
+            }
+        })();
+</script>

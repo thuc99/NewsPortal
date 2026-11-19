@@ -16,7 +16,7 @@
 
         .usr-grid {
             display: grid;
-            grid-template-columns: 340px 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
             align-items: start;
         }
@@ -62,61 +62,61 @@
             max-width: 620px;
         }
 
-        .usr-search input {
-            flex: 1 1 320px;
-            width: 320px;
-            max-width: 100%;
-            min-width: 0;
-            height: 40px;
-            padding: 0 12px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            font-size: 13px;
-        }
+            .usr-search input {
+                flex: 1 1 320px;
+                width: 320px;
+                max-width: 100%;
+                min-width: 0;
+                height: 40px;
+                padding: 0 12px;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                font-size: 13px;
+            }
 
-        .usr-search .search-button,
-        .usr-search .filter-reset {
-            flex: 0 0 auto;
-            height: 40px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 14px;
-            white-space: nowrap;
-        }
+            .usr-search .search-button,
+            .usr-search .filter-reset {
+                flex: 0 0 auto;
+                height: 40px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 14px;
+                white-space: nowrap;
+            }
 
-        .usr-search .search-button {
-            border: 0;
-            border-radius: 8px;
-            background: var(--red);
-            color: #fff;
-            font-weight: 700;
-            cursor: pointer;
-        }
+            .usr-search .search-button {
+                border: 0;
+                border-radius: 8px;
+                background: var(--red);
+                color: #fff;
+                font-weight: 700;
+                cursor: pointer;
+            }
 
-        .usr-search .filter-reset {
-            border-radius: 8px;
-            background: var(--soft);
-            color: var(--ink);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-            .usr-table th {
-                text-align: left;
-                padding: 11px 10px;
+            .usr-search .filter-reset {
+                border-radius: 8px;
                 background: var(--soft);
-                border-bottom: 2px solid var(--line);
-                font-size: 12px;
-                text-transform: uppercase;
-                color: var(--muted);
+                color: var(--ink);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 600;
             }
 
-            .usr-table td {
-                padding: 12px 10px;
-                border-bottom: 1px solid var(--line);
-            }
+        .usr-table th {
+            text-align: left;
+            padding: 11px 10px;
+            background: var(--soft);
+            border-bottom: 2px solid var(--line);
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .usr-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--line);
+        }
 
         .msg-ok {
             padding: 11px 15px;
@@ -143,8 +143,14 @@
         }
 
         @@media (max-width: 520px) {
-            .usr-search { flex-wrap: wrap; }
-            .usr-search input { flex-basis: 100%; width: 100%; }
+            .usr-search {
+                flex-wrap: wrap;
+            }
+
+                .usr-search input {
+                    flex-basis: 100%;
+                    width: 100%;
+                }
         }
     </style>
 }
@@ -168,41 +174,6 @@
 }
 
 <div class="usr-grid">
-    <div class="usr-box">
-        <h3 style="margin-top:0;"><i class="fa-solid fa-user-plus" style="color:var(--red);"></i> Thêm tài khoản mới</h3>
-        @using (Html.BeginForm("CreateUser", "Admin", FormMethod.Post))
-        {
-            @Html.AntiForgeryToken()
-            <div class="usr-field">
-                <label>Tên đăng nhập *</label>
-                <input type="text" name="username" required placeholder="Ví dụ: bientap01" />
-            </div>
-            <div class="usr-field">
-                <label>Mật khẩu *</label>
-                <input type="password" name="password" required placeholder="Nhập mật khẩu" />
-            </div>
-            <div class="usr-field">
-                <label>Họ và tên *</label>
-                <input type="text" name="fullName" required placeholder="Nguyễn Văn A" />
-            </div>
-            <div class="usr-field">
-                <label>Email *</label>
-                <input type="email" name="email" required maxlength="256" placeholder="email@newsportal.vn" />
-            </div>
-            <div class="usr-field">
-                <label>Vai trò</label>
-                <select name="role">
-                    <option value="User">User</option>
-                    <option value="Editor">Editor</option>
-                    <option value="Admin">Admin</option>
-                </select>
-            </div>
-            <button type="submit" class="search-button" style="width:100%; height:42px;">
-                Tạo tài khoản
-            </button>
-        }
-    </div>
-
     <div class="usr-box" style="overflow-x:auto;">
         <h3 style="margin-top:0;"><i class="fa-solid fa-users" style="color:var(--red);"></i> Danh sách tài khoản</h3>
         <form method="get" action="@Url.RouteUrl("Admin", new { action = "Users" })" class="usr-search">
