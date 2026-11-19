@@ -447,6 +447,8 @@ END";
                     ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
                 }
             }
+
+            ViewBag.IsSavedArticle = GetFavoriteIds().Contains(artId);
         }
 
         private ActionResult LoadArticleDetails(int? id, bool canComment)
@@ -626,48 +628,62 @@ END";
 
             int artId = articleId.Value;
 
-            // Giữ nguyên cookie của hệ thống cũ
-            var favoriteIds = GetFavoriteIds();
-            if (favoriteIds.Contains(artId))
-                favoriteIds.Remove(artId);
-            else
-                favoriteIds.Add(artId);
-
-            Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", favoriteIds))
-            {
-                Expires = DateTime.Now.AddYears(1),
-                HttpOnly = true
-            });
-
-            // Đồng bộ thêm vào bảng SavedArticles khi đã đăng nhập
             string currentUsername = (Session["User"] ?? Session["Admin"]) as string;
-            if (!string.IsNullOrEmpty(currentUsername))
+            var viewer = !string.IsNullOrEmpty(currentUsername)
+                ? db.Users.FirstOrDefault(u => u.Username == currentUsername)
+                : null;
+
+            if (viewer != null)
             {
-                var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
-                if (viewer != null)
+                var existing = db.SavedArticles.FirstOrDefault(s => s.UserId == viewer.UserId && s.ArticleId == artId);
+                if (existing != null)
                 {
-                    var existing = db.SavedArticles.FirstOrDefault(s => s.UserId == viewer.UserId && s.ArticleId == artId);
-                    if (existing != null)
-                    {
-                        db.SavedArticles.Remove(existing);
-                        TempData["FavoriteMessage"] = "Đã bỏ lưu bài viết.";
-                    }
-                    else
-                    {
-                        db.SavedArticles.Add(new SavedArticles
-                        {
-                            UserId = viewer.UserId,
-                            ArticleId = artId,
-                            SavedDate = DateTime.Now
-                        });
-                        TempData["FavoriteMessage"] = "Đã lưu bài viết vào Tin đã lưu.";
-                    }
-                    db.SaveChanges();
+                    db.SavedArticles.Remove(existing);
+                    TempData["FavoriteMessage"] = "Đã bỏ lưu bài viết.";
                 }
+                else
+                {
+                    db.SavedArticles.Add(new SavedArticles
+                    {
+                        UserId = viewer.UserId,
+                        ArticleId = artId,
+                        SavedDate = DateTime.Now
+                    });
+                    TempData["FavoriteMessage"] = "Đã lưu bài viết vào Tin đã lưu.";
+                }
+                db.SaveChanges();
+
+                var syncedIds = db.SavedArticles
+                    .Where(s => s.UserId == viewer.UserId)
+                    .OrderByDescending(s => s.SavedDate)
+                    .Select(s => s.ArticleId)
+                    .ToList();
+
+                Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", syncedIds))
+                {
+                    Expires = DateTime.Now.AddYears(1),
+                    HttpOnly = true
+                });
             }
             else
             {
-                TempData["FavoriteMessage"] = favoriteIds.Contains(artId) ? "Đã lưu bài viết yêu thích." : "Đã bỏ khỏi bài viết yêu thích.";
+                var favoriteIds = GetFavoriteIds();
+                if (favoriteIds.Contains(artId))
+                {
+                    favoriteIds.Remove(artId);
+                    TempData["FavoriteMessage"] = "Đã bỏ lưu bài viết.";
+                }
+                else
+                {
+                    favoriteIds.Add(artId);
+                    TempData["FavoriteMessage"] = "Đã lưu bài viết vào Tin đã lưu.";
+                }
+
+                Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", favoriteIds))
+                {
+                    Expires = DateTime.Now.AddYears(1),
+                    HttpOnly = true
+                });
             }
 
             return RedirectToAction("View", new { id = artId });
