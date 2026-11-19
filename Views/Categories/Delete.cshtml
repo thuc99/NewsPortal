@@ -7,43 +7,43 @@
 
 <style>
     .delete-page {
-        width: min(700px, calc(100% - 32px));
-        max-width: 700px;
-        margin: 40px auto;
-        padding: 0;
+        width: min(820px, 100%);
+        margin: 0 auto;
     }
 
     .delete-card {
-        background: white;
-        border: 0;
-        border-radius: 0;
-        padding: 0 0 30px;
+        background: var(--admin-panel);
+        border: 1px solid var(--admin-line);
+        border-radius: 14px;
+        padding: 30px;
+        box-shadow: 0 8px 24px rgba(23, 32, 51, .06);
     }
 
         .delete-card h2 {
-            color: #b91c1c;
-            font-size: 26px;
+            color: var(--admin-red);
+            font-size: 24px;
             font-weight: 750;
+            margin: 0 0 18px;
         }
 
     .delete-warning {
-        background: #fff7ed;
+        background: #fff8ed;
         color: #9a3412;
         border: 1px solid #fed7aa;
-        border-radius: 8px;
-        padding: 14px;
-        margin: 20px 0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 0 0 22px;
     }
 
     .delete-info {
         padding: 12px 0;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--admin-line);
     }
 
     .delete-actions {
         display: flex;
         gap: 10px;
-        margin-top: 25px;
+        margin-top: 24px;
     }
 
     .btn-delete, .btn-back {
@@ -56,17 +56,28 @@
     }
 
     .btn-delete {
-        background: #b91c1c;
+        background: var(--admin-red);
         color: white;
+        transition: background .2s, transform .2s;
+    }
+
+    .btn-delete:hover {
+        background: var(--red-dark);
+        transform: translateY(-1px);
     }
 
     .btn-back {
-        background: #e2e8f0;
-        color: #334155;
+        background: var(--soft);
+        color: var(--admin-ink);
+    }
+
+    .btn-back:hover {
+        background: var(--admin-line);
     }
 
     @@media (max-width: 650px) {
-        .delete-page { width: calc(100% - 24px); margin-top: 22px; }
+        .delete-page { width: 100%; }
+        .delete-card { padding: 22px 18px; }
         .delete-actions { flex-wrap: wrap; }
         .btn-delete, .btn-back { flex: 1 1 160px; text-align: center; }
     }

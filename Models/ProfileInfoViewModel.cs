@@ -66,6 +66,7 @@ namespace NewsPortal.Models
         public int ArticleId { get; set; }
         public string ArticleTitle { get; set; }
         public string Content { get; set; }
+        public string Status { get; set; }
         public DateTime? CreatedAt { get; set; }
     }
 
