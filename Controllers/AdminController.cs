@@ -620,7 +620,7 @@ END";
             status = (status ?? string.Empty).Trim();
 
             var comments = new List<AdminCommentRow>();
-            int totalCount = 0, pendingCount = 0, approvedCount = 0, hiddenCount = 0;
+            int totalCount = 0, approvedCount = 0, hiddenCount = 0;
 
             using (var conn = CreateConnection())
             {
@@ -629,7 +629,6 @@ END";
                 string countSql = @"
                     SELECT
                         COUNT(*) AS TotalCount,
-                        SUM(CASE WHEN Status = N'Pending' THEN 1 ELSE 0 END) AS PendingCount,
                         SUM(CASE WHEN Status = N'Approved' THEN 1 ELSE 0 END) AS ApprovedCount,
                         SUM(CASE WHEN Status = N'Hidden' THEN 1 ELSE 0 END) AS HiddenCount
                     FROM dbo.Comments;";
@@ -640,7 +639,6 @@ END";
                     if (r.Read())
                     {
                         totalCount = r["TotalCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["TotalCount"]);
-                        pendingCount = r["PendingCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["PendingCount"]);
                         approvedCount = r["ApprovedCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["ApprovedCount"]);
                         hiddenCount = r["HiddenCount"] == DBNull.Value ? 0 : Convert.ToInt32(r["HiddenCount"]);
                     }
@@ -667,9 +665,7 @@ END";
                            OR a.Title LIKE N'%' + @search + N'%'
                            OR u.Username LIKE N'%' + @search + N'%')
                     ORDER BY
-                        CASE WHEN c.Status = N'Pending' THEN 0
-                             WHEN c.Status = N'Approved' THEN 1
-                             ELSE 2 END,
+                        CASE WHEN c.Status = N'Approved' THEN 0 ELSE 1 END,
                         c.CreatedDate DESC;";
 
                 using (var cmd = new SqlCommand(sql, conn))
@@ -704,40 +700,17 @@ END";
             ViewBag.Search = search;
             ViewBag.StatusFilter = status;
             ViewBag.TotalCount = totalCount;
-            ViewBag.PendingCount = pendingCount;
             ViewBag.ApprovedCount = approvedCount;
             ViewBag.HiddenCount = hiddenCount;
 
             return View(comments);
         }
 
-        // POST: /Admin/ApproveComment
+        // POST: /Admin/MarkCommentSpam
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AdminAuthorize]
-        public ActionResult ApproveComment(int id, string search, string status)
-        {
-            using (var conn = CreateConnection())
-            {
-                conn.Open();
-                using (var cmd = new SqlCommand("UPDATE dbo.Comments SET Status = N'Approved' WHERE CommentID = @id;", conn))
-                {
-                    cmd.Parameters.AddWithValue("@id", id);
-                    int rows = cmd.ExecuteNonQuery();
-                    if (rows > 0)
-                        TempData["AdminMessage"] = "Đã duyệt bình luận #" + id + " hiển thị công khai.";
-                    else
-                        TempData["AdminError"] = "Không tìm thấy bình luận cần duyệt.";
-                }
-            }
-            return RedirectToAction("Comments", new { search = search, status = status });
-        }
-
-        // POST: /Admin/HideComment
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [AdminAuthorize]
-        public ActionResult HideComment(int id, string search, string status)
+        public ActionResult MarkCommentSpam(int id, string search, string status)
         {
             using (var conn = CreateConnection())
             {
@@ -747,9 +720,9 @@ END";
                     cmd.Parameters.AddWithValue("@id", id);
                     int rows = cmd.ExecuteNonQuery();
                     if (rows > 0)
-                        TempData["AdminMessage"] = "Đã ẩn bình luận #" + id + " khỏi trang công khai.";
+                        TempData["AdminMessage"] = "Đã đánh dấu spam và ẩn bình luận #" + id + ".";
                     else
-                        TempData["AdminError"] = "Không tìm thấy bình luận cần ẩn.";
+                        TempData["AdminError"] = "Không tìm thấy bình luận cần đánh dấu spam.";
                 }
             }
             return RedirectToAction("Comments", new { search = search, status = status });

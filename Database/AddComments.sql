@@ -10,7 +10,7 @@ BEGIN
 			CONSTRAINT DF_Comments_CreatedDate DEFAULT (GETDATE()),
 		UserId INT NULL,
 		Status NVARCHAR(20) NOT NULL
-			CONSTRAINT DF_Comments_Status DEFAULT (N'Pending'),
+			CONSTRAINT DF_Comments_Status DEFAULT (N'Approved'),
 
 		CONSTRAINT PK_Comments PRIMARY KEY (CommentID),
 		CONSTRAINT FK_Comments_Articles
@@ -37,10 +37,27 @@ IF COL_LENGTH(N'dbo.Comments', N'Status') IS NULL
 BEGIN
 	ALTER TABLE dbo.Comments
 		ADD Status NVARCHAR(20) NOT NULL
-			CONSTRAINT DF_Comments_Status DEFAULT (N'Pending') WITH VALUES;
-
-	UPDATE dbo.Comments SET Status = N'Approved';
+			CONSTRAINT DF_Comments_Status DEFAULT (N'Approved') WITH VALUES;
 END
+
+DECLARE @dropStatusDefaultSql NVARCHAR(MAX) = N'';
+SELECT @dropStatusDefaultSql = N'ALTER TABLE dbo.Comments DROP CONSTRAINT [' + REPLACE(dc.name, N']', N']]') + N'];'
+FROM sys.default_constraints dc
+INNER JOIN sys.columns col
+	ON col.object_id = dc.parent_object_id
+	AND col.column_id = dc.parent_column_id
+WHERE dc.parent_object_id = OBJECT_ID(N'dbo.Comments')
+	AND col.name = N'Status';
+
+IF LEN(@dropStatusDefaultSql) > 0
+	EXEC sp_executesql @dropStatusDefaultSql;
+
+ALTER TABLE dbo.Comments
+	ADD CONSTRAINT DF_Comments_Status DEFAULT (N'Approved') FOR Status;
+
+UPDATE dbo.Comments
+SET Status = N'Approved'
+WHERE Status = N'Pending';
 GO
 
 /* Dữ liệu mẫu cho trang báo */
