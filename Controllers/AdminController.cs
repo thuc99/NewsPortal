@@ -21,6 +21,8 @@ namespace NewsPortal.Controllers
             "Draft", "Pending", "Published", "Rejected", "Archived"
         };
 
+        private const int DashboardArticlePageSize = 10;
+
         private static bool _statusConstraintChecked = false;
         private static readonly object _constraintLock = new object();
 
@@ -122,7 +124,7 @@ END";
         }
 
         // GET: /Admin
-        public ActionResult Index(string search = "", string status = "")
+        public ActionResult Index(string search = "", string status = "", int page = 1, int? rejectionArticleId = null)
         {
             if (Session["Admin"] == null)
                 return RedirectToRoute("AdminArticles", new { action = "Index" });
@@ -130,7 +132,8 @@ END";
             var model = new AdminDashboardViewModel
             {
                 SearchQuery = search ?? "",
-                StatusFilter = status ?? ""
+                StatusFilter = status ?? "",
+                CurrentPage = Math.Max(page, 1)
             };
 
             int pendingArticles = 0;
@@ -275,30 +278,62 @@ END";
                     }
                 }
 
-                string reasonSql = @"
+                model.SearchQuery = model.SearchQuery.Trim();
+                model.StatusFilter = model.StatusFilter.Trim();
+                const string countSql = @"
+                    SELECT COUNT(*)
+                    FROM dbo.Articles a
+                    WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
+                      AND (@status = N'' OR a.Status = @status);";
+
+                using (var cmd = new SqlCommand(countSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@search", model.SearchQuery);
+                    cmd.Parameters.AddWithValue("@status", model.StatusFilter);
+                    model.FilteredArticleCount = Convert.ToInt32(cmd.ExecuteScalar());
+                }
+
+                model.TotalPages = Math.Max((int)Math.Ceiling((double)model.FilteredArticleCount / DashboardArticlePageSize), 1);
+                model.CurrentPage = Math.Min(model.CurrentPage, model.TotalPages);
+
+                const string reasonSql = @"
                     IF COL_LENGTH('dbo.Articles', 'RejectionReason') IS NOT NULL
                     BEGIN
                         SELECT ArticleID, RejectionReason
                         FROM dbo.Articles
                         WHERE Status = N'Rejected'
                           AND RejectionReason IS NOT NULL
-                          AND LTRIM(RTRIM(RejectionReason)) <> N'';
+                          AND LTRIM(RTRIM(RejectionReason)) <> N''
+                          AND ArticleID IN
+                          (
+                              SELECT a.ArticleID
+                              FROM dbo.Articles a
+                              WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
+                                AND (@status = N'' OR a.Status = @status)
+                              ORDER BY CASE WHEN a.Status = N'Pending' THEN 0 ELSE 1 END,
+                                       a.CreatedDate DESC
+                              OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+                          );
                     END";
 
                 using (var cmd = new SqlCommand(reasonSql, conn))
-                using (var reader = cmd.ExecuteReader())
                 {
-                    if (reader.HasRows)
+                    cmd.Parameters.AddWithValue("@search", model.SearchQuery);
+                    cmd.Parameters.AddWithValue("@status", model.StatusFilter);
+                    cmd.Parameters.AddWithValue("@offset", (model.CurrentPage - 1) * DashboardArticlePageSize);
+                    cmd.Parameters.AddWithValue("@pageSize", DashboardArticlePageSize);
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        while (reader.Read())
+                        if (reader.HasRows)
                         {
-                            rejectionReasons[Convert.ToInt32(reader["ArticleID"])] = Convert.ToString(reader["RejectionReason"]);
+                            while (reader.Read())
+                                rejectionReasons[Convert.ToInt32(reader["ArticleID"])] = Convert.ToString(reader["RejectionReason"]);
                         }
                     }
                 }
 
                 string listSql = @"
-                    SELECT TOP 50 
+                    SELECT 
                         a.ArticleID,
                         a.Title,
                         ISNULL(c.CategoryName, N'Chưa phân loại') AS CategoryName,
@@ -312,12 +347,15 @@ END";
                     WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
                       AND (@status = N'' OR a.Status = @status)
                     ORDER BY CASE WHEN a.Status = N'Pending' THEN 0 ELSE 1 END,
-                             a.CreatedDate DESC;";
+                             a.CreatedDate DESC
+                    OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;";
 
                 using (var cmd = new SqlCommand(listSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@search", model.SearchQuery.Trim());
                     cmd.Parameters.AddWithValue("@status", model.StatusFilter.Trim());
+                    cmd.Parameters.AddWithValue("@offset", (model.CurrentPage - 1) * DashboardArticlePageSize);
+                    cmd.Parameters.AddWithValue("@pageSize", DashboardArticlePageSize);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -342,6 +380,7 @@ END";
             ViewBag.RejectedArticles = rejectedArticles;
             ViewBag.ArchivedArticles = archivedArticles;
             ViewBag.RejectionReasons = rejectionReasons;
+            ViewBag.RejectionArticleId = rejectionArticleId;
             ViewBag.CategoryStats = categoryStats;
             ViewBag.ArticleRatingStats = articleRatingStats;
             ViewBag.TotalRatings = totalRatings;
@@ -355,17 +394,27 @@ END";
         [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult UpdateArticleStatus(int id, string newStatus, string search = "", string status = "", string rejectionReason = "")
+        public ActionResult UpdateArticleStatus(int id, string newStatus, string search = "", string status = "", string rejectionReason = "", int page = 1)
         {
             newStatus = (newStatus ?? "").Trim();
             rejectionReason = (rejectionReason ?? "").Trim();
+
+            if (newStatus == "Rejected" && string.IsNullOrWhiteSpace(rejectionReason))
+            {
+                TempData["AdminError"] = "Vui lòng nhập lý do từ chối để Tác giả biết nội dung cần chỉnh sửa.";
+                return RedirectToAction("Index", new { search = search, status = status, page = page, rejectionArticleId = id });
+            }
+
             if (rejectionReason.Length > 500)
-                rejectionReason = rejectionReason.Substring(0, 500);
+            {
+                TempData["AdminError"] = "Lý do từ chối không được vượt quá 500 ký tự.";
+                return RedirectToAction("Index", new { search = search, status = status, page = page, rejectionArticleId = id });
+            }
 
             if (!ValidStatuses.Contains(newStatus))
             {
                 TempData["AdminError"] = "Trạng thái bài viết không hợp lệ.";
-                return RedirectToAction("Index", new { search = search, status = status });
+                return RedirectToAction("Index", new { search = search, status = status, page = page });
             }
 
             using (var conn = CreateConnection())
@@ -394,7 +443,7 @@ END";
                     if (cmd.ExecuteNonQuery() == 0)
                     {
                         TempData["AdminError"] = "Không tìm thấy bài viết #" + id + ".";
-                        return RedirectToAction("Index", new { search = search, status = status });
+                        return RedirectToAction("Index", new { search = search, status = status, page = page });
                     }
                 }
             }
@@ -405,7 +454,7 @@ END";
                     TempData["AdminMessage"] = "Đã duyệt và xuất bản bài viết #" + id + " lên trang chủ (Published).";
                     break;
                 case "Rejected":
-                    TempData["AdminMessage"] = "Đã từ chối bài viết #" + id + " — trả về cho phóng viên chỉnh sửa và gửi duyệt lại (Rejected).";
+                    TempData["AdminMessage"] = "Đã từ chối bài viết #" + id + " — trả về Tác giả chỉnh sửa và gửi duyệt lại (Rejected).";
                     break;
                 case "Archived":
                     TempData["AdminMessage"] = "Đã chuyển bài viết #" + id + " vào kho lưu trữ (Archived).";
@@ -418,7 +467,7 @@ END";
                     break;
             }
 
-            return RedirectToAction("Index", new { search = search, status = status });
+            return RedirectToAction("Index", new { search = search, status = status, page = page });
         }
 
         // POST: /Admin/ToggleStatus

@@ -1122,9 +1122,13 @@
                             {
                                 <a href="@Url.Action("Index", "Admin")" class="account-menu-link">Bảng điều khiển Admin</a>
                             }
-                            if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
+                            string role = Convert.ToString(Session["Role"]);
+                            if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase))
                             {
-                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })" class="account-menu-link">Quản lý bài viết</a>
+                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })" class="account-menu-link">
+                                    @(string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase) ? "Duyệt bài viết" : "Bài viết của tôi")
+                                </a>
                             }
                             <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
                             <a href="@Url.Action("Info", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">

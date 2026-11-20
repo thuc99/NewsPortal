@@ -15,6 +15,38 @@
         color: #1e293b;
     }
 
+    .admin-category-page {
+        width: min(1208px, 100%);
+        max-width: 1208px;
+        margin: 0 auto;
+    }
+
+    .admin-page-back {
+        display: inline-block;
+        margin-bottom: 6px;
+        color: #b91c32;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .admin-page-back:hover {
+        color: #861b2b;
+        text-decoration: underline;
+    }
+
+    .admin-list-title {
+        margin: 0 0 14px;
+        color: #172033;
+        font-size: 19px;
+        font-weight: 750;
+    }
+
+    .admin-list-title i {
+        margin-right: 5px;
+        color: #b91c32;
+    }
+
     .management-header {
         display: flex;
         justify-content: space-between;
@@ -39,10 +71,10 @@
 
     .management-card {
         background: #fff;
-        border: 0;
-        border-radius: 0;
+        border: 1px solid #e2e7ef;
+        border-radius: 12px;
         overflow-x: auto;
-        box-shadow: none;
+        box-shadow: 0 4px 14px rgba(23, 32, 51, .04);
     }
 
     .management-table {
@@ -56,13 +88,13 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: .5px;
-            padding: 16px;
+            padding: 11px 12px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .management-table td {
-            padding: 17px 16px;
+            padding: 12px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
         }
@@ -107,12 +139,13 @@
         align-items: center;
         gap: 8px;
         margin: 0 0 18px;
-        max-width: 620px;
+        width: fit-content;
+        max-width: 100%;
     }
 
     .admin-search input {
-        flex: 1 1 320px;
-        width: 320px;
+        flex: 1 1 560px;
+        width: 560px;
         max-width: 100%;
         min-width: 0;
         height: 40px;
@@ -124,7 +157,7 @@
 
     .admin-search button,
     .admin-search a {
-        height: 40px;
+        min-height: 38px;
         flex: 0 0 auto;
         justify-content: center;
         white-space: nowrap;
@@ -134,7 +167,7 @@
     .admin-search a {
         display: inline-flex;
         align-items: center;
-        padding: 0 14px;
+        padding: 0 12px;
         border: 0;
         border-radius: 8px;
         background: #e2e8f0;
@@ -208,11 +241,15 @@
     }
 </style>
 
-<div class="management-page">
+<div class="management-page @(isAdminManagement ? "admin-category-page" : "")">
+    @if (isAdminManagement)
+    {
+        <a class="admin-page-back" href="@Url.Action("Index", "Admin")">&larr; Quay lại Bảng điều khiển Admin</a>
+    }
 
     <div class="management-header">
         <div>
-            <h2> Danh Mục</h2>
+            <h2>@(isAdminManagement ? "Quản lý Danh mục" : "Danh Mục")</h2>
             <p class="management-subtitle">
                 Chuyên mục tin tức trên NewsPortal.
             </p>
@@ -220,9 +257,7 @@
 
         @if (isAdminManagement)
         {
-            <div>
-                @Html.RouteLink("+ Thêm danh mục", "AdminCategories", new { action = "Create" }, new { @class = "btn-add" })
-            </div>
+            @Html.RouteLink("+ Thêm danh mục", "AdminCategories", new { action = "Create" }, new { @class = "btn-add" })
         }
     </div>
 
@@ -240,11 +275,13 @@
         </div>
     }
 
+    <div class="management-card">
     @if (isAdminManagement)
     {
+        <h3 class="admin-list-title"><i class="fa-solid fa-folder-tree"></i> Danh sách danh mục</h3>
         <form method="get" action="@Url.RouteUrl("AdminCategories", new { action = "Index" })" class="admin-search">
             <input type="search" name="search" value="@(ViewBag.Search ?? "")" placeholder="Tìm theo tên hoặc mô tả danh mục..." />
-            <button type="submit">Tìm kiếm</button>
+            <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
             @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
             {
                 <a href="@Url.RouteUrl("AdminCategories", new { action = "Index" })">Xóa</a>
@@ -252,7 +289,6 @@
         </form>
     }
 
-    <div class="management-card">
         <table class="management-table">
             <thead>
                 <tr>

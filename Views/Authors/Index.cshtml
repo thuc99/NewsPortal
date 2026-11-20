@@ -22,6 +22,38 @@
         color: #1e293b;
     }
 
+    .admin-author-page {
+        width: min(1208px, 100%);
+        max-width: 1208px;
+        margin: 0 auto;
+    }
+
+    .admin-page-back {
+        display: inline-block;
+        margin-bottom: 6px;
+        color: #b91c32;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .admin-page-back:hover {
+        color: #861b2b;
+        text-decoration: underline;
+    }
+
+    .admin-list-title {
+        margin: 0 0 14px;
+        color: #172033;
+        font-size: 19px;
+        font-weight: 750;
+    }
+
+    .admin-list-title i {
+        margin-right: 5px;
+        color: #b91c32;
+    }
+
     .management-header {
         display: flex;
         justify-content: space-between;
@@ -46,10 +78,10 @@
 
     .management-card {
         background: white;
-        border: 0;
-        border-radius: 0;
+        border: 1px solid #e2e7ef;
+        border-radius: 12px;
         overflow-x: auto;
-        box-shadow: none;
+        box-shadow: 0 4px 14px rgba(23, 32, 51, .04);
     }
 
     .management-table {
@@ -63,13 +95,13 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: .5px;
-            padding: 16px;
+            padding: 11px 12px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .management-table td {
-            padding: 17px 16px;
+            padding: 12px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
         }
@@ -122,12 +154,13 @@
         align-items: center;
         gap: 8px;
         margin: 0 0 18px;
-        max-width: 620px;
+        width: fit-content;
+        max-width: 100%;
     }
 
         .admin-search input {
-            flex: 1 1 320px;
-            width: 320px;
+            flex: 1 1 560px;
+            width: 560px;
             max-width: 100%;
             min-width: 0;
             height: 40px;
@@ -139,13 +172,13 @@
 
         .admin-search button,
         .admin-search a {
-            height: 40px;
+            min-height: 38px;
             flex: 0 0 auto;
             justify-content: center;
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            padding: 0 14px;
+            padding: 0 12px;
             border: 0;
             border-radius: 8px;
             background: #e2e8f0;
@@ -468,17 +501,10 @@
 
 @if (hasSelectedAuthor)
 {
-    string backUrl = ViewBag.ReturnUrl as string;
-    if (string.IsNullOrWhiteSpace(backUrl))
-    {
-        backUrl = isAdminManagement
-            ? Url.RouteUrl("AdminAuthors", new { action = "Index" })
-            : Url.Action("Index", "Authors");
-    }
     if (isAdminManagement)
     {
         <div style="max-width: 1160px; margin: 24px auto -16px;">
-            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index",returnUrl = backUrl })" style="display: inline-block; padding: 9px 15px; background: #e2e8f0; color: #334155; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index", id = (int?)null })" style="display: inline-block; padding: 9px 15px; background: #e2e8f0; color: #334155; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer;">
                 ← Quay lại danh sách tác giả
             </a>
         </div>
@@ -545,7 +571,7 @@
                                     : Url.Content("~/Content/Images/Authors/" + suggested.Images));
                         }
                         var suggestedUrl = isAdminManagement
-                            ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = suggested.AuthorID, returnUrl = backUrl })
+                            ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = suggested.AuthorID })
                             : Url.RouteUrl("PublicAuthor", new { action = "Index", id = suggested.AuthorID });
 
                         <div class="author-suggestion">
@@ -630,14 +656,20 @@
 }
 else
 {
-    <div class="management-page">
+    <div class="management-page @(isAdminManagement ? "admin-author-page" : "")">
+        @if (isAdminManagement)
+        {
+            <a class="admin-page-back" href="@Url.Action("Index", "Admin")">&larr; Quay lại Bảng điều khiển Admin</a>
+        }
         <div class="management-header">
             <div>
-                <h2>Quản lý tác giả</h2>
-                <p class="management-subtitle">
-                    Quản lý thông tin các tác giả của NewsPortal.
-                </p>
+                <h2>Quản lý Tác giả</h2>
+                <p class="management-subtitle">Quản lý thông tin các tác giả của NewsPortal.</p>
             </div>
+            @if (isAdminManagement)
+            {
+                @Html.RouteLink("+ Thêm tác giả", "AdminAuthors", new { action = "Create" }, new { @class = "btn-add" })
+            }
         </div>
 
         @if (TempData["Success"] != null)
@@ -654,11 +686,13 @@ else
             </div>
         }
 
+        <div class="management-card">
         @if (isAdminManagement)
         {
+            <h3 class="admin-list-title"><i class="fa-solid fa-users"></i> Danh sách tác giả</h3>
             <form method="get" action="@Url.RouteUrl("AdminAuthors", new { action = "Index" })" class="admin-search">
                 <input type="search" name="search" value="@(ViewBag.Search ?? "")" placeholder="Tìm theo tên tác giả hoặc email..." />
-                <button type="submit">Tìm kiếm</button>
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
                 @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
                 {
                     <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index" })">Xóa</a>
@@ -666,7 +700,6 @@ else
             </form>
         }
 
-        <div class="management-card">
             <table class="management-table">
                 <thead>
                     <tr>
