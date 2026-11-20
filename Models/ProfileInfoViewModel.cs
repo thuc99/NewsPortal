@@ -8,8 +8,6 @@ namespace NewsPortal.Models
 {
     public class ProfileInfoViewModel
     {
-        public string Username { get; set; }
-
         [Required(ErrorMessage = "Vui lòng nhập tên hiển thị")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "Tên hiển thị từ 2 đến 100 ký tự")]
         [Display(Name = "Tên hiển thị")]
@@ -68,7 +66,6 @@ namespace NewsPortal.Models
         public int ArticleId { get; set; }
         public string ArticleTitle { get; set; }
         public string Content { get; set; }
-        public string Status { get; set; }
         public DateTime? CreatedAt { get; set; }
     }
 

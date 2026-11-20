@@ -49,7 +49,6 @@
           <Property Name="AuthorName" Type="nvarchar" MaxLength="150" Nullable="false" />
           <Property Name="Email" Type="nvarchar" MaxLength="150" />
           <Property Name="Images" Type="nvarchar" MaxLength="500" />
-          <Property Name="UserId" Type="int" />
         </EntityType>
         <EntityType Name="Categories">
           <Key>
@@ -330,7 +329,6 @@
           <Property Name="Email" Type="String" MaxLength="150" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Articles" Relationship="NewsPortalDBModel.FK_Articles_Authors" FromRole="Authors" ToRole="Articles" />
           <Property Name="Images" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
-          <Property Name="UserId" Type="Int32" />
         </EntityType>
         <EntityType Name="Category">
           <Key>
@@ -556,7 +554,6 @@
           <EntitySetMapping Name="Authors">
             <EntityTypeMapping TypeName="NewsPortalDBModel.Author">
               <MappingFragment StoreEntitySet="Authors">
-                <ScalarProperty Name="UserId" ColumnName="UserId" />
                 <ScalarProperty Name="Images" ColumnName="Images" />
                 <ScalarProperty Name="Email" ColumnName="Email" />
                 <ScalarProperty Name="AuthorName" ColumnName="AuthorName" />

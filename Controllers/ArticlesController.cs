@@ -76,213 +76,49 @@ BEGIN
     ALTER TABLE dbo.Articles WITH CHECK
     ADD CONSTRAINT [CK_Articles_Status_Workflow]
     CHECK ([Status] IN (N'Draft', N'Pending', N'Published', N'Rejected', N'Archived'));
-
-    IF COL_LENGTH(N'dbo.Articles', N'RejectionReason') IS NULL
-    BEGIN
-        ALTER TABLE dbo.Articles ADD [RejectionReason] NVARCHAR(500) NULL;
-    END
-
-    IF COL_LENGTH(N'dbo.Articles', N'UserId') IS NULL
-    BEGIN
-        ALTER TABLE dbo.Articles ADD [UserId] INT NULL;
-    END
 END";
                 db.Database.ExecuteSqlCommand(sql);
                 _statusConstraintChecked = true;
             }
         }
 
-        private class ArticleRejectionRow
-        {
-            public int ArticleID { get; set; }
-            public string RejectionReason { get; set; }
-        }
-
-        private string GetRejectionReason(int articleId)
-        {
-            return db.Database.SqlQuery<string>(
-                "SELECT RejectionReason FROM dbo.Articles WHERE ArticleID = @p0",
-                articleId).FirstOrDefault();
-        }
-
-        private void SetRejectionReason(int articleId, string reason)
-        {
-            object param = string.IsNullOrWhiteSpace(reason) ? (object)DBNull.Value : reason.Trim();
-            db.Database.ExecuteSqlCommand(
-                "UPDATE dbo.Articles SET RejectionReason = @p0 WHERE ArticleID = @p1",
-                param,
-                articleId);
-        }
-
-        private Dictionary<int, string> GetRejectionReasons(IEnumerable<int> articleIds)
-        {
-            var result = new Dictionary<int, string>();
-            var idList = articleIds == null ? new List<int>() : articleIds.Distinct().ToList();
-            if (idList.Count == 0)
-                return result;
-
-            string inClause = string.Join(",", idList);
-            var rows = db.Database.SqlQuery<ArticleRejectionRow>(
-                "SELECT ArticleID, RejectionReason FROM dbo.Articles WHERE ArticleID IN (" + inClause + ") AND RejectionReason IS NOT NULL AND LTRIM(RTRIM(RejectionReason)) <> N''"
-            ).ToList();
-
-            foreach (var row in rows)
-            {
-                result[row.ArticleID] = row.RejectionReason;
-            }
-
-            return result;
-        }
-
-        private int? GetCurrentUserId()
-        {
-            string username = Convert.ToString(Session["User"] ?? Session["Admin"]);
-            if (string.IsNullOrWhiteSpace(username))
-                return null;
-
-            var dbUser = db.Users.FirstOrDefault(u => u.Username == username);
-            return dbUser != null ? (int?)dbUser.UserId : null;
-        }
-
-        private int? GetArticleOwnerUserId(int articleId)
-        {
-            return db.Database.SqlQuery<int?>(
-                @"SELECT COALESCE(a.UserId, author.UserId)
-                  FROM dbo.Articles a
-                  LEFT JOIN dbo.Authors author ON author.AuthorID = a.AuthorID
-                  WHERE a.ArticleID = @p0",
-                articleId).FirstOrDefault();
-        }
-
-        private void SetArticleOwnerUserId(int articleId, int? userId)
-        {
-            if (!userId.HasValue) return;
-            db.Database.ExecuteSqlCommand(
-                "UPDATE dbo.Articles SET UserId = @p0 WHERE ArticleID = @p1 AND UserId IS NULL",
-                userId.Value,
-                articleId);
-        }
-
-        private List<int> GetVisibleDraftArticleIdsForCurrentReporter()
-        {
-            int? currentUserId = GetCurrentUserId();
-            if (!currentUserId.HasValue)
-                return new List<int>();
-
-            return db.Database.SqlQuery<int>(
-                @"SELECT a.ArticleID
-                  FROM dbo.Articles a
-                  LEFT JOIN dbo.Authors author ON author.AuthorID = a.AuthorID
-                  WHERE a.Status = N'Draft' AND COALESCE(a.UserId, author.UserId) = @p0",
-                currentUserId.Value).ToList();
-        }
-
-        private bool CanCurrentUserAccessDraft(int articleId)
-        {
-            if (IsAdminUser())
-                return false;
-
-            if (!IsArticleAuthorRole())
-                return false;
-
-            int? currentUserId = GetCurrentUserId();
-            if (!currentUserId.HasValue)
-                return false;
-
-            int? ownerUserId = GetArticleOwnerUserId(articleId);
-            return ownerUserId.HasValue && ownerUserId.Value == currentUserId.Value;
-        }
-        // Authors may only modify their own articles; Admins and Editors can review all articles.
-        private bool CanEditorEditArticle(int articleId)
-        {
-            if (IsAdminUser())
-                return true;
-
-            if (IsEditorUser())
-                return db.Articles.Any(a => a.ArticleID == articleId && a.Status == "Pending");
-
-            if (!IsArticleAuthorRole())
-                return false;
-
-            int? currentUserId = GetCurrentUserId();
-            if (!currentUserId.HasValue)
-                return false;
-
-            int? ownerUserId = GetArticleOwnerUserId(articleId);
-            return ownerUserId.HasValue && ownerUserId.Value == currentUserId.Value;
-        }
-
-        private string GetCurrentRole()
-        {
-            string username = Convert.ToString(Session["User"] ?? Session["Admin"]);
-            if (string.IsNullOrWhiteSpace(username))
-                return null;
-
-            var user = db.Users.FirstOrDefault(u => u.Username == username && u.IsActive);
-            if (user == null)
-            {
-                Session.Remove("Admin");
-                Session.Remove("User");
-                Session.Remove("UserFullName");
-                Session.Remove("Role");
-                return null;
-            }
-
-            Session["Role"] = user.Role;
-            if (string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
-            {
-                Session["Admin"] = user.Username;
-                Session.Remove("User");
-            }
-            else
-            {
-                Session.Remove("Admin");
-                Session["User"] = user.Username;
-                Session["UserFullName"] = user.FullName;
-            }
-
-            return user.Role;
-        }
-
-        private bool IsEditorUser()
-        {
-            return string.Equals(GetCurrentRole(), "Editor", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private bool IsAuthorUser()
-        {
-            return string.Equals(GetCurrentRole(), "Author", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private bool IsReaderUser()
-        {
-            string role = GetCurrentRole();
-            return string.Equals(role, "Reader", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(role, "User", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private bool IsArticleAuthorRole()
-        {
-            return IsAuthorUser();
-        }
-
-        private bool CanAccessArticleManagement()
-        {
-            return IsAdminUser() || IsEditorUser() || IsArticleAuthorRole();
-        }
-
-        private bool CanCreateArticles()
-        {
-            return IsAdminUser() || IsArticleAuthorRole();
-        }
         private bool IsAdminUser()
         {
-            return string.Equals(GetCurrentRole(), "Admin", StringComparison.OrdinalIgnoreCase);
+            if (Session["Admin"] != null)
+                return true;
+
+            string username = Convert.ToString(Session["User"]);
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                var dbUser = db.Users.FirstOrDefault(u => u.Username == username);
+                if (dbUser != null)
+                {
+                    Session["Role"] = dbUser.Role;
+                    return string.Equals(dbUser.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+                }
+            }
+
+            return string.Equals(Convert.ToString(Session["Role"]), "Admin", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool CanManageArticles()
         {
-            return IsAdminUser() || IsEditorUser();
+            if (Session["Admin"] != null)
+                return true;
+
+            string username = Convert.ToString(Session["User"]);
+            if (string.IsNullOrWhiteSpace(username))
+                return false;
+
+            var dbUser = db.Users.FirstOrDefault(u => u.Username == username);
+            if (dbUser != null)
+            {
+                Session["Role"] = dbUser.Role;
+                return string.Equals(dbUser.Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(dbUser.Role, "Editor", StringComparison.OrdinalIgnoreCase);
+            }
+
+            return string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool IsAdminArticleRequest()
@@ -333,15 +169,15 @@ END";
 
         private ActionResult CheckArticlePermission(string actionLabel)
         {
-            if (!CanAccessArticleManagement())
+            if (!CanManageArticles())
             {
                 if (Session["User"] != null)
                 {
-                    TempData["Error"] = "Bạn không có quyền " + actionLabel + " bài viết. Chức năng này chỉ dành cho Admin, Editor hoặc Author.";
+                    TempData["Error"] = "Bạn không có quyền " + actionLabel + " bài viết. Chức năng này chỉ dành cho Admin và Editor.";
                     return new RedirectResult("~/Articles");
                 }
 
-                TempData["Error"] = "Vui lòng đăng nhập tài khoản Admin, Editor hoặc Author trước khi truy cập chức năng này.";
+                TempData["Error"] = "Vui lòng đăng nhập tài khoản Admin hoặc Editor trước khi truy cập chức năng này.";
                 return new RedirectResult("~/Account/Login");
             }
 
@@ -449,11 +285,8 @@ END";
             const int pageSize = 8;
             int requestedPage = page ?? 1;
             bool isAdminManagementRequest = IsAdminArticleRequest();
-            bool canManageArticles = isAdminManagementRequest && CanAccessArticleManagement();
+            bool canManageArticles = isAdminManagementRequest && CanManageArticles();
             bool isAdminUser = canManageArticles && IsAdminUser();
-            bool isEditorUser = canManageArticles && IsEditorUser();
-            bool isAuthorUser = canManageArticles && IsAuthorUser();
-            bool isReaderUser = canManageArticles && IsReaderUser();
 
             var query = db.Articles
                 .Include(a => a.Categories)
@@ -464,40 +297,14 @@ END";
             {
                 query = query.Where(a => a.Status == "Published");
             }
-            else if (isAdminUser || isEditorUser)
+            else
             {
-                // Reviewers cannot see unpublished drafts that have not been submitted.
-                query = query.Where(a => a.Status != "Draft");
-
-                ViewBag.CountAll = db.Articles.Count(a => a.Status != "Draft" && a.Status != "Archived");
-                ViewBag.CountDraft = 0;
+                ViewBag.CountAll = db.Articles.Count();
+                ViewBag.CountDraft = db.Articles.Count(a => a.Status == "Draft");
                 ViewBag.CountPending = db.Articles.Count(a => a.Status == "Pending");
                 ViewBag.CountPublished = db.Articles.Count(a => a.Status == "Published");
                 ViewBag.CountRejected = db.Articles.Count(a => a.Status == "Rejected");
-                ViewBag.CountArchived = isAdminUser ? db.Articles.Count(a => a.Status == "Archived") : 0;
-                if (!isAdminUser)
-                    query = query.Where(a => a.Status != "Archived");
-            }
-            else
-            {
-                // Authors and Readers only see articles owned by their account.
-                int? currentUserId = GetCurrentUserId();
-                var ownArticleIds = currentUserId.HasValue
-                    ? db.Database.SqlQuery<int>(@"
-                        SELECT a.ArticleID
-                        FROM dbo.Articles a
-                        LEFT JOIN dbo.Authors author ON author.AuthorID = a.AuthorID
-                        WHERE COALESCE(a.UserId, author.UserId) = @p0", currentUserId.Value).ToList()
-                    : new List<int>();
-
-                query = query.Where(a => ownArticleIds.Contains(a.ArticleID) && a.Status != "Archived");
-
-                ViewBag.CountDraft = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Draft");
-                ViewBag.CountPending = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Pending");
-                ViewBag.CountPublished = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Published");
-                ViewBag.CountRejected = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Rejected");
-                ViewBag.CountArchived = 0;
-                ViewBag.CountAll = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status != "Archived");
+                ViewBag.CountArchived = db.Articles.Count(a => a.Status == "Archived");
             }
 
             if (!string.IsNullOrWhiteSpace(searchString))
@@ -508,7 +315,10 @@ END";
                     searchString = searchString.Substring(0, 200);
                 }
 
-                query = query.Where(a => a.Title.Contains(searchString));
+                query = query.Where(a =>
+                    a.Title.Contains(searchString) ||
+                    a.Summary.Contains(searchString) ||
+                    a.Content.Contains(searchString));
             }
             else
             {
@@ -585,12 +395,6 @@ END";
             ViewBag.CanManageArticles = canManageArticles;
             ViewBag.IsAdminManagement = isAdminManagementRequest;
             ViewBag.IsAdminUser = isAdminUser;
-            ViewBag.IsEditorUser = isEditorUser;
-            ViewBag.IsAuthorUser = isAuthorUser;
-            ViewBag.IsReaderUser = isReaderUser;
-            ViewBag.RejectionReasons = canManageArticles
-                ? GetRejectionReasons(articles.Select(a => a.Id))
-                : new Dictionary<int, string>();
 
             if (!string.IsNullOrWhiteSpace(searchString) && totalArticles == 0)
             {
@@ -640,22 +444,7 @@ END";
                     }
                     db.SaveChanges();
 
-                    bool isSavedInDb = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
-                    ViewBag.IsSavedArticle = isSavedInDb;
-
-                    // Đồng bộ lại Cookie theo đúng dữ liệu mới nhất trong SQL
-                    var syncedIds = db.SavedArticles
-                        .Where(s => s.UserId == viewer.UserId)
-                        .OrderByDescending(s => s.SavedDate)
-                        .Select(s => s.ArticleId)
-                        .ToList();
-
-                    Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", syncedIds))
-                    {
-                        Expires = DateTime.Now.AddYears(1),
-                        HttpOnly = true
-                    });
-                    return;
+                    ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
                 }
             }
 
@@ -682,23 +471,11 @@ END";
                 .FirstOrDefault(a => a.ArticleID == articleId);
 
             bool hasManagePermission = CanManageArticles();
-            bool canManageArticles = IsAdminArticleRequest() && CanAccessArticleManagement();
-            if (article == null || (article.Status != "Published" &&
-                (!IsAdminArticleRequest() || (!hasManagePermission && !CanEditorEditArticle(article.ArticleID)))))
+            bool canManageArticles = IsAdminArticleRequest() && hasManagePermission;
+            if (article == null || (article.Status != "Published" && !hasManagePermission))
             {
                 TempData["Error"] = "Bài viết bạn tìm không tồn tại hoặc chưa được xuất bản.";
                 return IsAdminArticleRequest() ? RedirectToArticleManagement() : RedirectToAction("Index");
-            }
-
-            if (article.Status == "Draft" && !IsAdminArticleRequest())
-            {
-                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem.";
-                return IsAdminArticleRequest() ? RedirectToArticleManagement() : RedirectToAction("Index");
-            }
-            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
-            {
-                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem.";
-                return RedirectToArticleManagement();
             }
 
             bool isPublished = article.Status == "Published";
@@ -721,18 +498,15 @@ END";
             ViewBag.AuthorName = article.Authors == null ? null : article.Authors.AuthorName;
             ViewBag.RatingCount = db.ArticleRatings.Count(r => r.ArticleID == articleId);
             ViewBag.CanManageArticles = canManageArticles;
+            ViewBag.CanEditArticle = hasManagePermission;
             ViewBag.IsAdminManagement = IsAdminArticleRequest();
-            ViewBag.IsAdminUser = IsAdminUser() || IsEditorUser();
-            ViewBag.IsEditorUser = IsEditorUser();
-            ViewBag.IsReaderUser = IsReaderUser();
-            ViewBag.CanEditArticle = CanEditorEditArticle(article.ArticleID);
+            ViewBag.IsAdminUser = IsAdminUser();
             ViewBag.AverageRating = db.ArticleRatings
                 .Where(r => r.ArticleID == articleId)
                 .Select(r => (double?)r.Rating)
                 .Average() ?? 0;
-            ViewBag.IsFavorite = ViewBag.IsSavedArticle != null
-                            ? (bool)ViewBag.IsSavedArticle
-                            : GetFavoriteIds().Contains(articleId); ViewBag.CanComment = canComment && isPublished;
+            ViewBag.IsFavorite = GetFavoriteIds().Contains(articleId);
+            ViewBag.CanComment = canComment && isPublished;
 
             var recommendations = db.Articles
                 .Include(a => a.Categories)
@@ -800,11 +574,11 @@ END";
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Approved"
+                Status = "Pending"
             });
             db.SaveChanges();
 
-            TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được gửi và đang chờ Admin phê duyệt.";
             return RedirectToAction("View", new { id = articleId.Value });
         }
 
@@ -1099,14 +873,11 @@ END";
 
             var denied = CheckArticlePermission("thêm");
             if (denied != null) return denied;
-            if (!CanCreateArticles()) return RedirectToArticleManagement();
 
             RememberPreviousPage(returnUrl);
 
             ViewBag.IsAdminManagement = true;
-            ViewBag.IsAdminUser = IsAdminUser() || IsEditorUser();
-            ViewBag.IsEditorUser = IsEditorUser();
-            ViewBag.IsReaderUser = IsReaderUser();
+            ViewBag.IsAdminUser = IsAdminUser();
             ViewBag.ReturnUrl = returnUrl;
             PopulateCreateCategories(null);
             return View(new Article());
@@ -1130,13 +901,10 @@ END";
 
             var denied = CheckArticlePermission("thêm");
             if (denied != null) return denied;
-            if (!CanCreateArticles()) return RedirectToArticleManagement();
 
             bool isAdmin = IsAdminUser();
             ViewBag.IsAdminManagement = true;
-            ViewBag.IsAdminUser = isAdmin || IsEditorUser();
-            ViewBag.IsEditorUser = IsEditorUser();
-            ViewBag.IsReaderUser = IsReaderUser();
+            ViewBag.IsAdminUser = isAdmin;
             ViewBag.ReturnUrl = returnUrl;
 
             if (article != null)
@@ -1159,6 +927,7 @@ END";
             }
 
             var category = db.Categories.FirstOrDefault(c => c.CategoryID == article.CategoryId.Value);
+            var author = db.Authors.OrderBy(a => a.AuthorID).FirstOrDefault();
             if (category == null)
             {
                 ModelState.AddModelError("CategoryId", "Danh mục đã chọn không tồn tại.");
@@ -1166,71 +935,16 @@ END";
                 return View(article);
             }
 
-            var currentUsername = Session["User"] as string ?? Session["Admin"] as string;
-            if (string.IsNullOrWhiteSpace(currentUsername))
-            {
-                ModelState.AddModelError("", "Vui lòng đăng nhập trước khi thêm bài viết.");
-                return View(article);
-            }
-
-            var currentUser = db.Users.FirstOrDefault(u => u.Username == currentUsername);
-            if (currentUser == null)
-            {
-                ModelState.AddModelError("", "Tài khoản người dùng không hợp lệ.");
-                return View(article);
-            }
-
-            var displayName = !string.IsNullOrWhiteSpace(currentUser.FullName)
-                ? currentUser.FullName
-                : currentUser.Username;
-
-            var author = IsArticleAuthorRole()
-                ? db.Authors.FirstOrDefault(a => a.UserId == currentUser.UserId)
-                : db.Authors.FirstOrDefault(a =>
-                    a.AuthorName == displayName ||
-                    a.AuthorName == currentUser.Username ||
-                    (!string.IsNullOrEmpty(currentUser.Email) && a.Email == currentUser.Email));
-
             if (author == null)
             {
-                if (!IsAuthorUser())
-                {
-                    ModelState.AddModelError("", "Tài khoản Author chưa được liên kết với hồ sơ tác giả. Vui lòng liên hệ quản trị viên.");
-                    return View(article);
-                }
-
-                var existingUnlinkedAuthors = string.IsNullOrWhiteSpace(currentUser.Email)
-                    ? new List<Author>()
-                    : db.Authors.Where(a => a.Email == currentUser.Email && !a.UserId.HasValue).ToList();
-                if (existingUnlinkedAuthors.Count == 1)
-                {
-                    author = existingUnlinkedAuthors[0];
-                    author.UserId = currentUser.UserId;
-                    author.AuthorName = displayName;
-                }
-                else
-                {
-                    author = new Author
-                    {
-                        AuthorName = displayName,
-                        Email = currentUser.Email,
-                        UserId = currentUser.UserId
-                    };
-
-                    db.Authors.Add(author);
-                }
-                db.SaveChanges();
-            }
-
-            if (author == null)
-            {
-                ModelState.AddModelError("", "Không thể tạo hoặc tìm thấy tác giả.");
+                ModelState.AddModelError("", "Cần có tác giả trước khi thêm bài viết.");
                 return View(article);
             }
 
             string targetStatus;
-            if (IsArticleAuthorRole())
+            if (!isAdmin)
             {
+                // Phóng viên (Editor): chỉ được lưu nháp (Draft) hoặc gửi Admin duyệt (Pending)
                 targetStatus = string.Equals(submitAction, "Draft", StringComparison.OrdinalIgnoreCase)
                     ? "Draft"
                     : "Pending";
@@ -1255,7 +969,7 @@ END";
                 return View(article);
             }
 
-            var newArticle = new Articles
+            db.Articles.Add(new Articles
             {
                 CategoryID = category.CategoryID,
                 AuthorID = author.AuthorID,
@@ -1266,10 +980,8 @@ END";
                 Status = targetStatus,
                 ImageUrl = imageUrl,
                 ViewCount = 0
-            };
-            db.Articles.Add(newArticle);
+            });
             db.SaveChanges();
-            SetArticleOwnerUserId(newArticle.ArticleID, GetCurrentUserId());
 
             if (targetStatus == "Draft")
                 TempData["Success"] = "Đã lưu bài viết dưới dạng Bản nháp (Draft).";
@@ -1292,8 +1004,7 @@ END";
 
             bool isAdmin = IsAdminUser();
             ViewBag.IsAdminManagement = true;
-            ViewBag.IsAdminUser = isAdmin || IsEditorUser();
-            ViewBag.IsEditorUser = IsEditorUser();
+            ViewBag.IsAdminUser = isAdmin;
             ViewBag.ReturnUrl = returnUrl;
 
             if (!id.HasValue || id.Value <= 0)
@@ -1309,20 +1020,13 @@ END";
                 return RedirectToArticleManagement();
             }
 
-            if (!CanEditorEditArticle(article.ArticleID))
-            {
-                TempData["Error"] = "Bạn chỉ có quyền chỉnh sửa bài viết của chính mình.";
-                return RedirectToArticleManagement();
-            }
-            PopulateCreateCategories(article.CategoryID);
-            ViewBag.RejectionReason = GetRejectionReason(article.ArticleID);
             return View(ToArticleViewModel(article));
         }
 
         [HttpPost]
         [ValidateInput(false)]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Article article, HttpPostedFileBase imageFile, string submitAction, string returnUrl = null, string rejectionReason = "")
+        public ActionResult Edit(Article article, HttpPostedFileBase imageFile, string submitAction, string returnUrl = null)
         {
             EnsureWorkflowStatusConstraint();
 
@@ -1330,11 +1034,8 @@ END";
             if (denied != null) return denied;
 
             bool isAdmin = IsAdminUser();
-            bool isEditorUser = IsEditorUser();
-            bool isReviewer = isAdmin || isEditorUser;
             ViewBag.IsAdminManagement = true;
-            ViewBag.IsAdminUser = isReviewer;
-            ViewBag.IsEditorUser = isEditorUser;
+            ViewBag.IsAdminUser = isAdmin;
             ViewBag.ReturnUrl = returnUrl;
 
             var existing = article != null ? db.Articles.Find(article.Id) : null;
@@ -1343,15 +1044,6 @@ END";
                 TempData["Error"] = "Bài viết cần chỉnh sửa không tồn tại hoặc đã bị xóa trước đó.";
                 return RedirectToArticleManagement();
             }
-            if (!CanEditorEditArticle(existing.ArticleID))
-            {
-                TempData["Error"] = "Bạn chỉ có quyền chỉnh sửa bài viết của chính mình.";
-                return RedirectToArticleManagement();
-            }
-
-            rejectionReason = (rejectionReason ?? string.Empty).Trim();
-            if (rejectionReason.Length > 500)
-                rejectionReason = rejectionReason.Substring(0, 500);
 
             if (article != null)
             {
@@ -1365,36 +1057,7 @@ END";
             ModelState.Remove("Summary");
             ModelState.Remove("Image");
 
-            PopulateCreateCategories(article != null ? (article.CategoryId ?? existing.CategoryID) : existing.CategoryID);
             ValidateArticleInput(article, imageFile, isAdmin);
-
-            // Kiểm tra danh mục hợp lệ
-            if (article != null && (!article.CategoryId.HasValue || !db.Categories.Any(c => c.CategoryID == article.CategoryId.Value)))
-            {
-                ModelState.AddModelError("CategoryId", "Vui lòng chọn danh mục bài viết hợp lệ.");
-                PopulateCreateCategories(article != null ? (article.CategoryId ?? existing.CategoryID) : existing.CategoryID);
-            }
-
-
-            string targetAdminStatus = existing.Status;
-            if (isReviewer)
-            {
-                if (!string.IsNullOrWhiteSpace(submitAction) && ValidStatuses.Contains(submitAction))
-                    targetAdminStatus = submitAction;
-                else if (article != null && !string.IsNullOrWhiteSpace(article.Status) && ValidStatuses.Contains(article.Status))
-                    targetAdminStatus = article.Status;
-
-                if (!isAdmin && (existing.Status != "Pending" ||
-                    (targetAdminStatus != "Pending" && targetAdminStatus != "Published" && targetAdminStatus != "Rejected")))
-                {
-                    ModelState.AddModelError("", "Biên tập viên chỉ được chỉnh sửa bài chờ duyệt và giữ chờ, duyệt hoặc từ chối bài viết.");
-                }
-
-                if (targetAdminStatus == "Rejected" && string.IsNullOrWhiteSpace(rejectionReason))
-                {
-                    ModelState.AddModelError("", "Vui lòng nhập lý do từ chối để người viết biết cần sửa gì.");
-                }
-            }
 
             if (!ModelState.IsValid)
             {
@@ -1403,24 +1066,17 @@ END";
 
                 if (string.IsNullOrWhiteSpace(article.Image))
                     article.Image = existing.ImageUrl;
-                if (isEditorUser)
+                if (!isAdmin)
                     article.Status = existing.Status;
-                if (!isReviewer)
-                    article.Status = existing.Status;
-
-                ViewBag.RejectionReason = string.IsNullOrWhiteSpace(rejectionReason)
-                    ? GetRejectionReason(existing.ArticleID)
-                    : rejectionReason;
                 return View(article);
             }
 
-            existing.CategoryID = article.CategoryId.Value;
             existing.Title = article.Title;
             existing.Content = article.Content;
             existing.Summary = CreateSummary(article.Content);
             existing.UpdatedDate = DateTime.Now;
 
-            if (!isReviewer)
+            if (!isAdmin)
             {
                 if (string.Equals(submitAction, "Draft", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1435,7 +1091,11 @@ END";
             }
             else
             {
-                existing.Status = targetAdminStatus;
+                if (!string.IsNullOrWhiteSpace(submitAction) && ValidStatuses.Contains(submitAction))
+                    existing.Status = submitAction;
+                else if (!string.IsNullOrWhiteSpace(article.Status) && ValidStatuses.Contains(article.Status))
+                    existing.Status = article.Status;
+
                 TempData["Success"] = "Đã cập nhật bài viết thành công (Trạng thái: " + existing.Status + ").";
             }
 
@@ -1445,36 +1105,19 @@ END";
 
             db.SaveChanges();
 
-            if (IsArticleAuthorRole() && existing.Status == "Draft")
-            {
-                SetArticleOwnerUserId(existing.ArticleID, GetCurrentUserId());
-            }
-
-            if (existing.Status == "Rejected")
-            {
-                SetRejectionReason(existing.ArticleID, rejectionReason);
-            }
-            else if (existing.Status == "Pending" || existing.Status == "Published" || existing.Status == "Archived")
-            {
-                SetRejectionReason(existing.ArticleID, null);
-            }
-
             // Tự động quay về trang trước đó (hoặc Trang chủ) sau khi lưu/gửi thành công
             return RedirectBackOrHome(returnUrl);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ChangeWorkflowStatus(int? id, string newStatus, string returnStatus = "", string rejectionReason = "")
+        public ActionResult ChangeWorkflowStatus(int? id, string newStatus, string returnStatus = "")
         {
             EnsureWorkflowStatusConstraint();
 
-            bool isAdmin = IsAdminUser();
-            bool isEditor = IsEditorUser();
-            bool isAuthor = IsArticleAuthorRole();
-            if (!isAdmin && !isEditor && !isAuthor)
+            if (!CanManageArticles())
             {
-                TempData["Error"] = "Vui lòng đăng nhập tài khoản Admin, Editor hoặc Author.";
+                TempData["Error"] = "Vui lòng đăng nhập tài khoản Admin hoặc Editor.";
                 return RedirectToAction("Login", "Account");
             }
 
@@ -1491,65 +1134,22 @@ END";
                 return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
             }
 
-            if (!CanEditorEditArticle(article.ArticleID))
-            {
-                TempData["Error"] = "Bạn chỉ có quyền thay đổi trạng thái bài viết của chính mình.";
-                return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
-            }
-
-            if (isAuthor)
+            bool isAdmin = IsAdminUser();
+            if (!isAdmin)
             {
                 bool canSubmit = (article.Status == "Draft" || article.Status == "Rejected") && newStatus == "Pending";
                 bool canWithdraw = article.Status == "Pending" && newStatus == "Draft";
 
                 if (!canSubmit && !canWithdraw)
                 {
-                    TempData["Error"] = "Tác giả chỉ có quyền gửi duyệt bài nháp/bị từ chối hoặc rút bài chờ duyệt về nháp.";
+                    TempData["Error"] = "Phóng viên chỉ có quyền gửi duyệt bài nháp/bị từ chối hoặc rút bài chờ duyệt về nháp.";
                     return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
                 }
-            }
-            else if (isEditor)
-            {
-                bool canApprove = article.Status == "Pending" && newStatus == "Published";
-                bool canReject = article.Status == "Pending" && newStatus == "Rejected";
-
-                if (!canApprove && !canReject)
-                {
-                    TempData["Error"] = "Biên tập viên chỉ có thể duyệt hoặc từ chối bài viết đang chờ duyệt.";
-                    return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
-                }
-            }
-
-            rejectionReason = (rejectionReason ?? string.Empty).Trim();
-            if (newStatus == "Rejected")
-            {
-                if (string.IsNullOrWhiteSpace(rejectionReason))
-                {
-                    TempData["Error"] = "Vui lòng nhập lý do từ chối để người viết biết cần sửa gì.";
-                    return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
-                }
-
-                if (rejectionReason.Length > 500)
-                    rejectionReason = rejectionReason.Substring(0, 500);
             }
 
             article.Status = newStatus;
             article.UpdatedDate = DateTime.Now;
             db.SaveChanges();
-
-            if (isAuthor && newStatus == "Draft")
-            {
-                SetArticleOwnerUserId(article.ArticleID, GetCurrentUserId());
-            }
-
-            if (newStatus == "Rejected")
-            {
-                SetRejectionReason(article.ArticleID, rejectionReason);
-            }
-            else
-            {
-                SetRejectionReason(article.ArticleID, null);
-            }
 
             switch (newStatus)
             {
@@ -1560,7 +1160,7 @@ END";
                     TempData["Success"] = "Đã phê duyệt và xuất bản bài viết #" + article.ArticleID + " lên trang chủ (Published).";
                     break;
                 case "Rejected":
-                    TempData["Success"] = "Đã từ chối bài viết #" + article.ArticleID + " (Lý do: " + rejectionReason + ") — trả về tác giả chỉnh sửa (Rejected).";
+                    TempData["Success"] = "Đã từ chối bài viết #" + article.ArticleID + " — trả về phóng viên chỉnh sửa (Rejected).";
                     break;
                 case "Archived":
                     TempData["Success"] = "Đã chuyển bài viết #" + article.ArticleID + " vào kho lưu trữ (Archived).";
@@ -1578,15 +1178,9 @@ END";
             var denied = CheckArticlePermission("xóa");
             if (denied != null) return denied;
 
-            if (!IsAdminUser())
-            {
-                TempData["Error"] = "Chỉ Admin mới có quyền xóa bài viết.";
-                return RedirectToArticleManagement();
-            }
-
             bool isAdmin = IsAdminUser();
             ViewBag.IsAdminManagement = true;
-            ViewBag.IsAdminUser = isAdmin || IsEditorUser();
+            ViewBag.IsAdminUser = isAdmin;
 
             if (!id.HasValue || id.Value <= 0)
             {
@@ -1601,12 +1195,6 @@ END";
                 return RedirectToArticleManagement();
             }
 
-            if (!CanEditorEditArticle(article.ArticleID))
-            {
-                TempData["Error"] = "Bạn chỉ có quyền xóa bài viết của chính mình.";
-                return RedirectToArticleManagement();
-            }
-
             return View(ToArticleViewModel(article));
         }
 
@@ -1617,15 +1205,9 @@ END";
             var denied = CheckArticlePermission("xóa");
             if (denied != null) return denied;
 
-            if (!IsAdminUser())
-            {
-                TempData["Error"] = "Chỉ Admin mới có quyền xóa bài viết.";
-                return RedirectToArticleManagement();
-            }
-
             bool isAdmin = IsAdminUser();
             ViewBag.IsAdminManagement = true;
-            ViewBag.IsAdminUser = isAdmin || IsEditorUser();
+            ViewBag.IsAdminUser = isAdmin;
 
             if (!id.HasValue || id.Value <= 0)
             {
@@ -1637,12 +1219,6 @@ END";
             if (article == null)
             {
                 TempData["Error"] = "Bài viết không tồn tại hoặc đã bị xóa trước đó.";
-                return RedirectToArticleManagement();
-            }
-
-            if (!CanEditorEditArticle(article.ArticleID))
-            {
-                TempData["Error"] = "Bạn chỉ có quyền xóa bài viết của chính mình.";
                 return RedirectToArticleManagement();
             }
 
@@ -1664,7 +1240,6 @@ END";
             return new Article
             {
                 Id = article.ArticleID,
-                CategoryId = article.CategoryID,
                 Title = article.Title,
                 Content = article.Content,
                 CreatedDate = article.CreatedDate,

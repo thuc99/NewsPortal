@@ -188,12 +188,16 @@ namespace NewsPortal.Controllers
             ViewBag.IsAdminManagement = isAdminManagement;
             ViewBag.ReturnUrl = returnUrl;
 
+<<<<<<< HEAD
             var eligibleAuthors = db.Authors.Where(a =>
                 a.UserId.HasValue && db.Users.Any(u =>
                     u.UserId == a.UserId.Value &&
                     u.Role == "Author" &&
                     (isAdminManagement || u.IsActive)));
             var query = eligibleAuthors;
+=======
+            var query = db.Authors.AsQueryable();
+>>>>>>> b1325030efd325e79c38e5cc1c4bea6e34d793cf
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -284,7 +288,15 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         public ActionResult Create()
         {
-            return HttpNotFound();
+            if (!IsAdminManagementRequest())
+            {
+                return RedirectToRoute("AdminAuthors",
+                    new { action = "Create" });
+            }
+
+            ViewBag.IsAdminManagement = true;
+
+            return View();
         }
 
         // =========================
@@ -295,7 +307,52 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Author author, HttpPostedFileBase imageFile)
         {
-            return HttpNotFound();
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
+            {
+                imageFile = Request.Files[0];
+            }
+
+            if (author.AuthorName != null)
+                author.AuthorName = author.AuthorName.Trim();
+
+            if (author.Email != null)
+                author.Email = author.Email.Trim();
+
+            if (db.Authors.Any(a => a.Email == author.Email))
+            {
+                ModelState.AddModelError("Email", "Email đã được sử dụng");
+            }
+
+            string imageError;
+
+            if (!ValidateImage(imageFile, out imageError))
+            {
+                ModelState.AddModelError("Images", imageError);
+            }
+
+            if (ModelState.IsValid)
+            {
+                string imagePath = SaveAuthorImage(imageFile);
+
+                db.Authors.Add(author);
+                db.SaveChanges();
+
+                if (!string.IsNullOrEmpty(imagePath))
+                {
+                    db.Database.ExecuteSqlCommand(
+                        "UPDATE dbo.Authors SET Images = @p0 WHERE AuthorID = @p1",
+                        imagePath,
+                        author.AuthorID
+                    );
+                }
+
+                TempData["Success"] = "Thêm tác giả thành công";
+
+                return RedirectToAuthorsIndex();
+            }
+
+            return View(author);
         }
 
         // =========================

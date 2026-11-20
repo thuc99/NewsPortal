@@ -169,10 +169,12 @@ namespace NewsPortal.Controllers
                 return View();
             }
 
+            bool databaseAccountFound = false;
+            bool databaseAccountIsActive = false;
+
             string databaseUsername = null;
             string databaseFullName = null;
             string databaseRole = null;
-            bool databaseAccountIsActive = false;
 
             using (var conn = CreateUsersConnection())
             {
@@ -198,6 +200,8 @@ namespace NewsPortal.Controllers
                     {
                         if (reader.Read())
                         {
+                            databaseAccountFound = true;
+
                             databaseAccountIsActive =
                                 Convert.ToBoolean(reader["IsActive"]);
 
@@ -256,14 +260,34 @@ namespace NewsPortal.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                Session["Role"] = string.Equals(databaseRole, "Author", StringComparison.OrdinalIgnoreCase)
-                    ? "Author"
-                    : (string.Equals(databaseRole, "Reader", StringComparison.OrdinalIgnoreCase) ||
-                       string.Equals(databaseRole, "User", StringComparison.OrdinalIgnoreCase)
-                        ? "Reader"
-                        : databaseRole);
+                Session["Role"] = "User";
 
                 return RedirectToRoute("Default", new { controller = "Articles", action = "Index" });
+            }
+
+            // Đăng nhập Admin cũ
+            bool canUseLegacyRootLogin =
+                username.Equals(
+                    "admin",
+                    StringComparison.OrdinalIgnoreCase)
+                && password == "123456"
+                && (!databaseAccountFound ||
+                    (databaseAccountIsActive &&
+                    string.Equals(
+                        databaseRole,
+                        "Admin",
+                        StringComparison.OrdinalIgnoreCase)));
+
+            if (canUseLegacyRootLogin)
+            {
+                ClearLoginSession();
+
+                Session.Remove("LockUntil");
+                Session["Role"] = "Admin";
+                Session["Admin"] = "admin";
+                Session["FailCount"] = 0;
+
+                return RedirectToAction("Index", "Home");
             }
 
             // Đăng nhập thất bại
@@ -443,7 +467,7 @@ namespace NewsPortal.Controllers
 
                         cmd.Parameters.Add(
                             "@role", SqlDbType.NVarChar, 20
-                        ).Value = "Reader";
+                        ).Value = "User";
 
                         cmd.Parameters.Add(
                             "@isActive", SqlDbType.Bit
