@@ -190,19 +190,7 @@
     </style>
 </head>
 <body>
-    @{
-        string currentRole = Convert.ToString(Session["Role"]);
-        bool isAdmin = string.Equals(currentRole, "Admin", StringComparison.OrdinalIgnoreCase);
-        string roleLabel = isAdmin
-            ? "Quản trị viên"
-            : (string.Equals(currentRole, "Editor", StringComparison.OrdinalIgnoreCase)
-                ? "Biên tập viên"
-                : (string.Equals(currentRole, "Author", StringComparison.OrdinalIgnoreCase)
-                    ? "Tác giả"
-                    : (string.Equals(currentRole, "Reader", StringComparison.OrdinalIgnoreCase) || string.Equals(currentRole, "User", StringComparison.OrdinalIgnoreCase)
-                        ? "Độc giả"
-                        : currentRole)));
-    }
+    @{ bool isAdmin = Session["Admin"] != null; }
     <header class="admin-header">
         <div class="admin-header-inner">
             <a class="admin-brand" href="@(isAdmin ? Url.RouteUrl("Admin", new { action = "Index" }) : Url.RouteUrl("AdminArticles", new { action = "Index" }))">
@@ -229,8 +217,11 @@
                 }
             </nav>
             <div class="admin-user">
+                <a class="admin-home-btn" href="@Url.Action("Index", "Home")">
+                    <i class="fa-solid fa-house"></i> Quay về trang chủ
+                </a>
                 <span>@(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])</span>
-                <span class="admin-role-tag">@roleLabel</span>
+                <span class="admin-role-tag">@(isAdmin ? "Tổng biên tập" : "Biên tập")</span>
                 <a href="@Url.Action("Logout", "Account")">Đăng xuất</a>
             </div>
         </div>

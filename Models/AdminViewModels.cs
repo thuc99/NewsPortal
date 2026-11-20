@@ -53,10 +53,6 @@ namespace NewsPortal.Models
         public int TotalCategories { get; set; }
         public int TotalAuthors { get; set; }
         public int TotalUsers { get; set; }
-        public int FilteredArticleCount { get; set; }
-        public int CurrentPage { get; set; }
-        public int TotalPages { get; set; }
-        public int PageSize { get; set; }
 
         public string SearchQuery { get; set; }
         public string StatusFilter { get; set; }

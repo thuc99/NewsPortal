@@ -142,76 +142,6 @@
             padding: 20px;
         }
 
-        .adm-pagination {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 16px;
-        }
-
-        .adm-pagination-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .adm-pagination a {
-            padding: 7px 12px;
-            border: 1px solid var(--line);
-            border-radius: 7px;
-            background: #fff;
-            color: var(--ink) !important;
-            font-size: 13px;
-            font-weight: 700;
-            text-decoration: none !important;
-            cursor: pointer;
-        }
-
-        .adm-pagination a:hover {
-            border-color: var(--red);
-            color: var(--red) !important;
-        }
-
-        .adm-collapse-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            min-height: 36px;
-            padding: 7px 12px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--soft);
-            color: var(--ink);
-            font: inherit;
-            font-size: 13px;
-            font-weight: 700;
-            line-height: 1;
-            cursor: pointer;
-            transition: background-color .18s ease, border-color .18s ease, color .18s ease;
-        }
-
-        .adm-collapse-btn:hover {
-            background: #fff1f2;
-            border-color: var(--red);
-            color: var(--red);
-        }
-
-        .adm-collapse-btn:focus-visible {
-            outline: 3px solid rgba(220, 38, 38, .2);
-            outline-offset: 2px;
-        }
-
-        .adm-collapse-btn i {
-            font-size: 11px;
-            transition: transform .18s ease;
-        }
-
-        .adm-collapse-btn[aria-expanded="false"] i {
-            transform: rotate(180deg);
-        }
-
         .adm-toolbar {
             display: flex;
             justify-content: space-between;
@@ -824,11 +754,6 @@
                 <a href="@Url.Action("Index", "Admin")" class="search-reset">Xóa lọc</a>
             }
         </form>
-
-        <button type="button" class="adm-collapse-btn" id="adminArticleListToggle" aria-expanded="true" aria-controls="adminArticleList">
-            <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
-            <span>Thu gọn danh sách</span>
-        </button>
     </div>
 
     <div class="adm-wf-pills">
@@ -839,7 +764,6 @@
         <a class="adm-wf-pill @(Model.StatusFilter == "Archived" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Archived" })">Đã lưu trữ (@archivedCount)</a>
     </div>
 
-    <div id="adminArticleList">
     <div style="overflow-x:auto;">
         <table class="adm-table">
             <thead>
@@ -992,23 +916,6 @@
             </tbody>
         </table>
     </div>
-
-    <div class="adm-pagination">
-        <span style="color:var(--muted); font-size:13px;">
-            @Model.FilteredArticleCount bài viết · Trang @Model.CurrentPage / @Model.TotalPages
-        </span>
-        <div class="adm-pagination-controls">
-            @if (Model.CurrentPage > 1)
-            {
-                <a href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = Model.CurrentPage - 1 })" aria-label="Trang trước">Trước</a>
-            }
-            @if (Model.CurrentPage < Model.TotalPages)
-            {
-                <a href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = Model.CurrentPage + 1 })" aria-label="Trang sau">Sau</a>
-            }
-        </div>
-    </div>
-    </div>
 </div>
 
 <div id="rejectModal" class="reject-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rejectModalHeading">
@@ -1069,20 +976,6 @@
 
 <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const articleList = document.getElementById("adminArticleList");
-            const articleListToggle = document.getElementById("adminArticleListToggle");
-            if (articleList && articleListToggle) {
-                const toggleLabel = articleListToggle.querySelector("span");
-                articleListToggle.addEventListener("click", function () {
-                    const isExpanded = articleListToggle.getAttribute("aria-expanded") === "true";
-                    articleList.hidden = isExpanded;
-                    articleListToggle.setAttribute("aria-expanded", String(!isExpanded));
-                    if (toggleLabel) {
-                        toggleLabel.textContent = isExpanded ? "Mở rộng danh sách" : "Thu gọn danh sách";
-                    }
-                });
-            }
-
             const modal = document.getElementById("rejectModal");
             const articleIdInput = document.getElementById("rejectArticleId");
             const articleTitleText = document.getElementById("rejectModalArticleTitle");

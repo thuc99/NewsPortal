@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Web;
+﻿using System.Web;
 using System.Web.Mvc;
-using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
 {
@@ -10,39 +7,7 @@ namespace NewsPortal.Controllers
     {
         protected override bool AuthorizeCore(HttpContextBase httpContext)
         {
-            if (httpContext.Session == null)
-                return false;
-
-            string username = Convert.ToString(httpContext.Session["User"] ?? httpContext.Session["Admin"]);
-            if (string.IsNullOrWhiteSpace(username))
-                return false;
-
-            using (var db = new NewsPortalDBEntities())
-            {
-                var user = db.Users.FirstOrDefault(u => u.Username == username && u.IsActive);
-                if (user != null)
-                {
-                    httpContext.Session["Role"] = user.Role;
-                    if (string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
-                    {
-                        httpContext.Session["Admin"] = user.Username;
-                        httpContext.Session.Remove("User");
-                        httpContext.Session.Remove("UserFullName");
-                        return true;
-                    }
-
-                    httpContext.Session.Remove("Admin");
-                    httpContext.Session["User"] = user.Username;
-                    httpContext.Session["UserFullName"] = user.FullName;
-                    return false;
-                }
-            }
-
-            httpContext.Session.Remove("Admin");
-            httpContext.Session.Remove("User");
-            httpContext.Session.Remove("UserFullName");
-            httpContext.Session.Remove("Role");
-            return false;
+            return httpContext.Session["Admin"] != null;
         }
 
         protected override void HandleUnauthorizedRequest(

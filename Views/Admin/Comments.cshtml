@@ -131,6 +131,11 @@
             white-space: nowrap;
         }
 
+        .cmt-pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
         .cmt-approved {
             background: #dcfce7;
             color: #15803d;
@@ -158,6 +163,16 @@
             background: #fff;
             white-space: nowrap;
         }
+
+        .btn-approve {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+            .btn-approve:hover {
+                background: #16a34a;
+                color: #fff;
+            }
 
         .btn-hide {
             border-color: #d97706;
@@ -223,13 +238,17 @@
            class="cmt-tab @(string.IsNullOrEmpty(currentStatus) ? "active" : "")">
             Tất cả (@ViewBag.TotalCount)
         </a>
+        <a href="@Url.Action("Comments", "Admin", new { status = "Pending", search = currentSearch })"
+           class="cmt-tab @(currentStatus == "Pending" ? "active" : "")">
+            Chờ duyệt (@ViewBag.PendingCount)
+        </a>
         <a href="@Url.Action("Comments", "Admin", new { status = "Approved", search = currentSearch })"
            class="cmt-tab @(currentStatus == "Approved" ? "active" : "")">
-            Đang hiển thị (@ViewBag.ApprovedCount)
+            Đã duyệt (@ViewBag.ApprovedCount)
         </a>
         <a href="@Url.Action("Comments", "Admin", new { status = "Hidden", search = currentSearch })"
            class="cmt-tab @(currentStatus == "Hidden" ? "active" : "")">
-            Spam / đã ẩn (@ViewBag.HiddenCount)
+            Đã ẩn (@ViewBag.HiddenCount)
         </a>
     </div>
 
@@ -279,24 +298,40 @@
                         <td>
                             @if (c.Status == "Approved")
                             {
-                                <span class="cmt-badge cmt-approved">Đang hiển thị</span>
+                                <span class="cmt-badge cmt-approved">Đã duyệt</span>
+                            }
+                            else if (c.Status == "Hidden")
+                            {
+                                <span class="cmt-badge cmt-hidden">Đã ẩn</span>
                             }
                             else
                             {
-                                <span class="cmt-badge cmt-hidden">Spam / đã ẩn</span>
+                                <span class="cmt-badge cmt-pending">Chờ duyệt</span>
                             }
                         </td>
                         <td style="text-align:right;">
                             <div class="cmt-actions">
-                                @if (c.Status != "Hidden")
+                                @if (c.Status != "Approved")
                                 {
-                                    using (Html.BeginForm("MarkCommentSpam", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    using (Html.BeginForm("ApproveComment", "Admin", FormMethod.Post, new { style = "display:inline;" }))
                                     {
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@c.CommentID" />
                                         <input type="hidden" name="search" value="@currentSearch" />
                                         <input type="hidden" name="status" value="@currentStatus" />
-                                        <button type="submit" class="btn-act btn-hide">Đánh spam / Ẩn</button>
+                                        <button type="submit" class="btn-act btn-approve">Duyệt</button>
+                                    }
+                                }
+
+                                @if (c.Status != "Hidden")
+                                {
+                                    using (Html.BeginForm("HideComment", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.CommentID" />
+                                        <input type="hidden" name="search" value="@currentSearch" />
+                                        <input type="hidden" name="status" value="@currentStatus" />
+                                        <button type="submit" class="btn-act btn-hide">Ẩn</button>
                                     }
                                 }
 

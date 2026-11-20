@@ -55,7 +55,6 @@ namespace NewsPortal.Controllers
         {
             var u = CurrentUser();
             if (u == null) return HttpNotFound();
-            vm.Username = u.Username;
             vm.AvatarUrl = u.AvatarUrl;   // ảnh chỉ đổi qua nút máy ảnh
 
             vm.FullName = Regex.Replace((vm.FullName ?? "").Trim(), @"\s+", " ");
@@ -164,7 +163,6 @@ namespace NewsPortal.Controllers
         {
             return new ProfileInfoViewModel
             {
-                Username = u.Username,
                 FullName = u.FullName,
                 BirthDate = u.BirthDate,
                 Gender = u.Gender,
@@ -268,7 +266,6 @@ namespace NewsPortal.Controllers
                     ArticleId = c.ArticleID,
                     ArticleTitle = c.Articles != null ? c.Articles.Title : ("Bài viết #" + c.ArticleID),
                     Content = c.Content,
-                    Status = c.Status,
                     CreatedAt = c.CreatedDate
                 })
                 .ToList();

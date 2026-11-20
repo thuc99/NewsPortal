@@ -43,7 +43,10 @@ namespace NewsPortal.Controllers
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 searchString = searchString.Trim();
-                query = query.Where(a => a.Title.Contains(searchString));
+                query = query.Where(a =>
+                    a.Title.Contains(searchString) ||
+                    a.Summary.Contains(searchString) ||
+                    a.Content.Contains(searchString));
             }
 
             if (categoryId.HasValue)
@@ -103,7 +106,7 @@ namespace NewsPortal.Controllers
         {
             if (!id.HasValue || id.Value <= 0)
             {
-                return RedirectToRoute("HomeRoot");
+                return RedirectToAction("Index");
             }
 
             var article = db.Articles
@@ -117,7 +120,7 @@ namespace NewsPortal.Controllers
             }
 
             ViewBag.Comments = db.Comments
-                .Where(c => c.ArticleID == id.Value && c.Status == "Approved")
+                .Where(c => c.ArticleID == id.Value)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToList();
 
@@ -163,7 +166,7 @@ namespace NewsPortal.Controllers
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Approved"
+                Status = "Pending"
             });
 
             db.SaveChanges();

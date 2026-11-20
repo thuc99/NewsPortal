@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
 {
@@ -13,41 +11,17 @@ namespace NewsPortal.Controllers
             if (httpContext.Session == null)
                 return false;
 
-            string username = Convert.ToString(httpContext.Session["User"] ?? httpContext.Session["Admin"]);
-            if (string.IsNullOrWhiteSpace(username))
-                return false;
+            string role = Convert.ToString(httpContext.Session["Role"]);
 
-            using (var db = new NewsPortalDBEntities())
-            {
-                var user = db.Users.FirstOrDefault(u => u.Username == username && u.IsActive);
-                if (user != null)
-                {
-                    httpContext.Session["Role"] = user.Role;
-                    bool isAdmin = string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase);
-                    bool isEditor = string.Equals(user.Role, "Editor", StringComparison.OrdinalIgnoreCase);
+            bool isAdmin = httpContext.Session["Admin"] != null;
 
-                    if (isAdmin)
-                    {
-                        httpContext.Session["Admin"] = user.Username;
-                        httpContext.Session.Remove("User");
-                        httpContext.Session.Remove("UserFullName");
-                    }
-                    else
-                    {
-                        httpContext.Session.Remove("Admin");
-                        httpContext.Session["User"] = user.Username;
-                        httpContext.Session["UserFullName"] = user.FullName;
-                    }
+            bool isEditor = string.Equals(
+                role,
+                "Editor",
+                StringComparison.OrdinalIgnoreCase
+            );
 
-                    return isAdmin || isEditor;
-                }
-            }
-
-            httpContext.Session.Remove("Admin");
-            httpContext.Session.Remove("User");
-            httpContext.Session.Remove("UserFullName");
-            httpContext.Session.Remove("Role");
-            return false;
+            return isAdmin || isEditor;
         }
 
         protected override void HandleUnauthorizedRequest(
