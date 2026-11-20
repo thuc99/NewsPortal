@@ -41,6 +41,12 @@ namespace NewsPortal.Controllers
                 : RedirectToAction("Index");
         }
 
+        private bool IsAccountAuthor(Author author)
+        {
+            return author != null && author.UserId.HasValue && db.Users.Any(u =>
+                u.UserId == author.UserId.Value && u.Role == "Author");
+        }
+
         // Chuẩn hóa đường dẫn ảnh
         private string NormalizeImagePath(string path)
         {
@@ -182,20 +188,12 @@ namespace NewsPortal.Controllers
             ViewBag.IsAdminManagement = isAdminManagement;
             ViewBag.ReturnUrl = returnUrl;
 
-            var query = db.Authors.AsQueryable();
-            if (isAdminManagement)
-            {
-                query = query.Where(a => !a.UserId.HasValue || db.Users.Any(u =>
-                    u.UserId == a.UserId.Value &&
-                    u.Role == "Author"));
-            }
-            else
-            {
-                query = query.Where(a => !a.UserId.HasValue || db.Users.Any(u =>
+            var eligibleAuthors = db.Authors.Where(a =>
+                a.UserId.HasValue && db.Users.Any(u =>
                     u.UserId == a.UserId.Value &&
                     u.Role == "Author" &&
-                    u.IsActive));
-            }
+                    (isAdminManagement || u.IsActive)));
+            var query = eligibleAuthors;
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -214,8 +212,10 @@ namespace NewsPortal.Controllers
                 !isAdminManagement &&
                 string.IsNullOrWhiteSpace(search))
             {
+                var eligibleAuthorIds = eligibleAuthors.Select(a => a.AuthorID);
                 var mostPublishedArticles = db.Articles
-                    .Where(a => a.Status == "Published")
+                    .Where(a => a.Status == "Published" &&
+                        eligibleAuthorIds.Contains(a.AuthorID))
                     .GroupBy(a => a.AuthorID)
                     .Select(group => new
                     {
@@ -228,7 +228,7 @@ namespace NewsPortal.Controllers
 
                 selectedAuthorId = mostPublishedArticles != null
                     ? (int?)mostPublishedArticles.AuthorID
-                    : db.Authors
+                    : eligibleAuthors
                         .OrderBy(a => a.AuthorName)
                         .Select(a => (int?)a.AuthorID)
                         .FirstOrDefault();
@@ -236,18 +236,11 @@ namespace NewsPortal.Controllers
 
             if (selectedAuthorId.HasValue)
             {
-                var selectedAuthor = db.Authors.Find(selectedAuthorId.Value);
+                var selectedAuthor = eligibleAuthors.FirstOrDefault(a =>
+                    a.AuthorID == selectedAuthorId.Value);
 
                 if (selectedAuthor == null)
                     return HttpNotFound();
-
-                if (selectedAuthor.UserId.HasValue && !db.Users.Any(u =>
-                    u.UserId == selectedAuthor.UserId.Value &&
-                    u.Role == "Author" &&
-                    (isAdminManagement || u.IsActive)))
-                {
-                    return HttpNotFound();
-                }
 
                 selectedAuthor.Images = GetAuthorImage(selectedAuthor.AuthorID);
 
@@ -264,7 +257,7 @@ namespace NewsPortal.Controllers
                 ViewBag.Articles = authorArticles;
                 ViewBag.ArticleCount = authorArticles.Count;
 
-                var suggestedAuthors = db.Authors
+                var suggestedAuthors = eligibleAuthors
                     .Where(a => a.AuthorID != selectedAuthorId.Value)
                     .OrderBy(a => a.AuthorName)
                     .Take(6)
@@ -321,7 +314,7 @@ namespace NewsPortal.Controllers
 
             var author = db.Authors.Find(id);
 
-            if (author == null)
+            if (!IsAccountAuthor(author))
                 return HttpNotFound();
 
             author.Images = GetAuthorImage(author.AuthorID);
@@ -345,7 +338,7 @@ namespace NewsPortal.Controllers
 
             var existingAuthor = db.Authors.Find(author.AuthorID);
 
-            if (existingAuthor == null)
+            if (!IsAccountAuthor(existingAuthor))
                 return HttpNotFound();
 
             if (author.AuthorName != null)
@@ -419,7 +412,7 @@ namespace NewsPortal.Controllers
         public ActionResult DeleteImage(int id)
         {
             var author = db.Authors.Find(id);
-            if (author == null)
+            if (!IsAccountAuthor(author))
                 return HttpNotFound();
 
             string oldImage = GetAuthorImage(id);
@@ -452,7 +445,7 @@ namespace NewsPortal.Controllers
 
             var author = db.Authors.Find(id);
 
-            if (author == null)
+            if (!IsAccountAuthor(author))
                 return HttpNotFound();
 
             author.Images = GetAuthorImage(author.AuthorID);
@@ -473,7 +466,7 @@ namespace NewsPortal.Controllers
 
             var author = db.Authors.Find(id);
 
-            if (author == null)
+            if (!IsAccountAuthor(author))
                 return HttpNotFound();
 
             if (db.Articles.Any(a => a.AuthorID == id))

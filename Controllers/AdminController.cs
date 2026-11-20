@@ -585,12 +585,6 @@ END";
                 return RedirectToAction("Users");
             }
 
-            if (string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
-            {
-                TempData["AdminError"] = "Tên đăng nhập 'admin' được dành riêng cho tài khoản gốc.";
-                return RedirectToAction("Users");
-            }
-
             if (fullName.Length < 2 || fullName.Length > 100)
             {
                 TempData["AdminError"] = "Họ tên phải từ 2 đến 100 ký tự.";

@@ -89,7 +89,13 @@ namespace NewsPortal.Controllers
             ViewBag.FromDate = fromDate;
             ViewBag.ToDate = toDate;
             ViewBag.Categories = db.Categories.OrderBy(c => c.CategoryName).ToList();
-            ViewBag.Authors = db.Authors.OrderBy(a => a.AuthorName).ToList();
+            ViewBag.Authors = db.Authors
+                .Where(a => a.UserId.HasValue && db.Users.Any(u =>
+                    u.UserId == a.UserId.Value &&
+                    u.Role == "Author" &&
+                    u.IsActive))
+                .OrderBy(a => a.AuthorName)
+                .ToList();
             ViewBag.FeaturedArticle = featured;
             ViewBag.LatestArticles = latestArticles;
             ViewBag.CurrentPage = page;
