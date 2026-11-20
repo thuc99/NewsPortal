@@ -186,7 +186,22 @@ END";
             int? ownerUserId = GetArticleOwnerUserId(articleId);
             return !ownerUserId.HasValue || ownerUserId.Value == currentUserId.Value;
         }
+        // Phóng viên chỉ được chỉnh sửa/xóa bài của chính họ, không được bài của tác giả khác
+        private bool CanEditorEditArticle(int articleId)
+        {
+            if (IsAdminUser())
+                return true;
 
+            if (!CanManageArticles())
+                return false;
+
+            int? currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return false;
+
+            int? ownerUserId = GetArticleOwnerUserId(articleId);
+            return ownerUserId.HasValue && ownerUserId.Value == currentUserId.Value;
+        }
         private bool IsAdminUser()
         {
             if (Session["Admin"] != null)
@@ -416,20 +431,20 @@ END";
             }
             else
             {
-                // Phóng viên chỉ xem được bài Nháp của chính mình
-                var ownDraftIds = GetVisibleDraftArticleIdsForCurrentReporter();
-                query = query.Where(a => a.Status != "Draft" || ownDraftIds.Contains(a.ArticleID));
+                // Phóng viên chỉ xem được các bài viết của chính mình
+                int? currentUserId = GetCurrentUserId();
+                var ownArticleIds = currentUserId.HasValue
+                    ? db.Database.SqlQuery<int>("SELECT ArticleID FROM dbo.Articles WHERE UserId = @p0", currentUserId.Value).ToList()
+                    : new List<int>();
 
-                ViewBag.CountDraft = ownDraftIds.Count;
-                ViewBag.CountPending = db.Articles.Count(a => a.Status == "Pending");
-                ViewBag.CountPublished = db.Articles.Count(a => a.Status == "Published");
-                ViewBag.CountRejected = db.Articles.Count(a => a.Status == "Rejected");
-                ViewBag.CountArchived = db.Articles.Count(a => a.Status == "Archived");
-                ViewBag.CountAll = (int)ViewBag.CountDraft
-                    + (int)ViewBag.CountPending
-                    + (int)ViewBag.CountPublished
-                    + (int)ViewBag.CountRejected
-                    + (int)ViewBag.CountArchived;
+                query = query.Where(a => ownArticleIds.Contains(a.ArticleID));
+
+                ViewBag.CountDraft = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Draft");
+                ViewBag.CountPending = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Pending");
+                ViewBag.CountPublished = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Published");
+                ViewBag.CountRejected = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Rejected");
+                ViewBag.CountArchived = db.Articles.Count(a => ownArticleIds.Contains(a.ArticleID) && a.Status == "Archived");
+                ViewBag.CountAll = ownArticleIds.Count;
             }
 
             if (!string.IsNullOrWhiteSpace(searchString))
@@ -572,7 +587,22 @@ END";
                     }
                     db.SaveChanges();
 
-                    ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
+                    bool isSavedInDb = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
+                    ViewBag.IsSavedArticle = isSavedInDb;
+
+                    // Đồng bộ lại Cookie theo đúng dữ liệu mới nhất trong SQL
+                    var syncedIds = db.SavedArticles
+                        .Where(s => s.UserId == viewer.UserId)
+                        .OrderByDescending(s => s.SavedDate)
+                        .Select(s => s.ArticleId)
+                        .ToList();
+
+                    Response.Cookies.Add(new HttpCookie("NewsPortalFavorites", string.Join(",", syncedIds))
+                    {
+                        Expires = DateTime.Now.AddYears(1),
+                        HttpOnly = true
+                    });
+                    return;
                 }
             }
 
@@ -632,15 +662,15 @@ END";
             ViewBag.AuthorName = article.Authors == null ? null : article.Authors.AuthorName;
             ViewBag.RatingCount = db.ArticleRatings.Count(r => r.ArticleID == articleId);
             ViewBag.CanManageArticles = canManageArticles;
-            ViewBag.CanEditArticle = hasManagePermission;
-            ViewBag.IsAdminManagement = IsAdminArticleRequest();
+            ViewBag.CanEditArticle = CanEditorEditArticle(article.ArticleID); ViewBag.IsAdminManagement = IsAdminArticleRequest();
             ViewBag.IsAdminUser = IsAdminUser();
             ViewBag.AverageRating = db.ArticleRatings
                 .Where(r => r.ArticleID == articleId)
                 .Select(r => (double?)r.Rating)
                 .Average() ?? 0;
-            ViewBag.IsFavorite = GetFavoriteIds().Contains(articleId);
-            ViewBag.CanComment = canComment && isPublished;
+            ViewBag.IsFavorite = ViewBag.IsSavedArticle != null
+                            ? (bool)ViewBag.IsSavedArticle
+                            : GetFavoriteIds().Contains(articleId); ViewBag.CanComment = canComment && isPublished;
 
             var recommendations = db.Articles
                 .Include(a => a.Categories)
@@ -708,11 +738,11 @@ END";
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Pending"
+                Status = "Approved"
             });
             db.SaveChanges();
 
-            TempData["CommentSuccess"] = "Bình luận của bạn đã được gửi và đang chờ Admin phê duyệt.";
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được đăng.";
             return RedirectToAction("View", new { id = articleId.Value });
         }
 
@@ -1197,12 +1227,12 @@ END";
                 return RedirectToArticleManagement();
             }
 
-            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            if (!CanEditorEditArticle(article.ArticleID))
             {
-                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem và chỉnh sửa.";
+                TempData["Error"] = "Bạn chỉ có quyền chỉnh sửa bài viết của chính mình.";
                 return RedirectToArticleManagement();
             }
-
+            PopulateCreateCategories(article.CategoryID);
             ViewBag.RejectionReason = GetRejectionReason(article.ArticleID);
             return View(ToArticleViewModel(article));
         }
@@ -1228,10 +1258,9 @@ END";
                 TempData["Error"] = "Bài viết cần chỉnh sửa không tồn tại hoặc đã bị xóa trước đó.";
                 return RedirectToArticleManagement();
             }
-
-            if (existing.Status == "Draft" && !CanCurrentUserAccessDraft(existing.ArticleID))
+            if (!CanEditorEditArticle(existing.ArticleID))
             {
-                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền chỉnh sửa.";
+                TempData["Error"] = "Bạn chỉ có quyền chỉnh sửa bài viết của chính mình.";
                 return RedirectToArticleManagement();
             }
 
@@ -1251,7 +1280,16 @@ END";
             ModelState.Remove("Summary");
             ModelState.Remove("Image");
 
+            PopulateCreateCategories(article != null ? (article.CategoryId ?? existing.CategoryID) : existing.CategoryID);
             ValidateArticleInput(article, imageFile, isAdmin);
+
+            // Kiểm tra danh mục hợp lệ
+            if (article != null && (!article.CategoryId.HasValue || !db.Categories.Any(c => c.CategoryID == article.CategoryId.Value)))
+            {
+                ModelState.AddModelError("CategoryId", "Vui lòng chọn danh mục bài viết hợp lệ.");
+                PopulateCreateCategories(article != null ? (article.CategoryId ?? existing.CategoryID) : existing.CategoryID);
+            }
+
 
             string targetAdminStatus = existing.Status;
             if (isAdmin)
@@ -1283,6 +1321,7 @@ END";
                 return View(article);
             }
 
+            existing.CategoryID = article.CategoryId.Value;
             existing.Title = article.Title;
             existing.Content = article.Content;
             existing.Summary = CreateSummary(article.Content);
@@ -1356,9 +1395,9 @@ END";
                 return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
             }
 
-            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            if (!CanEditorEditArticle(article.ArticleID))
             {
-                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền thao tác.";
+                TempData["Error"] = "Bạn chỉ có quyền thay đổi trạng thái bài viết của chính mình.";
                 return RedirectToRoute("AdminArticles", new { action = "Index", status = string.IsNullOrWhiteSpace(returnStatus) ? null : returnStatus });
             }
 
@@ -1450,9 +1489,9 @@ END";
                 return RedirectToArticleManagement();
             }
 
-            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            if (!CanEditorEditArticle(article.ArticleID))
             {
-                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem hoặc xóa.";
+                TempData["Error"] = "Bạn chỉ có quyền xóa bài viết của chính mình.";
                 return RedirectToArticleManagement();
             }
 
@@ -1483,9 +1522,9 @@ END";
                 return RedirectToArticleManagement();
             }
 
-            if (article.Status == "Draft" && !CanCurrentUserAccessDraft(article.ArticleID))
+            if (!CanEditorEditArticle(article.ArticleID))
             {
-                TempData["Error"] = "Bài viết đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xóa.";
+                TempData["Error"] = "Bạn chỉ có quyền xóa bài viết của chính mình.";
                 return RedirectToArticleManagement();
             }
 
@@ -1507,6 +1546,7 @@ END";
             return new Article
             {
                 Id = article.ArticleID,
+                CategoryId = article.CategoryID,
                 Title = article.Title,
                 Content = article.Content,
                 CreatedDate = article.CreatedDate,

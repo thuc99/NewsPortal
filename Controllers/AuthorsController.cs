@@ -111,7 +111,7 @@ namespace NewsPortal.Controllers
 
             imageFile.SaveAs(fullPath);
 
-            return "~/Content/Images/Authors/" + fileName;
+            return "/Content/Images/Authors/" + fileName;
         }
 
         // =========================
@@ -176,12 +176,10 @@ namespace NewsPortal.Controllers
 
                 selectedAuthor.Images = GetAuthorImage(selectedAuthor.AuthorID);
 
-                // Nếu là Admin thì lấy TẤT CẢ bài của tác giả (kể cả Nháp, Chờ duyệt...); nếu ngoài trang chủ thì chỉ lấy Published
-                var articlesQuery = db.Articles.Where(a => a.AuthorID == selectedAuthorId.Value);
-                if (!isAdminManagement)
-                {
-                    articlesQuery = articlesQuery.Where(a => a.Status == "Published");
-                }
+                // Chỉ lấy bài Published cho tất cả trường hợp
+                var articlesQuery = db.Articles.Where(a =>
+                    a.AuthorID == selectedAuthorId.Value &&
+                    a.Status == "Published");
 
                 var authorArticles = articlesQuery
                     .OrderByDescending(a => a.CreatedDate)
@@ -239,6 +237,10 @@ namespace NewsPortal.Controllers
         public ActionResult Create(Author author, HttpPostedFileBase imageFile)
         {
             ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
+            {
+                imageFile = Request.Files[0];
+            }
 
             if (author.AuthorName != null)
                 author.AuthorName = author.AuthorName.Trim();
@@ -316,6 +318,10 @@ namespace NewsPortal.Controllers
         public ActionResult Edit(Author author, HttpPostedFileBase imageFile)
         {
             ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
+            {
+                imageFile = Request.Files[0];
+            }
 
             var existingAuthor = db.Authors.Find(author.AuthorID);
 
