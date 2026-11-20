@@ -1,6 +1,5 @@
 ﻿@model IEnumerable<NewsPortal.Models.Article>
 @using System
-@using System.Collections.Generic
 @using System.Linq
 @using NewsPortal.Models
 
@@ -28,7 +27,6 @@
     int countPublished = ViewBag.CountPublished == null ? 0 : (int)ViewBag.CountPublished;
     int countRejected = ViewBag.CountRejected == null ? 0 : (int)ViewBag.CountRejected;
     int countArchived = ViewBag.CountArchived == null ? 0 : (int)ViewBag.CountArchived;
-    var rejectionReasons = ViewBag.RejectionReasons as Dictionary<int, string> ?? new Dictionary<int, string>();
 }
 
 @if (TempData["Success"] != null)
@@ -319,31 +317,31 @@
         table-layout: fixed;
     }
 
-        .admin-articles-page .management-table th:nth-child(1),
-        .admin-articles-page .management-table td:nth-child(1) {
-            width: 110px;
-        }
+    .admin-articles-page .management-table th:nth-child(1),
+    .admin-articles-page .management-table td:nth-child(1) {
+        width: 110px;
+    }
 
-        .admin-articles-page .management-table th:nth-child(2),
-        .admin-articles-page .management-table td:nth-child(2) {
-            width: 50%;
-        }
+    .admin-articles-page .management-table th:nth-child(2),
+    .admin-articles-page .management-table td:nth-child(2) {
+        width: 50%;
+    }
 
-        .admin-articles-page .management-table th:nth-child(3),
-        .admin-articles-page .management-table td:nth-child(3) {
-            width: 110px;
-        }
+    .admin-articles-page .management-table th:nth-child(3),
+    .admin-articles-page .management-table td:nth-child(3) {
+        width: 110px;
+    }
 
-        .admin-articles-page .management-table th:nth-child(4),
-        .admin-articles-page .management-table td:nth-child(4) {
-            width: 145px;
-        }
+    .admin-articles-page .management-table th:nth-child(4),
+    .admin-articles-page .management-table td:nth-child(4) {
+        width: 145px;
+    }
 
-        .admin-articles-page .management-table th:nth-child(5),
-        .admin-articles-page .management-table td:nth-child(5) {
-            width: 240px;
-            padding-left: 28px;
-        }
+    .admin-articles-page .management-table th:nth-child(5),
+    .admin-articles-page .management-table td:nth-child(5) {
+        width: 240px;
+        padding-left: 28px;
+    }
 
     .admin-articles-page .article-title {
         min-width: 0;
@@ -354,10 +352,10 @@
         table-layout: fixed;
     }
 
-        .public-articles-page .management-table th:first-child,
-        .public-articles-page .management-table td:first-child {
-            width: 220px;
-        }
+    .public-articles-page .management-table th:first-child,
+    .public-articles-page .management-table td:first-child {
+        width: 220px;
+    }
 
     .public-articles-page .article-image {
         display: block;
@@ -374,13 +372,13 @@
         line-height: 1.5;
     }
 
-        .article-title a {
-            color: #1e293b;
-        }
+    .article-title a {
+        color: #1e293b;
+    }
 
-            .article-title a:hover {
-                color: #b91c1c;
-            }
+    .article-title a:hover {
+        color: #b91c1c;
+    }
 
     .article-excerpt {
         display: -webkit-box;
@@ -392,79 +390,6 @@
         line-height: 1.6;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
-    }
-
-    .rejection-reason-box {
-        margin-top: 8px;
-        padding: 8px 11px;
-        border-radius: 7px;
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
-        font-size: 13px;
-        font-weight: 500;
-        line-height: 1.5;
-    }
-
-    .wf-reject-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, .55);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-    }
-
-        .wf-reject-overlay.is-open {
-            display: flex;
-        }
-
-    .wf-reject-card {
-        width: 100%;
-        max-width: 480px;
-        background: #fff;
-        border-radius: 12px;
-        padding: 22px 24px;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, .25);
-    }
-
-        .wf-reject-card h4 {
-            margin: 0 0 6px;
-            font-size: 18px;
-            color: #b91c1c;
-        }
-
-    .wf-reject-title {
-        margin: 0 0 14px;
-        font-size: 13.5px;
-        color: #64748b;
-        line-height: 1.5;
-    }
-
-    .wf-reject-card textarea {
-        width: 100%;
-        min-height: 105px;
-        padding: 10px 12px;
-        border: 1.5px solid #cbd5e1;
-        border-radius: 8px;
-        font: inherit;
-        font-size: 14px;
-        box-sizing: border-box;
-        resize: vertical;
-    }
-
-        .wf-reject-card textarea:focus {
-            outline: none;
-            border-color: #b91c1c;
-        }
-
-    .wf-reject-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        margin-top: 14px;
     }
 
     .article-date {
@@ -585,24 +510,24 @@
         text-align: center;
     }
 
-        .pagination-direction.disabled {
-            padding: 7px 11px;
-            background: #f8fafc;
-            color: #a0a5ae;
-        }
-
-    .pagination a {
+    .pagination-direction.disabled {
         padding: 7px 11px;
-        border-radius: 6px;
-        background: #f1f5f9;
-        color: #334155;
-        text-decoration: none;
+        background: #f8fafc;
+        color: #a0a5ae;
     }
 
-        .pagination a.active {
-            background: #b91c1c;
-            color: white;
+        .pagination a {
+            padding: 7px 11px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #334155;
+            text-decoration: none;
         }
+
+            .pagination a.active {
+                background: #b91c1c;
+                color: white;
+            }
 
     @@media (max-width: 850px) {
         .management-table {
@@ -682,13 +607,10 @@
                href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Pending" })">
                 Chờ duyệt (Pending) <span class="wf-count">@countPending</span>
             </a>
-            @if (!isAdminUser)
-            {
-                <a class="wf-tab @(currentStatusFilter == "Draft" ? "active" : "")"
-                   href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Draft" })">
-                    Bản nháp (Draft) <span class="wf-count">@countDraft</span>
-                </a>
-            }
+            <a class="wf-tab @(currentStatusFilter == "Draft" ? "active" : "")"
+               href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Draft" })">
+                Bản nháp (Draft) <span class="wf-count">@countDraft</span>
+            </a>
             <a class="wf-tab @(currentStatusFilter == "Published" ? "active" : "")"
                href="@Url.RouteUrl("AdminArticles", new { action = "Index", status = "Published" })">
                 Đã xuất bản (Published) <span class="wf-count">@countPublished</span>
@@ -749,10 +671,7 @@
             {
                 <select name="status">
                     <option value="">Mọi trạng thái</option>
-                    @if (!isAdminUser)
-                    {
-                        <option value="Draft" @(currentStatusFilter == "Draft" ? "selected" : "")>Draft - Bản nháp</option>
-                    }
+                    <option value="Draft" @(currentStatusFilter == "Draft" ? "selected" : "")>Draft - Bản nháp</option>
                     <option value="Pending" @(currentStatusFilter == "Pending" ? "selected" : "")>Pending - Chờ duyệt</option>
                     <option value="Published" @(currentStatusFilter == "Published" ? "selected" : "")>Published - Đã xuất bản</option>
                     <option value="Rejected" @(currentStatusFilter == "Rejected" ? "selected" : "")>Rejected - Bị từ chối</option>
@@ -867,12 +786,6 @@
                                 {
                                     <div class="article-excerpt">@item.PlainSummary</div>
                                 }
-                                @if (canManageArticles && item.Status == "Rejected" && rejectionReasons.ContainsKey(item.Id))
-                                {
-                                    <div class="rejection-reason-box">
-                                        <strong>Lý do từ chối:</strong> @rejectionReasons[item.Id]
-                                    </div>
-                                }
                             </td>
 
                             <td class="article-date">
@@ -900,12 +813,14 @@
                                                     <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
                                                     <button type="submit" class="action-btn btn-submit-wf">Duyệt đăng</button>
                                                 }
-                                                <button type="button"
-                                                        class="action-btn btn-reject-wf js-open-wf-reject"
-                                                        data-article-id="@item.Id"
-                                                        data-article-title="@item.Title">
-                                                    Từ chối
-                                                </button>
+                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="newStatus" value="Rejected" />
+                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
+                                                    <button type="submit" class="action-btn btn-reject-wf">Từ chối</button>
+                                                }
                                             }
                                             else if (item.Status == "Published")
                                             {
@@ -1063,98 +978,21 @@
 
 </div>
 
-@if (canManageArticles && isAdminUser)
-{
-    <div id="wfRejectModal" class="wf-reject-overlay" role="dialog" aria-modal="true" aria-labelledby="wfRejectHeading">
-        <div class="wf-reject-card">
-            <h4 id="wfRejectHeading">Từ chối bài viết</h4>
-            <p id="wfRejectTitle" class="wf-reject-title"></p>
-            @using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { id = "wfRejectForm" }))
-            {
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" id="wfRejectArticleId" value="" />
-                <input type="hidden" name="newStatus" value="Rejected" />
-                <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
-                <label for="wfRejectReasonInput" style="display:block; font-weight:700; font-size:13px; margin-bottom:6px;">
-                    Lý do từ chối <span style="color:#b91c1c;">*</span>
-                </label>
-                <textarea id="wfRejectReasonInput"
-                          name="rejectionReason"
-                          maxlength="500"
-                          required
-                          placeholder="Nhập lý do từ chối để người viết biết cần chỉnh sửa nội dung gì..."></textarea>
-                <div style="font-size:12px; color:#64748b; margin-top:4px;">Tối đa 500 ký tự. Lý do sẽ hiển thị cho người viết khi sửa bài.</div>
-                <div class="wf-reject-actions">
-                    <button type="button" id="wfRejectCancel" class="action-btn btn-archive-wf">Hủy</button>
-                    <button type="submit" class="action-btn btn-reject-wf">Xác nhận từ chối</button>
-                </div>
-            }
-        </div>
-    </div>
-}
-
 <script>
-        (function () {
-            var toggle = document.getElementById("filterToggle");
-            var filter = document.getElementById("advancedFilter");
+    (function () {
+        var toggle = document.getElementById("filterToggle");
+        var filter = document.getElementById("advancedFilter");
 
-            if (toggle && filter) {
-                toggle.addEventListener("click", function () {
-                    if (!toggle || !filter) return;
-                    filter.classList.toggle("is-hidden");
+        if (toggle && filter) {
+            toggle.addEventListener("click", function () {
+                if (!toggle || !filter) return;
+                filter.classList.toggle("is-hidden");
 
-                    toggle.textContent =
-                        filter.classList.contains("is-hidden")
-                            ? "Bộ lọc nâng cao"
-                            : "Ẩn bộ lọc";
-                });
-            }
-
-            var modal = document.getElementById("wfRejectModal");
-            var heading = document.getElementById("wfRejectHeading");
-            var titleEl = document.getElementById("wfRejectTitle");
-            var idInput = document.getElementById("wfRejectArticleId");
-            var reasonInput = document.getElementById("wfRejectReasonInput");
-            var cancelBtn = document.getElementById("wfRejectCancel");
-            var rejectForm = document.getElementById("wfRejectForm");
-
-            function closeRejectModal() {
-                if (!modal) return;
-                modal.classList.remove("is-open");
-                if (reasonInput) reasonInput.value = "";
-            }
-
-            var rejectBtns = document.querySelectorAll(".js-open-wf-reject");
-            for (var i = 0; i < rejectBtns.length; i++) {
-                rejectBtns[i].addEventListener("click", function () {
-                    var articleId = this.getAttribute("data-article-id") || "";
-                    var articleTitle = this.getAttribute("data-article-title") || "";
-                    if (idInput) idInput.value = articleId;
-                    if (heading) heading.textContent = "Từ chối bài viết #" + articleId;
-                    if (titleEl) titleEl.textContent = articleTitle;
-                    if (modal) modal.classList.add("is-open");
-                    if (reasonInput) reasonInput.focus();
-                });
-            }
-
-            if (cancelBtn) {
-                cancelBtn.addEventListener("click", closeRejectModal);
-            }
-
-            if (modal) {
-                modal.addEventListener("click", function (e) {
-                    if (e.target === modal) closeRejectModal();
-                });
-            }
-
-            if (rejectForm) {
-                rejectForm.addEventListener("submit", function (e) {
-                    if (!reasonInput || !reasonInput.value.trim()) {
-                        e.preventDefault();
-                        alert("Vui lòng nhập lý do từ chối để người viết sửa lại.");
-                        if (reasonInput) reasonInput.focus();
-                    }
-                });
-            }
-        })();
+                toggle.textContent =
+                    filter.classList.contains("is-hidden")
+                        ? "Bộ lọc nâng cao"
+                        : "Ẩn bộ lọc";
+            });
+        }
+    })();
 </script>

@@ -1,5 +1,4 @@
-﻿
-using NewsPortal.Models;
+﻿using NewsPortal.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,13 +41,44 @@ namespace NewsPortal.Controllers
                 : RedirectToAction("Index");
         }
 
+        private bool IsAccountAuthor(Author author)
+        {
+            return author != null && author.UserId.HasValue && db.Users.Any(u =>
+                u.UserId == author.UserId.Value && u.Role == "Author");
+        }
+
+        // Chuẩn hóa đường dẫn ảnh
+        private string NormalizeImagePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return null;
+
+            path = path.Trim();
+
+            if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("/"))
+            {
+                return path;
+            }
+
+            if (path.StartsWith("~"))
+            {
+                return VirtualPathUtility.ToAbsolute(path);
+            }
+
+            return "/Content/Images/Authors/" + path.TrimStart('/');
+        }
+
         // Đọc đường dẫn ảnh từ SQL Server
         private string GetAuthorImage(int authorId)
         {
-            return db.Database.SqlQuery<string>(
+            var rawPath = db.Database.SqlQuery<string>(
                 "SELECT Images FROM dbo.Authors WHERE AuthorID = @p0",
                 authorId
             ).FirstOrDefault();
+
+            return NormalizeImagePath(rawPath);
         }
 
         // Nạp ảnh vào danh sách tác giả
@@ -111,13 +141,44 @@ namespace NewsPortal.Controllers
 
             imageFile.SaveAs(fullPath);
 
-            return "~/Content/Images/Authors/" + fileName;
+            return "/Content/Images/Authors/" + fileName;
+        }
+
+        // Xóa file ảnh cũ trên ổ đĩa an toàn
+        private void TryDeleteAuthorImage(string imagePath)
+        {
+            if (string.IsNullOrWhiteSpace(imagePath))
+                return;
+
+            if (imagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                imagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            try
+            {
+                string virtualPath = imagePath.StartsWith("~")
+                    ? imagePath
+                    : (imagePath.StartsWith("/") ? "~" + imagePath : "~/Content/Images/Authors/" + imagePath);
+
+                string fullPath = Server.MapPath(virtualPath);
+
+                if (!string.IsNullOrEmpty(fullPath) && System.IO.File.Exists(fullPath))
+                {
+                    System.IO.File.Delete(fullPath);
+                }
+            }
+            catch
+            {
+                // Bỏ qua nếu file không tồn tại hoặc không thuộc thư mục ứng dụng
+            }
         }
 
         // =========================
         // DANH SÁCH TÁC GIẢ
         // =========================
-        public ActionResult Index(string search, int? id)
+        public ActionResult Index(string search, int? id, string returnUrl = null)
         {
             var denied = CheckAdminManagementAccess();
             if (denied != null) return denied;
@@ -125,8 +186,18 @@ namespace NewsPortal.Controllers
             bool isAdminManagement = IsAdminManagementRequest();
 
             ViewBag.IsAdminManagement = isAdminManagement;
+            ViewBag.ReturnUrl = returnUrl;
 
+<<<<<<< HEAD
+            var eligibleAuthors = db.Authors.Where(a =>
+                a.UserId.HasValue && db.Users.Any(u =>
+                    u.UserId == a.UserId.Value &&
+                    u.Role == "Author" &&
+                    (isAdminManagement || u.IsActive)));
+            var query = eligibleAuthors;
+=======
             var query = db.Authors.AsQueryable();
+>>>>>>> b1325030efd325e79c38e5cc1c4bea6e34d793cf
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -145,8 +216,10 @@ namespace NewsPortal.Controllers
                 !isAdminManagement &&
                 string.IsNullOrWhiteSpace(search))
             {
+                var eligibleAuthorIds = eligibleAuthors.Select(a => a.AuthorID);
                 var mostPublishedArticles = db.Articles
-                    .Where(a => a.Status == "Published")
+                    .Where(a => a.Status == "Published" &&
+                        eligibleAuthorIds.Contains(a.AuthorID))
                     .GroupBy(a => a.AuthorID)
                     .Select(group => new
                     {
@@ -159,34 +232,36 @@ namespace NewsPortal.Controllers
 
                 selectedAuthorId = mostPublishedArticles != null
                     ? (int?)mostPublishedArticles.AuthorID
-                    : db.Authors
+                    : eligibleAuthors
                         .OrderBy(a => a.AuthorName)
                         .Select(a => (int?)a.AuthorID)
                         .FirstOrDefault();
             }
 
-            if (selectedAuthorId.HasValue && !isAdminManagement)
+            if (selectedAuthorId.HasValue)
             {
-                var selectedAuthor = db.Authors.Find(selectedAuthorId.Value);
+                var selectedAuthor = eligibleAuthors.FirstOrDefault(a =>
+                    a.AuthorID == selectedAuthorId.Value);
 
                 if (selectedAuthor == null)
                     return HttpNotFound();
 
                 selectedAuthor.Images = GetAuthorImage(selectedAuthor.AuthorID);
 
-                var publishedArticles = db.Articles
-                    .Where(a =>
-                        a.AuthorID == selectedAuthorId.Value &&
-                        a.Status == "Published")
+                var articlesQuery = db.Articles.Where(a =>
+                    a.AuthorID == selectedAuthorId.Value &&
+                    a.Status == "Published");
+
+                var authorArticles = articlesQuery
                     .OrderByDescending(a => a.CreatedDate)
                     .ToList();
 
                 ViewBag.SelectedAuthor = selectedAuthor;
                 ViewBag.ShowAuthorProfile = true;
-                ViewBag.Articles = publishedArticles;
-                ViewBag.ArticleCount = publishedArticles.Count;
+                ViewBag.Articles = authorArticles;
+                ViewBag.ArticleCount = authorArticles.Count;
 
-                var suggestedAuthors = db.Authors
+                var suggestedAuthors = eligibleAuthors
                     .Where(a => a.AuthorID != selectedAuthorId.Value)
                     .OrderBy(a => a.AuthorName)
                     .Take(6)
@@ -233,6 +308,10 @@ namespace NewsPortal.Controllers
         public ActionResult Create(Author author, HttpPostedFileBase imageFile)
         {
             ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
+            {
+                imageFile = Request.Files[0];
+            }
 
             if (author.AuthorName != null)
                 author.AuthorName = author.AuthorName.Trim();
@@ -259,7 +338,6 @@ namespace NewsPortal.Controllers
                 db.Authors.Add(author);
                 db.SaveChanges();
 
-                // Lưu đường dẫn ảnh trực tiếp vào SQL Server
                 if (!string.IsNullOrEmpty(imagePath))
                 {
                     db.Database.ExecuteSqlCommand(
@@ -293,7 +371,7 @@ namespace NewsPortal.Controllers
 
             var author = db.Authors.Find(id);
 
-            if (author == null)
+            if (!IsAccountAuthor(author))
                 return HttpNotFound();
 
             author.Images = GetAuthorImage(author.AuthorID);
@@ -302,18 +380,22 @@ namespace NewsPortal.Controllers
         }
 
         // =========================
-        // SỬA TÁC GIẢ - POST
+        // SỬA TÁC GIẢ - POST (HỖ TRỢ THAY ẢNH HOẶC XÓA ẢNH)
         // =========================
         [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Author author, HttpPostedFileBase imageFile)
+        public ActionResult Edit(Author author, HttpPostedFileBase imageFile, bool removeImage = false)
         {
             ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
+            {
+                imageFile = Request.Files[0];
+            }
 
             var existingAuthor = db.Authors.Find(author.AuthorID);
 
-            if (existingAuthor == null)
+            if (!IsAccountAuthor(existingAuthor))
                 return HttpNotFound();
 
             if (author.AuthorName != null)
@@ -343,11 +425,9 @@ namespace NewsPortal.Controllers
 
                 db.SaveChanges();
 
-                // Chỉ thay ảnh nếu người dùng chọn ảnh mới
                 if (imageFile != null && imageFile.ContentLength > 0)
                 {
                     string oldImage = GetAuthorImage(existingAuthor.AuthorID);
-
                     string newImage = SaveAuthorImage(imageFile);
 
                     db.Database.ExecuteSqlCommand(
@@ -356,16 +436,18 @@ namespace NewsPortal.Controllers
                         existingAuthor.AuthorID
                     );
 
-                    // Xóa ảnh cũ sau khi đã cập nhật đường dẫn mới
-                    if (!string.IsNullOrEmpty(oldImage))
-                    {
-                        string oldPath = Server.MapPath(oldImage);
+                    TryDeleteAuthorImage(oldImage);
+                }
+                else if (removeImage)
+                {
+                    string oldImage = GetAuthorImage(existingAuthor.AuthorID);
 
-                        if (System.IO.File.Exists(oldPath))
-                        {
-                            System.IO.File.Delete(oldPath);
-                        }
-                    }
+                    db.Database.ExecuteSqlCommand(
+                        "UPDATE dbo.Authors SET Images = NULL WHERE AuthorID = @p0",
+                        existingAuthor.AuthorID
+                    );
+
+                    TryDeleteAuthorImage(oldImage);
                 }
 
                 TempData["Success"] = "Cập nhật thành công";
@@ -376,6 +458,32 @@ namespace NewsPortal.Controllers
             author.Images = GetAuthorImage(author.AuthorID);
 
             return View(author);
+        }
+
+        // =========================
+        // XÓA RIÊNG ẢNH TÁC GIẢ - POST
+        // =========================
+        [AdminAuthorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteImage(int id)
+        {
+            var author = db.Authors.Find(id);
+            if (!IsAccountAuthor(author))
+                return HttpNotFound();
+
+            string oldImage = GetAuthorImage(id);
+
+            db.Database.ExecuteSqlCommand(
+                "UPDATE dbo.Authors SET Images = NULL WHERE AuthorID = @p0",
+                id
+            );
+
+            TryDeleteAuthorImage(oldImage);
+
+            TempData["Success"] = "Đã xóa ảnh đại diện tác giả";
+
+            return RedirectToRoute("AdminAuthors", new { action = "Edit", id = id });
         }
 
         // =========================
@@ -394,7 +502,7 @@ namespace NewsPortal.Controllers
 
             var author = db.Authors.Find(id);
 
-            if (author == null)
+            if (!IsAccountAuthor(author))
                 return HttpNotFound();
 
             author.Images = GetAuthorImage(author.AuthorID);
@@ -415,7 +523,7 @@ namespace NewsPortal.Controllers
 
             var author = db.Authors.Find(id);
 
-            if (author == null)
+            if (!IsAccountAuthor(author))
                 return HttpNotFound();
 
             if (db.Articles.Any(a => a.AuthorID == id))
@@ -431,15 +539,7 @@ namespace NewsPortal.Controllers
             db.Authors.Remove(author);
             db.SaveChanges();
 
-            if (!string.IsNullOrEmpty(imagePath))
-            {
-                string fullPath = Server.MapPath(imagePath);
-
-                if (System.IO.File.Exists(fullPath))
-                {
-                    System.IO.File.Delete(fullPath);
-                }
-            }
+            TryDeleteAuthorImage(imagePath);
 
             TempData["Success"] = "Đã xóa tác giả";
 

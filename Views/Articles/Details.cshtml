@@ -180,7 +180,7 @@
         box-sizing: border-box;
         overflow: hidden;
         border-radius: 12px;
-        margin: 0 0 25px;
+        margin: 0 auto 25px;
     }
     .detail-content {
         color: #334155;
@@ -215,9 +215,20 @@
         }
 
         .detail-content img {
+            display: block;
             max-width: 100%;
             height: auto;
             border-radius: 8px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .detail-content figure.image {
+            display: table;
+            float: none !important;
+            max-width: 100%;
+            margin: 20px auto;
+            text-align: center;
         }
 
         .detail-content table {
@@ -559,7 +570,7 @@
         </div>
 
         <div style="margin-left:auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-            @if (ViewBag.CanComment == true || ViewBag.CanManageArticles == true)
+            @if (ViewBag.CanComment == true)
             {
                 <div class="article-tools">
                     <span class="article-stat article-views">
@@ -573,8 +584,7 @@
                 </div>
             }
 
-            @if (ViewBag.IsAdminManagement != true)
-            {
+            @{
                 bool isSaved = ViewBag.IsSavedArticle != null && (bool)ViewBag.IsSavedArticle;
                 using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { style = "display:inline-block; margin:0;" }))
                 {

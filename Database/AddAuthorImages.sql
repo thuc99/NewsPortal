@@ -1,6 +1,0 @@
-IF OBJECT_ID(N'dbo.Authors', N'U') IS NOT NULL
-   AND COL_LENGTH(N'dbo.Authors', N'Images') IS NULL
-BEGIN
-	ALTER TABLE dbo.Authors ADD Images NVARCHAR(500) NULL;
-END
-GO

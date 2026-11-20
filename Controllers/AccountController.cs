@@ -391,16 +391,6 @@ namespace NewsPortal.Controllers
                 return View();
             }
 
-            if (username.Equals(
-                "admin",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                ViewBag.Error =
-                    "Tên đăng nhập này không được phép sử dụng.";
-
-                return View();
-            }
-
             try
             {
                 using (var conn = CreateUsersConnection())

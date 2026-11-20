@@ -16,30 +16,6 @@ namespace NewsPortal.Controllers
     [AdminAreaAuthorize]
     public class AdminController : Controller
     {
-        public class CategoryStatusStat
-        {
-            public int CategoryID { get; set; }
-            public string CategoryName { get; set; }
-            public int TotalArticles { get; set; }
-            public int PublishedCount { get; set; }
-            public int PendingCount { get; set; }
-            public int DraftCount { get; set; }
-            public int RejectedCount { get; set; }
-            public int ArchivedCount { get; set; }
-            public int TotalViews { get; set; }
-        }
-
-        public class ArticleRatingStat
-        {
-            public int ArticleID { get; set; }
-            public string Title { get; set; }
-            public string CategoryName { get; set; }
-            public int RatingCount { get; set; }
-            public double AverageRating { get; set; }
-            public int FiveStarCount { get; set; }
-            public int LowStarCount { get; set; }
-        }
-
         private static readonly string[] ValidStatuses = new[]
         {
             "Draft", "Pending", "Published", "Rejected", "Archived"
@@ -99,11 +75,6 @@ BEGIN
     ALTER TABLE dbo.Articles WITH CHECK
     ADD CONSTRAINT [CK_Articles_Status_Workflow]
     CHECK ([Status] IN (N'Draft', N'Pending', N'Published', N'Rejected', N'Archived'));
-
-    IF COL_LENGTH(N'dbo.Articles', N'RejectionReason') IS NULL
-    BEGIN
-        ALTER TABLE dbo.Articles ADD [RejectionReason] NVARCHAR(500) NULL;
-    END
 END";
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -142,12 +113,6 @@ END";
             int pendingArticles = 0;
             int rejectedArticles = 0;
             int archivedArticles = 0;
-            var rejectionReasons = new Dictionary<int, string>();
-            var categoryStats = new List<CategoryStatusStat>();
-            var articleRatingStats = new List<ArticleRatingStat>();
-            int totalRatings = 0;
-            double overallAverageRating = 0;
-            int[] starCounts = new int[6];
 
             using (var conn = CreateConnection())
             {
@@ -156,13 +121,13 @@ END";
 
                 string statsSql = @"
                     SELECT 
-                        (SELECT COUNT(*) FROM dbo.Articles WHERE Status <> N'Draft') AS TotalArticles,
+                        (SELECT COUNT(*) FROM dbo.Articles) AS TotalArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Published') AS PublishedArticles,
-                        0 AS DraftArticles,
+                        (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Draft') AS DraftArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Pending') AS PendingArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Rejected') AS RejectedArticles,
                         (SELECT COUNT(*) FROM dbo.Articles WHERE Status = N'Archived') AS ArchivedArticles,
-                        (SELECT ISNULL(SUM(ViewCount), 0) FROM dbo.Articles WHERE Status <> N'Draft') AS TotalViews,
+                        (SELECT ISNULL(SUM(ViewCount), 0) FROM dbo.Articles) AS TotalViews,
                         (SELECT COUNT(*) FROM dbo.Categories) AS TotalCategories,
                         (SELECT COUNT(*) FROM dbo.Authors) AS TotalAuthors,
                         (SELECT COUNT(*) FROM dbo.Users) AS TotalUsers;";
@@ -193,13 +158,11 @@ END";
                         ISNULL(au.AuthorName, N'Không rõ') AS AuthorName,
                         a.Status,
                         ISNULL(a.ViewCount, 0) AS ViewCount,
-                        a.CreatedDate,
-                        a.RejectionReason
+                        a.CreatedDate
                     FROM dbo.Articles a
                     LEFT JOIN dbo.Categories c ON a.CategoryID = c.CategoryID
                     LEFT JOIN dbo.Authors au ON a.AuthorID = au.AuthorID
-                    WHERE a.Status <> N'Draft'
-                      AND (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
+                    WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
                       AND (@status = N'' OR a.Status = @status)
                     ORDER BY CASE WHEN a.Status = N'Pending' THEN 0 ELSE 1 END,
                              a.CreatedDate DESC;";
@@ -213,10 +176,9 @@ END";
                     {
                         while (reader.Read())
                         {
-                            int articleId = Convert.ToInt32(reader["ArticleID"]);
                             model.Articles.Add(new AdminArticleRow
                             {
-                                ArticleID = articleId,
+                                ArticleID = Convert.ToInt32(reader["ArticleID"]),
                                 Title = Convert.ToString(reader["Title"]),
                                 CategoryName = Convert.ToString(reader["CategoryName"]),
                                 AuthorName = Convert.ToString(reader["AuthorName"]),
@@ -224,117 +186,7 @@ END";
                                 ViewCount = Convert.ToInt32(reader["ViewCount"]),
                                 CreatedDate = Convert.ToDateTime(reader["CreatedDate"])
                             });
-
-                            if (reader["RejectionReason"] != DBNull.Value)
-                            {
-                                string reasonText = Convert.ToString(reader["RejectionReason"]).Trim();
-                                if (!string.IsNullOrEmpty(reasonText))
-                                {
-                                    rejectionReasons[articleId] = reasonText;
-                                }
-                            }
                         }
-                    }
-                }
-
-                string categoryStatsSql = @"
-                    SELECT
-                        c.CategoryID,
-                        c.CategoryName,
-                        COUNT(a.ArticleID) AS TotalArticles,
-                        SUM(CASE WHEN a.Status = N'Published' THEN 1 ELSE 0 END) AS PublishedCount,
-                        SUM(CASE WHEN a.Status = N'Pending' THEN 1 ELSE 0 END) AS PendingCount,
-                        SUM(CASE WHEN a.Status = N'Draft' THEN 1 ELSE 0 END) AS DraftCount,
-                        SUM(CASE WHEN a.Status = N'Rejected' THEN 1 ELSE 0 END) AS RejectedCount,
-                        SUM(CASE WHEN a.Status = N'Archived' THEN 1 ELSE 0 END) AS ArchivedCount,
-                        ISNULL(SUM(a.ViewCount), 0) AS TotalViews
-                    FROM dbo.Categories c
-                    LEFT JOIN dbo.Articles a ON a.CategoryID = c.CategoryID AND a.Status <> N'Draft'
-                    GROUP BY c.CategoryID, c.CategoryName
-                    ORDER BY COUNT(a.ArticleID) DESC, c.CategoryName ASC;";
-
-                using (var cmd = new SqlCommand(categoryStatsSql, conn))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        categoryStats.Add(new CategoryStatusStat
-                        {
-                            CategoryID = Convert.ToInt32(reader["CategoryID"]),
-                            CategoryName = Convert.ToString(reader["CategoryName"]),
-                            TotalArticles = Convert.ToInt32(reader["TotalArticles"]),
-                            PublishedCount = Convert.ToInt32(reader["PublishedCount"]),
-                            PendingCount = Convert.ToInt32(reader["PendingCount"]),
-                            DraftCount = Convert.ToInt32(reader["DraftCount"]),
-                            RejectedCount = Convert.ToInt32(reader["RejectedCount"]),
-                            ArchivedCount = Convert.ToInt32(reader["ArchivedCount"]),
-                            TotalViews = Convert.ToInt32(reader["TotalViews"])
-                        });
-                    }
-                }
-
-                string ratingSummarySql = @"
-                    IF OBJECT_ID(N'dbo.ArticleRatings', N'U') IS NOT NULL
-                    BEGIN
-                        SELECT
-                            COUNT(*) AS TotalRatings,
-                            ISNULL(AVG(CAST(Rating AS FLOAT)), 0) AS OverallAvg,
-                            SUM(CASE WHEN Rating = 5 THEN 1 ELSE 0 END) AS Star5,
-                            SUM(CASE WHEN Rating = 4 THEN 1 ELSE 0 END) AS Star4,
-                            SUM(CASE WHEN Rating = 3 THEN 1 ELSE 0 END) AS Star3,
-                            SUM(CASE WHEN Rating = 2 THEN 1 ELSE 0 END) AS Star2,
-                            SUM(CASE WHEN Rating = 1 THEN 1 ELSE 0 END) AS Star1
-                        FROM dbo.ArticleRatings;
-                    END";
-
-                using (var cmd = new SqlCommand(ratingSummarySql, conn))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        totalRatings = reader["TotalRatings"] == DBNull.Value ? 0 : Convert.ToInt32(reader["TotalRatings"]);
-                        overallAverageRating = reader["OverallAvg"] == DBNull.Value ? 0 : Convert.ToDouble(reader["OverallAvg"]);
-                        starCounts[5] = reader["Star5"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Star5"]);
-                        starCounts[4] = reader["Star4"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Star4"]);
-                        starCounts[3] = reader["Star3"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Star3"]);
-                        starCounts[2] = reader["Star2"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Star2"]);
-                        starCounts[1] = reader["Star1"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Star1"]);
-                    }
-                }
-
-                string articleRatingsSql = @"
-                    IF OBJECT_ID(N'dbo.ArticleRatings', N'U') IS NOT NULL
-                    BEGIN
-                        SELECT TOP 15
-                            a.ArticleID,
-                            a.Title,
-                            ISNULL(c.CategoryName, N'Chưa phân loại') AS CategoryName,
-                            COUNT(r.RatingID) AS RatingCount,
-                            AVG(CAST(r.Rating AS FLOAT)) AS AverageRating,
-                            SUM(CASE WHEN r.Rating = 5 THEN 1 ELSE 0 END) AS FiveStarCount,
-                            SUM(CASE WHEN r.Rating <= 2 THEN 1 ELSE 0 END) AS LowStarCount
-                        FROM dbo.Articles a
-                        INNER JOIN dbo.ArticleRatings r ON r.ArticleID = a.ArticleID
-                        LEFT JOIN dbo.Categories c ON c.CategoryID = a.CategoryID
-                        GROUP BY a.ArticleID, a.Title, c.CategoryName
-                        ORDER BY AVG(CAST(r.Rating AS FLOAT)) DESC, COUNT(r.RatingID) DESC;
-                    END";
-
-                using (var cmd = new SqlCommand(articleRatingsSql, conn))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        articleRatingStats.Add(new ArticleRatingStat
-                        {
-                            ArticleID = Convert.ToInt32(reader["ArticleID"]),
-                            Title = Convert.ToString(reader["Title"]),
-                            CategoryName = Convert.ToString(reader["CategoryName"]),
-                            RatingCount = Convert.ToInt32(reader["RatingCount"]),
-                            AverageRating = reader["AverageRating"] == DBNull.Value ? 0 : Convert.ToDouble(reader["AverageRating"]),
-                            FiveStarCount = reader["FiveStarCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["FiveStarCount"]),
-                            LowStarCount = reader["LowStarCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["LowStarCount"])
-                        });
                     }
                 }
             }
@@ -342,12 +194,6 @@ END";
             ViewBag.PendingArticles = pendingArticles;
             ViewBag.RejectedArticles = rejectedArticles;
             ViewBag.ArchivedArticles = archivedArticles;
-            ViewBag.RejectionReasons = rejectionReasons;
-            ViewBag.CategoryStats = categoryStats;
-            ViewBag.ArticleRatingStats = articleRatingStats;
-            ViewBag.TotalRatings = totalRatings;
-            ViewBag.OverallAverageRating = overallAverageRating;
-            ViewBag.StarCounts = starCounts;
 
             return View(model);
         }
@@ -356,28 +202,13 @@ END";
         [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult UpdateArticleStatus(int id, string newStatus, string search = "", string status = "", string rejectionReason = "")
+        public ActionResult UpdateArticleStatus(int id, string newStatus, string search = "", string status = "")
         {
             newStatus = (newStatus ?? "").Trim();
-            rejectionReason = (rejectionReason ?? "").Trim();
             if (!ValidStatuses.Contains(newStatus))
             {
                 TempData["AdminError"] = "Trạng thái bài viết không hợp lệ.";
                 return RedirectToAction("Index", new { search = search, status = status });
-            }
-
-            if (newStatus == "Rejected")
-            {
-                if (string.IsNullOrWhiteSpace(rejectionReason))
-                {
-                    TempData["AdminError"] = "Vui lòng nhập lý do từ chối để người viết biết cần sửa gì.";
-                    return RedirectToAction("Index", new { search = search, status = status });
-                }
-
-                if (rejectionReason.Length > 500)
-                {
-                    rejectionReason = rejectionReason.Substring(0, 500);
-                }
             }
 
             using (var conn = CreateConnection())
@@ -385,36 +216,15 @@ END";
                 conn.Open();
                 EnsureWorkflowStatusConstraint(conn);
 
-                const string checkDraftSql = "SELECT Status FROM dbo.Articles WHERE ArticleID = @id;";
-                using (var checkCmd = new SqlCommand(checkDraftSql, conn))
-                {
-                    checkCmd.Parameters.AddWithValue("@id", id);
-                    object currentStatusObj = checkCmd.ExecuteScalar();
-                    if (currentStatusObj == null || currentStatusObj == DBNull.Value)
-                    {
-                        TempData["AdminError"] = "Không tìm thấy bài viết #" + id + ".";
-                        return RedirectToAction("Index", new { search = search, status = status });
-                    }
-                    if (string.Equals(Convert.ToString(currentStatusObj), "Draft", StringComparison.OrdinalIgnoreCase))
-                    {
-                        TempData["AdminError"] = "Bài viết #" + id + " đang ở trạng thái Bản nháp (Draft) — chỉ người viết bài mới có quyền xem và thao tác.";
-                        return RedirectToAction("Index", new { search = search, status = status });
-                    }
-                }
-
                 const string sql = @"
                     UPDATE dbo.Articles
                     SET Status = @newStatus,
-                        RejectionReason = @rejectionReason,
                         UpdatedDate = GETDATE()
-                    WHERE ArticleID = @id AND Status <> N'Draft';";
+                    WHERE ArticleID = @id;";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@newStatus", newStatus);
-                    cmd.Parameters.AddWithValue(
-                        "@rejectionReason",
-                        newStatus == "Rejected" ? (object)rejectionReason : DBNull.Value);
                     cmd.Parameters.AddWithValue("@id", id);
                     if (cmd.ExecuteNonQuery() == 0)
                     {
@@ -430,7 +240,7 @@ END";
                     TempData["AdminMessage"] = "Đã duyệt và xuất bản bài viết #" + id + " lên trang chủ (Published).";
                     break;
                 case "Rejected":
-                    TempData["AdminMessage"] = "Đã từ chối bài viết #" + id + " (Lý do: " + rejectionReason + ") — trả về cho phóng viên chỉnh sửa và gửi duyệt lại (Rejected).";
+                    TempData["AdminMessage"] = "Đã từ chối bài viết #" + id + " — trả về cho phóng viên chỉnh sửa và gửi duyệt lại (Rejected).";
                     break;
                 case "Archived":
                     TempData["AdminMessage"] = "Đã chuyển bài viết #" + id + " vào kho lưu trữ (Archived).";
@@ -561,12 +371,6 @@ END";
             if (username.Length < 3 || username.Length > 30 || Regex.IsMatch(username, @"\s"))
             {
                 TempData["AdminError"] = "Tên đăng nhập phải từ 3 đến 30 ký tự và không chứa khoảng trắng.";
-                return RedirectToAction("Users");
-            }
-
-            if (string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
-            {
-                TempData["AdminError"] = "Tên đăng nhập 'admin' được dành riêng cho tài khoản gốc.";
                 return RedirectToAction("Users");
             }
 
