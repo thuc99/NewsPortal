@@ -128,15 +128,17 @@ END";
         }
 
         // GET: /Admin
-        public ActionResult Index(string search = "", string status = "")
+        public ActionResult Index(string search = "", string status = "", int page = 1)
         {
             if (Session["Admin"] == null)
                 return RedirectToRoute("AdminArticles", new { action = "Index" });
 
+            const int pageSize = 10;
             var model = new AdminDashboardViewModel
             {
                 SearchQuery = search ?? "",
-                StatusFilter = status ?? ""
+                StatusFilter = status ?? "",
+                PageSize = pageSize
             };
 
             int pendingArticles = 0;
@@ -185,8 +187,25 @@ END";
                     }
                 }
 
+                const string filteredCountSql = @"
+                    SELECT COUNT(*)
+                    FROM dbo.Articles a
+                    WHERE a.Status <> N'Draft'
+                      AND (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
+                      AND (@status = N'' OR a.Status = @status);";
+
+                using (var cmd = new SqlCommand(filteredCountSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@search", model.SearchQuery.Trim());
+                    cmd.Parameters.AddWithValue("@status", model.StatusFilter.Trim());
+                    model.FilteredArticleCount = Convert.ToInt32(cmd.ExecuteScalar());
+                }
+
+                model.TotalPages = Math.Max((int)Math.Ceiling((double)model.FilteredArticleCount / pageSize), 1);
+                model.CurrentPage = Math.Min(Math.Max(page, 1), model.TotalPages);
+
                 string listSql = @"
-                    SELECT TOP 50 
+                    SELECT
                         a.ArticleID,
                         a.Title,
                         ISNULL(c.CategoryName, N'Chưa phân loại') AS CategoryName,
@@ -202,12 +221,15 @@ END";
                       AND (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
                       AND (@status = N'' OR a.Status = @status)
                     ORDER BY CASE WHEN a.Status = N'Pending' THEN 0 ELSE 1 END,
-                             a.CreatedDate DESC;";
+                             a.CreatedDate DESC
+                    OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;";
 
                 using (var cmd = new SqlCommand(listSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@search", model.SearchQuery.Trim());
                     cmd.Parameters.AddWithValue("@status", model.StatusFilter.Trim());
+                    cmd.Parameters.AddWithValue("@offset", (model.CurrentPage - 1) * pageSize);
+                    cmd.Parameters.AddWithValue("@pageSize", pageSize);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -549,7 +571,7 @@ END";
             username = (username ?? "").Trim();
             fullName = (fullName ?? "").Trim();
             email = (email ?? "").Trim();
-            role = string.IsNullOrWhiteSpace(role) ? "User" : role.Trim();
+            role = string.IsNullOrWhiteSpace(role) ? "Reader" : role.Trim();
 
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
                 string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email))
@@ -607,7 +629,11 @@ END";
             else if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
                 role = "Admin";
             else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
-                role = "User";
+                role = "Reader";
+            else if (string.Equals(role, "Reader", StringComparison.OrdinalIgnoreCase))
+                role = "Reader";
+            else if (string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase))
+                role = "Author";
             else
             {
                 TempData["AdminError"] = "Vai trò không hợp lệ.";
@@ -638,18 +664,46 @@ END";
                     }
                 }
 
-                string insertSql = @"
+                using (var transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        string insertSql = @"
                     INSERT INTO dbo.Users (Username, PasswordHash, FullName, Email, Role, IsActive, CreatedAt)
+                    OUTPUT INSERTED.UserId
                     VALUES (@u, @p, @fn, @em, @role, 1, GETDATE());";
 
-                using (var cmd = new SqlCommand(insertSql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@u", username);
-                    cmd.Parameters.AddWithValue("@p", ComputeSha256(password.Trim()));
-                    cmd.Parameters.AddWithValue("@fn", fullName);
-                    cmd.Parameters.AddWithValue("@em", email);
-                    cmd.Parameters.AddWithValue("@role", role);
-                    cmd.ExecuteNonQuery();
+                        int userId;
+                        using (var cmd = new SqlCommand(insertSql, conn, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@u", username);
+                            cmd.Parameters.AddWithValue("@p", ComputeSha256(password.Trim()));
+                            cmd.Parameters.AddWithValue("@fn", fullName);
+                            cmd.Parameters.AddWithValue("@em", email);
+                            cmd.Parameters.AddWithValue("@role", role);
+                            userId = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+                        if (role == "Author")
+                        {
+                            using (var authorCmd = new SqlCommand(@"
+                        INSERT INTO dbo.Authors (AuthorName, Email, UserId)
+                        VALUES (@name, @email, @userId);", conn, transaction))
+                            {
+                                authorCmd.Parameters.AddWithValue("@name", fullName);
+                                authorCmd.Parameters.AddWithValue("@email", email);
+                                authorCmd.Parameters.AddWithValue("@userId", userId);
+                                authorCmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
             }
 
@@ -669,7 +723,11 @@ END";
             else if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase))
                 role = "Editor";
             else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
-                role = "User";
+                role = "Reader";
+            else if (string.Equals(role, "Reader", StringComparison.OrdinalIgnoreCase))
+                role = "Reader";
+            else if (string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase))
+                role = "Author";
             else
             {
                 TempData["AdminError"] = "Vai trò không hợp lệ.";
@@ -679,8 +737,10 @@ END";
             using (var conn = CreateConnection())
             {
                 conn.Open();
-                const string accountSql = "SELECT Username, Role, IsActive FROM dbo.Users WHERE UserId = @id;";
+                const string accountSql = "SELECT Username, FullName, Email, Role, IsActive FROM dbo.Users WHERE UserId = @id;";
                 string username;
+                string fullName;
+                string email;
                 string currentRole;
                 bool isActive;
 
@@ -696,6 +756,8 @@ END";
                         }
 
                         username = Convert.ToString(reader["Username"]);
+                        fullName = Convert.ToString(reader["FullName"]);
+                        email = Convert.ToString(reader["Email"]);
                         currentRole = Convert.ToString(reader["Role"]);
                         isActive = Convert.ToBoolean(reader["IsActive"]);
                     }
@@ -722,12 +784,47 @@ END";
                     }
                 }
 
-                const string updateSql = "UPDATE dbo.Users SET Role = @role WHERE UserId = @id;";
-                using (var updateCmd = new SqlCommand(updateSql, conn))
+                using (var transaction = conn.BeginTransaction())
                 {
-                    updateCmd.Parameters.AddWithValue("@role", role);
-                    updateCmd.Parameters.AddWithValue("@id", id);
-                    updateCmd.ExecuteNonQuery();
+                    try
+                    {
+                        using (var updateCmd = new SqlCommand(
+                            "UPDATE dbo.Users SET Role = @role WHERE UserId = @id;", conn, transaction))
+                        {
+                            updateCmd.Parameters.AddWithValue("@role", role);
+                            updateCmd.Parameters.AddWithValue("@id", id);
+                            updateCmd.ExecuteNonQuery();
+                        }
+
+                        if (role == "Author")
+                        {
+                            using (var linkCmd = new SqlCommand(@"
+                                IF EXISTS (SELECT 1 FROM dbo.Authors WHERE UserId = @userId)
+                                    UPDATE dbo.Authors
+                                    SET AuthorName = @name, Email = @email
+                                    WHERE UserId = @userId;
+                                ELSE IF (SELECT COUNT(*) FROM dbo.Authors WHERE Email = @email AND UserId IS NULL) = 1
+                                    UPDATE dbo.Authors
+                                    SET UserId = @userId, AuthorName = @name
+                                    WHERE Email = @email AND UserId IS NULL;
+                                ELSE
+                                    INSERT INTO dbo.Authors (AuthorName, Email, UserId)
+                                    VALUES (@name, @email, @userId);", conn, transaction))
+                            {
+                                linkCmd.Parameters.AddWithValue("@name", fullName);
+                                linkCmd.Parameters.AddWithValue("@email", email);
+                                linkCmd.Parameters.AddWithValue("@userId", id);
+                                linkCmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
             }
 

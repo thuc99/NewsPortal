@@ -260,7 +260,12 @@ namespace NewsPortal.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                Session["Role"] = "User";
+                Session["Role"] = string.Equals(databaseRole, "Author", StringComparison.OrdinalIgnoreCase)
+                    ? "Author"
+                    : (string.Equals(databaseRole, "Reader", StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(databaseRole, "User", StringComparison.OrdinalIgnoreCase)
+                        ? "Reader"
+                        : databaseRole);
 
                 return RedirectToRoute("Default", new { controller = "Articles", action = "Index" });
             }
@@ -477,7 +482,7 @@ namespace NewsPortal.Controllers
 
                         cmd.Parameters.Add(
                             "@role", SqlDbType.NVarChar, 20
-                        ).Value = "User";
+                        ).Value = "Reader";
 
                         cmd.Parameters.Add(
                             "@isActive", SqlDbType.Bit

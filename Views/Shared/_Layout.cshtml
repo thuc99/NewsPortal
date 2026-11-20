@@ -1137,21 +1137,26 @@
                         {
                             string rawRole = Convert.ToString(Session["Role"]);
                             string displayRole = string.Equals(rawRole, "Admin", StringComparison.OrdinalIgnoreCase)
-                                ? "Tổng biên tập"
+                                ? "Quản trị viên"
                                 : (string.Equals(rawRole, "Editor", StringComparison.OrdinalIgnoreCase)
-                                    ? "Biên tập"
-                                    : rawRole);
+                                    ? "Biên tập viên"
+                                    : (string.Equals(rawRole, "Author", StringComparison.OrdinalIgnoreCase)
+                                        ? "Tác giả"
+                                        : (string.Equals(rawRole, "Reader", StringComparison.OrdinalIgnoreCase) || string.Equals(rawRole, "User", StringComparison.OrdinalIgnoreCase)
+                                            ? "Độc giả"
+                                            : rawRole)));
                             <div style="padding: 8px 14px; font-size: 13px; font-weight: 700; color: #b91c1c;">
                                 Xin chào, @(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])
                                 <span style="font-size:11px; color:var(--muted);">(@displayRole)</span>
                             </div>
                             if (Session["Admin"] != null)
                             {
-                                <a href="@Url.Action("Index", "Admin")" class="account-menu-link">Bảng điều khiển Tổng biên tập</a>
+                                <a href="@Url.Action("Index", "Admin")" class="account-menu-link">Bảng điều khiển Admin</a>
                             }
-                            if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
+                            if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(Convert.ToString(Session["Role"]), "Author", StringComparison.OrdinalIgnoreCase))
                             {
-                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })" class="account-menu-link">Quản lý bài viết</a>
+                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })" class="account-menu-link">@(string.Equals(rawRole, "Author", StringComparison.OrdinalIgnoreCase) ? "Bài viết của tôi" : "Quản lý bài viết")</a>
                             }
                             <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
                             <a href="@Url.Action("Info", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">

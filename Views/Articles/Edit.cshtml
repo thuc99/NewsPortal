@@ -4,6 +4,7 @@
 @{
     ViewBag.Title = "Chỉnh sửa bài viết";
     bool isAdminUser = ViewBag.IsAdminUser == true;
+    bool isEditorUser = ViewBag.IsEditorUser == true;
     string rejectionReason = ViewBag.RejectionReason as string ?? "";
 
     string currentImageSrc = null;
@@ -27,12 +28,19 @@
 
     var statusItems = new[]
     {
-        new SelectListItem { Value = "Draft", Text = "Draft - Bản nháp" },
         new SelectListItem { Value = "Pending", Text = "Pending - Chờ duyệt" },
         new SelectListItem { Value = "Published", Text = "Published - Đã xuất bản" },
-        new SelectListItem { Value = "Rejected", Text = "Rejected - Bị từ chối" },
-        new SelectListItem { Value = "Archived", Text = "Archived - Đã lưu trữ" }
+        new SelectListItem { Value = "Rejected", Text = "Rejected - Bị từ chối" }
     };
+
+    if (!isEditorUser)
+    {
+        statusItems = statusItems.Concat(new[]
+        {
+            new SelectListItem { Value = "Draft", Text = "Draft - Bản nháp" },
+            new SelectListItem { Value = "Archived", Text = "Archived - Đã lưu trữ" }
+        }).ToArray();
+    }
 }
 
 <style>
@@ -402,13 +410,13 @@
         <p class="form-sub">
             @(isAdminUser
                 ? "Cập nhật nội dung và trạng thái kiểm duyệt bài viết."
-                : "Chỉnh sửa nội dung để lưu nháp hoặc gửi Admin xét duyệt.")
+                : "Chỉnh sửa nội dung để lưu nháp hoặc gửi biên tập viên xét duyệt.")
         </p>
 
         @if (Model.Status == "Rejected")
         {
             <div class="rejected-banner">
-                <strong>Bài viết này đã bị Admin từ chối (Rejected).</strong>
+            <strong>Bài viết này đã bị từ chối (Rejected).</strong>
                 @if (!string.IsNullOrWhiteSpace(rejectionReason))
                 {
                     <div style="margin-top:6px;">
@@ -424,7 +432,7 @@
         else if (!isAdminUser && Model.Status == "Pending")
         {
             <div class="pending-banner">
-                <strong>Bài viết đang chờ Admin duyệt (Pending).</strong>
+            <strong>Bài viết đang chờ biên tập viên duyệt (Pending).</strong>
                 Bạn có thể cập nhật nội dung và tiếp tục giữ ở hàng đợi duyệt
                 hoặc lưu tạm về bản nháp.
             </div>
@@ -433,7 +441,7 @@
         {
             <div class="pending-banner">
                 <strong>Bạn có thể chỉnh sửa bài viết này.</strong>
-                Khi gửi nội dung chỉnh sửa, bài sẽ chuyển sang chờ Admin duyệt;
+                Khi gửi nội dung chỉnh sửa, bài sẽ chuyển sang chờ biên tập viên duyệt;
                 chọn lưu bản nháp nếu chưa muốn gửi.
             </div>
         }
@@ -633,9 +641,14 @@
                         name="submitAction"
                         value="Pending"
                         class="btn-save">
-                    @(Model.Status == "Rejected"
-                            ? "Gửi duyệt lại"
-                            : "Gửi Admin duyệt")
+                    @if (Model.Status == "Rejected")
+                    {
+                        @:Gửi duyệt lại
+                    }
+                    else
+                    {
+                        @:Gửi biên tập viên duyệt
+                    }
                 </button>
 
                 <button type="submit"

@@ -43,10 +43,7 @@ namespace NewsPortal.Controllers
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 searchString = searchString.Trim();
-                query = query.Where(a =>
-                    a.Title.Contains(searchString) ||
-                    a.Summary.Contains(searchString) ||
-                    a.Content.Contains(searchString));
+                query = query.Where(a => a.Title.Contains(searchString));
             }
 
             if (categoryId.HasValue)

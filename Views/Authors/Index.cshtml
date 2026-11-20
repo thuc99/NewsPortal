@@ -472,13 +472,13 @@
     if (string.IsNullOrWhiteSpace(backUrl))
     {
         backUrl = isAdminManagement
-            ? Url.RouteUrl("AdminAuthors", new { action = "Index" })
+            ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = (int?)null })
             : Url.Action("Index", "Authors");
     }
     if (isAdminManagement)
     {
         <div style="max-width: 1160px; margin: 24px auto -16px;">
-            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index",returnUrl = backUrl })" style="display: inline-block; padding: 9px 15px; background: #e2e8f0; color: #334155; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index", id = (int?)null })" style="display: inline-block; padding: 9px 15px; background: #e2e8f0; color: #334155; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
                 ← Quay lại danh sách tác giả
             </a>
         </div>
@@ -639,12 +639,6 @@ else
                 </p>
             </div>
 
-            @if (isAdminManagement)
-            {
-                <div>
-                    @Html.RouteLink("+ Thêm tác giả", "AdminAuthors", new { action = "Create" }, new { @class = "btn-add" })
-                </div>
-            }
         </div>
 
         @if (TempData["Success"] != null)

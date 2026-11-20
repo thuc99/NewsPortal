@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
 {
@@ -11,17 +13,38 @@ namespace NewsPortal.Controllers
             if (httpContext.Session == null)
                 return false;
 
-            string role = Convert.ToString(httpContext.Session["Role"]);
+            string username = Convert.ToString(httpContext.Session["User"] ?? httpContext.Session["Admin"]);
+            if (string.IsNullOrWhiteSpace(username))
+                return false;
 
-            bool isAdmin = httpContext.Session["Admin"] != null;
+            using (var db = new NewsPortalDBEntities())
+            {
+                var user = db.Users.FirstOrDefault(u => u.Username == username && u.IsActive);
+                if (user != null)
+                {
+                    httpContext.Session["Role"] = user.Role;
+                    bool isAdmin = string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+                    bool isEditor = string.Equals(user.Role, "Editor", StringComparison.OrdinalIgnoreCase);
 
-            bool isEditor = string.Equals(
-                role,
-                "Editor",
-                StringComparison.OrdinalIgnoreCase
-            );
+                    if (isAdmin)
+                    {
+                        httpContext.Session["Admin"] = user.Username;
+                        httpContext.Session.Remove("User");
+                        httpContext.Session.Remove("UserFullName");
+                    }
+                    else
+                    {
+                        httpContext.Session.Remove("Admin");
+                        httpContext.Session["User"] = user.Username;
+                        httpContext.Session["UserFullName"] = user.FullName;
+                    }
 
-            return isAdmin || isEditor;
+                    return isAdmin || isEditor;
+                }
+            }
+
+            return httpContext.Session["Admin"] != null &&
+                   string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase);
         }
 
         protected override void HandleUnauthorizedRequest(

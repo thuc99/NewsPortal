@@ -574,7 +574,7 @@
                     </div>
                 }
 
-                @if (ViewBag.IsAdminManagement != true)
+                @if (ViewBag.IsAdminManagement != true && ViewBag.CanComment == true)
                 {
                     bool isSaved = ViewBag.IsSavedArticle != null && (bool)ViewBag.IsSavedArticle;
                     using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { style = "display:inline-block; margin:0;" }))
@@ -600,7 +600,16 @@
         @Html.Raw(safeContent)
     </div>
 
-    @if (ViewBag.CanManageArticles == true)
+    @if (ViewBag.IsAdminManagement == true && ViewBag.CanEditArticle == true)
+    {
+        <div class="view-actions">
+            @Html.RouteLink("Sửa bài", "AdminArticles",
+                new { action = "Edit", id = Model.Id },
+                new { @class = "btn-detail btn-back" })
+        </div>
+    }
+
+    @if (ViewBag.IsAdminManagement == true)
     {
         <div class="view-actions">
             @Html.RouteLink("Quay lại danh sách", "AdminArticles",
