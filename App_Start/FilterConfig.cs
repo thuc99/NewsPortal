@@ -31,9 +31,6 @@ namespace NewsPortal
                     var user = db.Users.FirstOrDefault(u => u.Username == username);
                     if (user == null)
                     {
-                        if (session["Admin"] != null && string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
-                            return;
-
                         ClearIdentity(session);
                         return;
                     }

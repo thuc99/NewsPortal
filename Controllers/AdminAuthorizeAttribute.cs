@@ -38,8 +38,11 @@ namespace NewsPortal.Controllers
                 }
             }
 
-            return httpContext.Session["Admin"] != null &&
-                   string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase);
+            httpContext.Session.Remove("Admin");
+            httpContext.Session.Remove("User");
+            httpContext.Session.Remove("UserFullName");
+            httpContext.Session.Remove("Role");
+            return false;
         }
 
         protected override void HandleUnauthorizedRequest(

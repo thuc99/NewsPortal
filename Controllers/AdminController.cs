@@ -550,12 +550,11 @@ END";
 
             foreach (var user in users)
             {
-                bool isRootAdmin = string.Equals(user.Username, "admin", StringComparison.OrdinalIgnoreCase);
                 bool isLastActiveAdmin = user.IsActive &&
                     string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase) &&
                     activeAdminCount <= 1;
-                user.CanToggleStatus = !isLastActiveAdmin && !(isRootAdmin && user.IsActive);
-                user.CanChangeRole = !isRootAdmin && !isLastActiveAdmin;
+                user.CanToggleStatus = !isLastActiveAdmin;
+                user.CanChangeRole = !isLastActiveAdmin;
             }
 
             ViewBag.Search = search;
@@ -763,11 +762,10 @@ END";
                     }
                 }
 
-                bool isRootAdmin = string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase);
                 bool isSelf = string.Equals(Convert.ToString(Session["Admin"]), username, StringComparison.OrdinalIgnoreCase);
-                if (role != "Admin" && (isRootAdmin || isSelf))
+                if (role != "Admin" && isSelf)
                 {
-                    TempData["AdminError"] = "Không thể hạ cấp tài khoản Admin gốc hoặc tài khoản đang đăng nhập.";
+                    TempData["AdminError"] = "Không thể tự hạ cấp tài khoản đang đăng nhập.";
                     return RedirectToAction("Users");
                 }
 
@@ -862,12 +860,6 @@ END";
                         role = Convert.ToString(reader["Role"]);
                         isActive = Convert.ToBoolean(reader["IsActive"]);
                     }
-                }
-
-                if (isActive && string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
-                {
-                    TempData["AdminError"] = "Không thể khóa tài khoản Quản trị viên gốc.";
-                    return RedirectToAction("Users");
                 }
 
                 if (isActive && string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))

@@ -221,10 +221,9 @@ END";
             var user = db.Users.FirstOrDefault(u => u.Username == username && u.IsActive);
             if (user == null)
             {
-                if (Session["Admin"] != null && string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
-                    return "Admin";
-
                 Session.Remove("Admin");
+                Session.Remove("User");
+                Session.Remove("UserFullName");
                 Session.Remove("Role");
                 return null;
             }

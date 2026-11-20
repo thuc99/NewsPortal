@@ -169,12 +169,10 @@ namespace NewsPortal.Controllers
                 return View();
             }
 
-            bool databaseAccountFound = false;
-            bool databaseAccountIsActive = false;
-
             string databaseUsername = null;
             string databaseFullName = null;
             string databaseRole = null;
+            bool databaseAccountIsActive = false;
 
             using (var conn = CreateUsersConnection())
             {
@@ -200,8 +198,6 @@ namespace NewsPortal.Controllers
                     {
                         if (reader.Read())
                         {
-                            databaseAccountFound = true;
-
                             databaseAccountIsActive =
                                 Convert.ToBoolean(reader["IsActive"]);
 
@@ -268,31 +264,6 @@ namespace NewsPortal.Controllers
                         : databaseRole);
 
                 return RedirectToRoute("Default", new { controller = "Articles", action = "Index" });
-            }
-
-            // Đăng nhập Admin cũ
-            bool canUseLegacyRootLogin =
-                username.Equals(
-                    "admin",
-                    StringComparison.OrdinalIgnoreCase)
-                && password == "123456"
-                && (!databaseAccountFound ||
-                    (databaseAccountIsActive &&
-                    string.Equals(
-                        databaseRole,
-                        "Admin",
-                        StringComparison.OrdinalIgnoreCase)));
-
-            if (canUseLegacyRootLogin)
-            {
-                ClearLoginSession();
-
-                Session.Remove("LockUntil");
-                Session["Role"] = "Admin";
-                Session["Admin"] = "admin";
-                Session["FailCount"] = 0;
-
-                return RedirectToAction("Index", "Home");
             }
 
             // Đăng nhập thất bại
