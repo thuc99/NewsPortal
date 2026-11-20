@@ -225,7 +225,6 @@
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Database\AddAuthorImages.sql" />
     <Content Include="Database\AddComments.sql" />
-    <Content Include="Database\LinkAuthorsToUsers.sql" />
     <Content Include="Database\UpdateArticleStatusConstraint.sql" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />

@@ -1,11 +1,15 @@
 USE [master]
 GO
 
--- Tạo database NewsPortalDB tự động theo thư mục mặc định của SQL Server (chạy được trên mọi máy)
-IF DB_ID(N'NewsPortalDB') IS NULL
+-- CẢNH BÁO: Script này xóa toàn bộ database NewsPortalDB và tạo lại dữ liệu mẫu.
+IF DB_ID(N'NewsPortalDB') IS NOT NULL
 BEGIN
-    CREATE DATABASE [NewsPortalDB];
+	ALTER DATABASE [NewsPortalDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+	DROP DATABASE [NewsPortalDB];
 END
+GO
+
+CREATE DATABASE [NewsPortalDB];
 GO
 
 ALTER DATABASE [NewsPortalDB] SET COMPATIBILITY_LEVEL = 150
@@ -100,6 +104,7 @@ CREATE TABLE [dbo].[Authors](
 	[AuthorName] [nvarchar](150) NOT NULL,
 	[Email] [nvarchar](150) NULL,
 	[Images] [nvarchar](500) NULL,
+	[UserId] [int] NULL,
  CONSTRAINT [PK_Authors] PRIMARY KEY CLUSTERED ([AuthorID] ASC)
 ) ON [PRIMARY]
 GO
@@ -709,6 +714,32 @@ INSERT [dbo].[SavedArticles] ([Id], [UserId], [ArticleId], [SavedDate]) VALUES
 (2, 4, 22, CAST(N'2026-11-19T14:12:00.000' AS DateTime))
 SET IDENTITY_INSERT [dbo].[SavedArticles] OFF
 GO
+
+-- Liên kết tác giả với tài khoản có email trùng khớp duy nhất.
+;WITH UniqueEmailMatches AS
+(
+	SELECT a.AuthorID, u.UserId
+	FROM dbo.Authors a
+	INNER JOIN dbo.Users u
+		ON NULLIF(LTRIM(RTRIM(a.Email)), N'') IS NOT NULL
+	   AND LOWER(LTRIM(RTRIM(a.Email))) = LOWER(LTRIM(RTRIM(u.Email)))
+	WHERE a.UserId IS NULL
+	  AND (SELECT COUNT(*) FROM dbo.Authors a2
+		   WHERE LOWER(LTRIM(RTRIM(a2.Email))) = LOWER(LTRIM(RTRIM(a.Email)))) = 1
+	  AND (SELECT COUNT(*) FROM dbo.Users u2
+		   WHERE LOWER(LTRIM(RTRIM(u2.Email))) = LOWER(LTRIM(RTRIM(u.Email)))) = 1
+)
+UPDATE a
+SET UserId = m.UserId
+FROM dbo.Authors a
+INNER JOIN UniqueEmailMatches m ON m.AuthorID = a.AuthorID;
+GO
+
+UPDATE dbo.Users
+SET Role = N'Reader'
+WHERE Role = N'User';
+GO
+
 /* ============================================================================
    3. RÀNG BUỘC KHÓA NGOẠI, CHỈ MỤC & GIÁ TRỊ MẶC ĐỊNH (CONSTRAINTS & INDEXES)
    ============================================================================ */
@@ -752,6 +783,8 @@ ALTER TABLE [dbo].[Articles] WITH CHECK ADD CONSTRAINT [FK_Articles_Authors] FOR
 GO
 ALTER TABLE [dbo].[Articles] WITH CHECK ADD CONSTRAINT [FK_Articles_Categories] FOREIGN KEY([CategoryID]) REFERENCES [dbo].[Categories] ([CategoryID])
 GO
+ALTER TABLE [dbo].[Authors] WITH CHECK ADD CONSTRAINT [FK_Authors_Users] FOREIGN KEY([UserId]) REFERENCES [dbo].[Users] ([UserId])
+GO
 ALTER TABLE [dbo].[ArticleViewHistory] WITH CHECK ADD CONSTRAINT [FK_ArticleViewHistory_Articles] FOREIGN KEY([ArticleId]) REFERENCES [dbo].[Articles] ([ArticleID]) ON DELETE CASCADE
 GO
 ALTER TABLE [dbo].[ArticleViewHistory] WITH CHECK ADD CONSTRAINT [FK_ArticleViewHistory_Users] FOREIGN KEY([UserId]) REFERENCES [dbo].[Users] ([UserId]) ON DELETE CASCADE
@@ -768,6 +801,11 @@ GO
 ALTER TABLE [dbo].[ArticleRatings] WITH CHECK ADD CONSTRAINT [CK_ArticleRatings_Rating] CHECK (([Rating]>=(1) AND [Rating]<=(5)))
 GO
 ALTER TABLE [dbo].[Articles] WITH CHECK ADD CONSTRAINT [CK_Articles_Status_Workflow] CHECK (([Status] IN (N'Draft', N'Pending', N'Published', N'Rejected', N'Archived')))
+GO
+
+CREATE UNIQUE NONCLUSTERED INDEX [UX_Authors_UserId]
+	ON [dbo].[Authors] ([UserId])
+	WHERE [UserId] IS NOT NULL
 GO
 
 
