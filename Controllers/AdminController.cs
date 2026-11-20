@@ -857,10 +857,8 @@ END";
                            OR a.Title LIKE N'%' + @search + N'%'
                            OR u.Username LIKE N'%' + @search + N'%')
                     ORDER BY
-                        CASE WHEN c.Status = N'Pending' THEN 0
-                             WHEN c.Status = N'Approved' THEN 1
-                             ELSE 2 END,
-                        c.CreatedDate DESC;";
+                        c.CreatedDate DESC,
+                        c.CommentID DESC;";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -962,6 +960,27 @@ END";
                         TempData["AdminMessage"] = "Đã xóa vĩnh viễn bình luận #" + id + ".";
                     else
                         TempData["AdminError"] = "Không tìm thấy bình luận cần xóa.";
+                }
+            }
+            return RedirectToAction("Comments", new { search = search, status = status });
+        }
+        // POST: /Admin/MarkCommentSpam
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize]
+        public ActionResult MarkCommentSpam(int id, string search, string status)
+        {
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                using (var cmd = new SqlCommand("UPDATE dbo.Comments SET Status = N'Hidden' WHERE CommentID = @id;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    int rows = cmd.ExecuteNonQuery();
+                    if (rows > 0)
+                        TempData["AdminMessage"] = "Đã đánh dấu spam và ẩn bình luận #" + id + " khỏi trang công khai.";
+                    else
+                        TempData["AdminError"] = "Không tìm thấy bình luận cần xử lý.";
                 }
             }
             return RedirectToAction("Comments", new { search = search, status = status });
