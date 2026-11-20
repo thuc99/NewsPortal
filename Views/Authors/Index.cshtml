@@ -638,13 +638,6 @@ else
                     Quản lý thông tin các tác giả của NewsPortal.
                 </p>
             </div>
-
-            @if (isAdminManagement)
-            {
-                <div>
-                    @Html.RouteLink("+ Thêm tác giả", "AdminAuthors", new { action = "Create" }, new { @class = "btn-add" })
-                </div>
-            }
         </div>
 
         @if (TempData["Success"] != null)

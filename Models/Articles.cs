@@ -35,6 +35,8 @@ namespace NewsPortal.Models
         public string ImageUrl { get; set; }
         public int ViewCount { get; set; }
         public string Image { get; set; }
+        public string RejectionReason { get; set; }
+        public Nullable<int> UserId { get; set; }
     
         public virtual Author Authors { get; set; }
         public virtual Category Categories { get; set; }

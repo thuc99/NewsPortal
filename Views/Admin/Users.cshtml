@@ -222,17 +222,22 @@
                                     {
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@u.UserID" />
-                                        <select name="role" style="height:32px; border:1px solid var(--line); border-radius:6px;">
-                                            <option value="Admin" @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Tổng biên tập</option>
-                                            <option value="Editor" @(string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Biên tập</option>
-                                            <option value="User" @(string.Equals(u.Role, "User", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>User</option>
+                                        <select name="role" style="height:32px; border:1px solid var(--line); border-radius:6px; padding:0 8px;">
+                                            <option value="Admin" @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Quản trị viên</option>
+                                            <option value="Editor" @(string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Biên tập viên</option>
+                                            <option value="Author" @(string.Equals(u.Role, "Author", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Tác giả</option>
+                                            <option value="Reader" @((string.Equals(u.Role, "Reader", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "User", StringComparison.OrdinalIgnoreCase)) ? "selected" : "")>Độc giả</option>
                                         </select>
-                                        <button type="submit" style="padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer;">Lưu</button>
+                                        <button type="submit" style="padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; font-weight:600;">Lưu</button>
                                     }
                                 }
                                 else
                                 {
-                                    <strong>@(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "Tổng biên tập" : (string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "Biên tập" : u.Role))</strong>
+                                    <strong>
+                                        @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "Quản trị viên" :
+                                          string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "Biên tập viên" :
+                                          string.Equals(u.Role, "Author", StringComparison.OrdinalIgnoreCase) ? "Tác giả" : "Độc giả")
+                                    </strong>
                                 }
                             </td>
                             <td>@u.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>

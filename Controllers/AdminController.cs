@@ -97,6 +97,29 @@ END";
                 return sb.ToString();
             }
         }
+        public class CategoryStatusStat
+        {
+            public int CategoryID { get; set; }
+            public string CategoryName { get; set; }
+            public int TotalArticles { get; set; }
+            public int PublishedCount { get; set; }
+            public int PendingCount { get; set; }
+            public int DraftCount { get; set; }
+            public int RejectedCount { get; set; }
+            public int ArchivedCount { get; set; }
+            public int TotalViews { get; set; }
+        }
+
+        public class ArticleRatingStat
+        {
+            public int ArticleID { get; set; }
+            public string Title { get; set; }
+            public string CategoryName { get; set; }
+            public double AverageRating { get; set; }
+            public int RatingCount { get; set; }
+            public int FiveStarCount { get; set; }
+            public int LowStarCount { get; set; }
+        }
 
         // GET: /Admin
         public ActionResult Index(string search = "", string status = "")
@@ -113,6 +136,12 @@ END";
             int pendingArticles = 0;
             int rejectedArticles = 0;
             int archivedArticles = 0;
+            var rejectionReasons = new Dictionary<int, string>();
+            var categoryStats = new List<CategoryStatusStat>();
+            var articleRatingStats = new List<ArticleRatingStat>();
+            int totalRatings = 0;
+            double overallAvgRating = 0;
+            int[] starCounts = new int[6];
 
             using (var conn = CreateConnection())
             {
@@ -147,6 +176,124 @@ END";
                         model.TotalCategories = Convert.ToInt32(reader["TotalCategories"]);
                         model.TotalAuthors = Convert.ToInt32(reader["TotalAuthors"]);
                         model.TotalUsers = Convert.ToInt32(reader["TotalUsers"]);
+                    }
+                }
+
+                string catSql = @"
+                    SELECT
+                        c.CategoryID,
+                        c.CategoryName,
+                        COUNT(a.ArticleID) AS TotalArticles,
+                        ISNULL(SUM(CASE WHEN a.Status = N'Published' THEN 1 ELSE 0 END), 0) AS PublishedCount,
+                        ISNULL(SUM(CASE WHEN a.Status = N'Pending' THEN 1 ELSE 0 END), 0) AS PendingCount,
+                        ISNULL(SUM(CASE WHEN a.Status = N'Draft' THEN 1 ELSE 0 END), 0) AS DraftCount,
+                        ISNULL(SUM(CASE WHEN a.Status = N'Rejected' THEN 1 ELSE 0 END), 0) AS RejectedCount,
+                        ISNULL(SUM(CASE WHEN a.Status = N'Archived' THEN 1 ELSE 0 END), 0) AS ArchivedCount,
+                        ISNULL(SUM(ISNULL(a.ViewCount, 0)), 0) AS TotalViews
+                    FROM dbo.Categories c
+                    LEFT JOIN dbo.Articles a ON a.CategoryID = c.CategoryID
+                    GROUP BY c.CategoryID, c.CategoryName
+                    ORDER BY c.CategoryName ASC;";
+
+                using (var cmd = new SqlCommand(catSql, conn))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        categoryStats.Add(new CategoryStatusStat
+                        {
+                            CategoryID = Convert.ToInt32(reader["CategoryID"]),
+                            CategoryName = Convert.ToString(reader["CategoryName"]),
+                            TotalArticles = Convert.ToInt32(reader["TotalArticles"]),
+                            PublishedCount = Convert.ToInt32(reader["PublishedCount"]),
+                            PendingCount = Convert.ToInt32(reader["PendingCount"]),
+                            DraftCount = Convert.ToInt32(reader["DraftCount"]),
+                            RejectedCount = Convert.ToInt32(reader["RejectedCount"]),
+                            ArchivedCount = Convert.ToInt32(reader["ArchivedCount"]),
+                            TotalViews = Convert.ToInt32(reader["TotalViews"])
+                        });
+                    }
+                }
+
+                string ratingSql = @"
+                    IF OBJECT_ID(N'dbo.ArticleRatings', N'U') IS NOT NULL
+                    BEGIN
+                        SELECT
+                            COUNT(*) AS TotalRatings,
+                            ISNULL(AVG(CAST(Rating AS FLOAT)), 0) AS AvgRating,
+                            ISNULL(SUM(CASE WHEN Rating = 1 THEN 1 ELSE 0 END), 0) AS Star1,
+                            ISNULL(SUM(CASE WHEN Rating = 2 THEN 1 ELSE 0 END), 0) AS Star2,
+                            ISNULL(SUM(CASE WHEN Rating = 3 THEN 1 ELSE 0 END), 0) AS Star3,
+                            ISNULL(SUM(CASE WHEN Rating = 4 THEN 1 ELSE 0 END), 0) AS Star4,
+                            ISNULL(SUM(CASE WHEN Rating = 5 THEN 1 ELSE 0 END), 0) AS Star5
+                        FROM dbo.ArticleRatings;
+
+                        SELECT
+                            a.ArticleID,
+                            a.Title,
+                            ISNULL(c.CategoryName, N'Chưa phân loại') AS CategoryName,
+                            AVG(CAST(r.Rating AS FLOAT)) AS AverageRating,
+                            COUNT(r.RatingID) AS RatingCount,
+                            SUM(CASE WHEN r.Rating = 5 THEN 1 ELSE 0 END) AS FiveStarCount,
+                            SUM(CASE WHEN r.Rating IN (1, 2) THEN 1 ELSE 0 END) AS LowStarCount
+                        FROM dbo.ArticleRatings r
+                        INNER JOIN dbo.Articles a ON a.ArticleID = r.ArticleID
+                        LEFT JOIN dbo.Categories c ON c.CategoryID = a.CategoryID
+                        GROUP BY a.ArticleID, a.Title, c.CategoryName
+                        ORDER BY AverageRating DESC, RatingCount DESC;
+                    END";
+
+                using (var cmd = new SqlCommand(ratingSql, conn))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.HasRows && reader.Read())
+                    {
+                        totalRatings = Convert.ToInt32(reader["TotalRatings"]);
+                        overallAvgRating = Convert.ToDouble(reader["AvgRating"]);
+                        starCounts[1] = Convert.ToInt32(reader["Star1"]);
+                        starCounts[2] = Convert.ToInt32(reader["Star2"]);
+                        starCounts[3] = Convert.ToInt32(reader["Star3"]);
+                        starCounts[4] = Convert.ToInt32(reader["Star4"]);
+                        starCounts[5] = Convert.ToInt32(reader["Star5"]);
+
+                        if (reader.NextResult())
+                        {
+                            while (reader.Read())
+                            {
+                                articleRatingStats.Add(new ArticleRatingStat
+                                {
+                                    ArticleID = Convert.ToInt32(reader["ArticleID"]),
+                                    Title = Convert.ToString(reader["Title"]),
+                                    CategoryName = Convert.ToString(reader["CategoryName"]),
+                                    AverageRating = Convert.ToDouble(reader["AverageRating"]),
+                                    RatingCount = Convert.ToInt32(reader["RatingCount"]),
+                                    FiveStarCount = Convert.ToInt32(reader["FiveStarCount"]),
+                                    LowStarCount = Convert.ToInt32(reader["LowStarCount"])
+                                });
+                            }
+                        }
+                    }
+                }
+
+                string reasonSql = @"
+                    IF COL_LENGTH('dbo.Articles', 'RejectionReason') IS NOT NULL
+                    BEGIN
+                        SELECT ArticleID, RejectionReason
+                        FROM dbo.Articles
+                        WHERE Status = N'Rejected'
+                          AND RejectionReason IS NOT NULL
+                          AND LTRIM(RTRIM(RejectionReason)) <> N'';
+                    END";
+
+                using (var cmd = new SqlCommand(reasonSql, conn))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            rejectionReasons[Convert.ToInt32(reader["ArticleID"])] = Convert.ToString(reader["RejectionReason"]);
+                        }
                     }
                 }
 
@@ -194,6 +341,12 @@ END";
             ViewBag.PendingArticles = pendingArticles;
             ViewBag.RejectedArticles = rejectedArticles;
             ViewBag.ArchivedArticles = archivedArticles;
+            ViewBag.RejectionReasons = rejectionReasons;
+            ViewBag.CategoryStats = categoryStats;
+            ViewBag.ArticleRatingStats = articleRatingStats;
+            ViewBag.TotalRatings = totalRatings;
+            ViewBag.OverallAverageRating = overallAvgRating;
+            ViewBag.StarCounts = starCounts;
 
             return View(model);
         }
@@ -202,9 +355,13 @@ END";
         [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult UpdateArticleStatus(int id, string newStatus, string search = "", string status = "")
+        public ActionResult UpdateArticleStatus(int id, string newStatus, string search = "", string status = "", string rejectionReason = "")
         {
             newStatus = (newStatus ?? "").Trim();
+            rejectionReason = (rejectionReason ?? "").Trim();
+            if (rejectionReason.Length > 500)
+                rejectionReason = rejectionReason.Substring(0, 500);
+
             if (!ValidStatuses.Contains(newStatus))
             {
                 TempData["AdminError"] = "Trạng thái bài viết không hợp lệ.";
@@ -220,12 +377,20 @@ END";
                     UPDATE dbo.Articles
                     SET Status = @newStatus,
                         UpdatedDate = GETDATE()
-                    WHERE ArticleID = @id;";
+                    WHERE ArticleID = @id;
+
+                    IF @@ROWCOUNT > 0 AND COL_LENGTH('dbo.Articles', 'RejectionReason') IS NOT NULL
+                    BEGIN
+                        UPDATE dbo.Articles
+                        SET RejectionReason = CASE WHEN @newStatus = N'Rejected' AND @reason <> N'' THEN @reason ELSE NULL END
+                        WHERE ArticleID = @id;
+                    END";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@newStatus", newStatus);
                     cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Parameters.AddWithValue("@reason", rejectionReason);
                     if (cmd.ExecuteNonQuery() == 0)
                     {
                         TempData["AdminError"] = "Không tìm thấy bài viết #" + id + ".";
@@ -350,6 +515,96 @@ END";
             return View(users);
         }
 
+        private string NormalizeRole(string role)
+        {
+            role = (role ?? "").Trim();
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)) return "Admin";
+            if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase)) return "Editor";
+            if (string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase)) return "Author";
+            if (string.Equals(role, "Reader", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "User", StringComparison.OrdinalIgnoreCase)) return "Reader";
+            return null;
+        }
+
+        private void SyncAuthorProfile(SqlConnection conn, int userId, string newRole)
+        {
+            if (!string.Equals(newRole, "Author", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            string username = "";
+            string fullName = "";
+            string email = "";
+
+            using (var userCmd = new SqlCommand("SELECT Username, FullName, Email FROM dbo.Users WHERE UserId = @uid;", conn))
+            {
+                userCmd.Parameters.AddWithValue("@uid", userId);
+                using (var r = userCmd.ExecuteReader())
+                {
+                    if (!r.Read()) return;
+                    username = Convert.ToString(r["Username"]);
+                    fullName = r["FullName"] == DBNull.Value ? "" : Convert.ToString(r["FullName"]).Trim();
+                    email = r["Email"] == DBNull.Value ? "" : Convert.ToString(r["Email"]).Trim();
+                }
+            }
+
+            string displayAuthorName = string.IsNullOrWhiteSpace(fullName) ? username : fullName;
+
+            int? existingAuthorId = null;
+            using (var checkCmd = new SqlCommand("SELECT TOP 1 AuthorID FROM dbo.Authors WHERE UserId = @uid;", conn))
+            {
+                checkCmd.Parameters.AddWithValue("@uid", userId);
+                object scalar = checkCmd.ExecuteScalar();
+                if (scalar != null && scalar != DBNull.Value)
+                    existingAuthorId = Convert.ToInt32(scalar);
+            }
+
+            if (!existingAuthorId.HasValue && !string.IsNullOrWhiteSpace(email))
+            {
+                using (var emailCmd = new SqlCommand("SELECT TOP 1 AuthorID FROM dbo.Authors WHERE UserId IS NULL AND Email = @em;", conn))
+                {
+                    emailCmd.Parameters.AddWithValue("@em", email);
+                    object scalar = emailCmd.ExecuteScalar();
+                    if (scalar != null && scalar != DBNull.Value)
+                        existingAuthorId = Convert.ToInt32(scalar);
+                }
+            }
+
+            if (existingAuthorId.HasValue)
+            {
+                const string updateSql = @"
+                    UPDATE dbo.Authors
+                    SET UserId = @uid,
+                        AuthorName = CASE WHEN LTRIM(RTRIM(ISNULL(AuthorName, N''))) = N'' THEN @name ELSE AuthorName END,
+                        Email = CASE WHEN @em <> N'' THEN @em ELSE Email END
+                    WHERE AuthorID = @aid;";
+
+                using (var upCmd = new SqlCommand(updateSql, conn))
+                {
+                    upCmd.Parameters.AddWithValue("@uid", userId);
+                    upCmd.Parameters.AddWithValue("@name", displayAuthorName);
+                    upCmd.Parameters.AddWithValue("@em", email);
+                    upCmd.Parameters.AddWithValue("@aid", existingAuthorId.Value);
+                    upCmd.ExecuteNonQuery();
+                }
+            }
+            else
+            {
+                const string insertSql = @"
+                    INSERT INTO dbo.Authors (AuthorName, Email, UserId)
+                    VALUES (@name, @em, @uid);";
+
+                using (var insCmd = new SqlCommand(insertSql, conn))
+                {
+                    insCmd.Parameters.AddWithValue("@name", displayAuthorName);
+                    insCmd.Parameters.AddWithValue("@em", string.IsNullOrWhiteSpace(email) ? (object)DBNull.Value : email);
+                    insCmd.Parameters.AddWithValue("@uid", userId);
+                    insCmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         // POST: /Admin/CreateUser
         [AdminAuthorize]
         [HttpPost]
@@ -359,7 +614,7 @@ END";
             username = (username ?? "").Trim();
             fullName = (fullName ?? "").Trim();
             email = (email ?? "").Trim();
-            role = string.IsNullOrWhiteSpace(role) ? "User" : role.Trim();
+            string normalizedRole = string.IsNullOrWhiteSpace(role) ? "Reader" : NormalizeRole(role);
 
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
                 string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email))
@@ -386,35 +641,26 @@ END";
                 return RedirectToAction("Users");
             }
 
-            if (!string.IsNullOrEmpty(email))
+            bool validEmail = email.Length <= 256;
+            try
             {
-                bool validEmail = email.Length <= 256;
-                try
-                {
-                    var address = new MailAddress(email);
-                    validEmail = validEmail && string.Equals(address.Address, email, StringComparison.OrdinalIgnoreCase);
-                }
-                catch (FormatException)
-                {
-                    validEmail = false;
-                }
-
-                if (!validEmail)
-                {
-                    TempData["AdminError"] = "Email không đúng định dạng hoặc vượt quá 256 ký tự.";
-                    return RedirectToAction("Users");
-                }
+                var address = new MailAddress(email);
+                validEmail = validEmail && string.Equals(address.Address, email, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (FormatException)
+            {
+                validEmail = false;
             }
 
-            if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase))
-                role = "Editor";
-            else if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
-                role = "Admin";
-            else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
-                role = "User";
-            else
+            if (!validEmail)
             {
-                TempData["AdminError"] = "Vai trò không hợp lệ.";
+                TempData["AdminError"] = "Email không đúng định dạng hoặc vượt quá 256 ký tự.";
+                return RedirectToAction("Users");
+            }
+
+            if (normalizedRole == null)
+            {
+                TempData["AdminError"] = "Cấp bậc tài khoản không hợp lệ (chỉ chấp nhận Admin, Editor, Author, Reader).";
                 return RedirectToAction("Users");
             }
 
@@ -442,22 +688,26 @@ END";
                     }
                 }
 
-                string insertSql = @"
+                const string insertSql = @"
                     INSERT INTO dbo.Users (Username, PasswordHash, FullName, Email, Role, IsActive, CreatedAt)
+                    OUTPUT INSERTED.UserId
                     VALUES (@u, @p, @fn, @em, @role, 1, GETDATE());";
 
+                int newUserId;
                 using (var cmd = new SqlCommand(insertSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@u", username);
                     cmd.Parameters.AddWithValue("@p", ComputeSha256(password.Trim()));
                     cmd.Parameters.AddWithValue("@fn", fullName);
                     cmd.Parameters.AddWithValue("@em", email);
-                    cmd.Parameters.AddWithValue("@role", role);
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("@role", normalizedRole);
+                    newUserId = Convert.ToInt32(cmd.ExecuteScalar());
                 }
+
+                SyncAuthorProfile(conn, newUserId, normalizedRole);
             }
 
-            TempData["AdminMessage"] = "Đã tạo tài khoản '" + username + "' thành công.";
+            TempData["AdminMessage"] = "Đã tạo tài khoản '" + username + "' với cấp bậc " + normalizedRole + " thành công.";
             return RedirectToAction("Users");
         }
 
@@ -467,75 +717,78 @@ END";
         [ValidateAntiForgeryToken]
         public ActionResult UpdateUserRole(int id, string role)
         {
-            role = (role ?? "").Trim();
-            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
-                role = "Admin";
-            else if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase))
-                role = "Editor";
-            else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
-                role = "User";
-            else
+            string normalizedRole = NormalizeRole(role);
+            if (normalizedRole == null)
             {
-                TempData["AdminError"] = "Vai trò không hợp lệ.";
+                TempData["AdminError"] = "Cấp bậc tài khoản không hợp lệ.";
                 return RedirectToAction("Users");
             }
 
-            using (var conn = CreateConnection())
+            try
             {
-                conn.Open();
-                const string accountSql = "SELECT Username, Role, IsActive FROM dbo.Users WHERE UserId = @id;";
-                string username;
-                string currentRole;
-                bool isActive;
-
-                using (var cmd = new SqlCommand(accountSql, conn))
+                using (var conn = CreateConnection())
                 {
-                    cmd.Parameters.AddWithValue("@id", id);
-                    using (var reader = cmd.ExecuteReader())
+                    conn.Open();
+                    const string accountSql = "SELECT Username, Role, IsActive FROM dbo.Users WHERE UserId = @id;";
+                    string username;
+                    string currentRole;
+                    bool isActive;
+
+                    using (var cmd = new SqlCommand(accountSql, conn))
                     {
-                        if (!reader.Read())
+                        cmd.Parameters.AddWithValue("@id", id);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            TempData["AdminError"] = "Không tìm thấy tài khoản.";
-                            return RedirectToAction("Users");
-                        }
+                            if (!reader.Read())
+                            {
+                                TempData["AdminError"] = "Không tìm thấy tài khoản cần cập nhật.";
+                                return RedirectToAction("Users");
+                            }
 
-                        username = Convert.ToString(reader["Username"]);
-                        currentRole = Convert.ToString(reader["Role"]);
-                        isActive = Convert.ToBoolean(reader["IsActive"]);
-                    }
-                }
-
-                bool isRootAdmin = string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase);
-                bool isSelf = string.Equals(Convert.ToString(Session["Admin"]), username, StringComparison.OrdinalIgnoreCase);
-                if (role != "Admin" && (isRootAdmin || isSelf))
-                {
-                    TempData["AdminError"] = "Không thể hạ cấp tài khoản Admin gốc hoặc tài khoản đang đăng nhập.";
-                    return RedirectToAction("Users");
-                }
-
-                if (isActive && string.Equals(currentRole, "Admin", StringComparison.OrdinalIgnoreCase) && role != "Admin")
-                {
-                    const string countSql = "SELECT COUNT(*) FROM dbo.Users WHERE Role = N'Admin' AND IsActive = 1;";
-                    using (var countCmd = new SqlCommand(countSql, conn))
-                    {
-                        if (Convert.ToInt32(countCmd.ExecuteScalar()) <= 1)
-                        {
-                            TempData["AdminError"] = "Không thể hạ cấp Admin đang hoạt động cuối cùng.";
-                            return RedirectToAction("Users");
+                            username = Convert.ToString(reader["Username"]);
+                            currentRole = Convert.ToString(reader["Role"]);
+                            isActive = Convert.ToBoolean(reader["IsActive"]);
                         }
                     }
-                }
 
-                const string updateSql = "UPDATE dbo.Users SET Role = @role WHERE UserId = @id;";
-                using (var updateCmd = new SqlCommand(updateSql, conn))
-                {
-                    updateCmd.Parameters.AddWithValue("@role", role);
-                    updateCmd.Parameters.AddWithValue("@id", id);
-                    updateCmd.ExecuteNonQuery();
+                    bool isRootAdmin = string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase);
+                    bool isSelf = string.Equals(Convert.ToString(Session["Admin"]), username, StringComparison.OrdinalIgnoreCase);
+                    if (normalizedRole != "Admin" && (isRootAdmin || isSelf))
+                    {
+                        TempData["AdminError"] = "Không thể hạ cấp tài khoản Admin gốc hoặc tài khoản đang đăng nhập.";
+                        return RedirectToAction("Users");
+                    }
+
+                    if (isActive && string.Equals(currentRole, "Admin", StringComparison.OrdinalIgnoreCase) && normalizedRole != "Admin")
+                    {
+                        const string countSql = "SELECT COUNT(*) FROM dbo.Users WHERE Role = N'Admin' AND IsActive = 1;";
+                        using (var countCmd = new SqlCommand(countSql, conn))
+                        {
+                            if (Convert.ToInt32(countCmd.ExecuteScalar()) <= 1)
+                            {
+                                TempData["AdminError"] = "Không thể hạ cấp Admin đang hoạt động cuối cùng.";
+                                return RedirectToAction("Users");
+                            }
+                        }
+                    }
+
+                    const string updateSql = "UPDATE dbo.Users SET Role = @role WHERE UserId = @id;";
+                    using (var updateCmd = new SqlCommand(updateSql, conn))
+                    {
+                        updateCmd.Parameters.AddWithValue("@role", normalizedRole);
+                        updateCmd.Parameters.AddWithValue("@id", id);
+                        updateCmd.ExecuteNonQuery();
+                    }
+
+                    SyncAuthorProfile(conn, id, normalizedRole);
+                    TempData["AdminMessage"] = "Đã cập nhật cấp bậc tài khoản '" + username + "' thành " + normalizedRole + ".";
                 }
             }
+            catch (Exception ex)
+            {
+                TempData["AdminError"] = "Lỗi khi cập nhật cấp bậc tài khoản: " + ex.Message;
+            }
 
-            TempData["AdminMessage"] = "Đã cập nhật vai trò tài khoản.";
             return RedirectToAction("Users");
         }
 
