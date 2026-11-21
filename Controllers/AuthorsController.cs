@@ -188,7 +188,6 @@ namespace NewsPortal.Controllers
             ViewBag.IsAdminManagement = isAdminManagement;
             ViewBag.ReturnUrl = returnUrl;
 
-
             var eligibleAuthors = db.Authors.Where(a =>
                 a.UserId.HasValue && db.Users.Any(u =>
                     u.UserId == a.UserId.Value &&
@@ -196,15 +195,13 @@ namespace NewsPortal.Controllers
                     (isAdminManagement || u.IsActive)));
             var query = eligibleAuthors;
 
-
             if (!string.IsNullOrWhiteSpace(search))
             {
                 string keyword = search.Trim();
 
                 query = query.Where(a =>
                     a.AuthorName.Contains(keyword) ||
-                    a.Email.Contains(keyword) ||
-                    (a.UserId.HasValue && db.Users.Any(u => u.UserId == a.UserId.Value && u.Username.Contains(keyword))));
+                    a.Email.Contains(keyword));
             }
 
             ViewBag.Search = search;
@@ -278,39 +275,81 @@ namespace NewsPortal.Controllers
 
             LoadAuthorImages(authors);
 
-            var linkedUserIds = authors
-                .Where(a => a.UserId.HasValue)
-                .Select(a => a.UserId.Value)
-                .Distinct()
-                .ToList();
-
-            ViewBag.AuthorUsers = db.Users
-                .Where(u => linkedUserIds.Contains(u.UserId))
-                .ToDictionary(u => u.UserId, u => u);
-
             return View(authors);
         }
 
         // =========================
-        // VÔ HIỆU HÓA THÊM TÁC GIẢ THỦ CÔNG
+        // THÊM TÁC GIẢ - GET
         // =========================
         [AdminAuthorize]
         public ActionResult Create()
         {
-            TempData["Error"] = "Chức năng thêm tác giả thủ công đã tắt. Vui lòng nâng cấp tài khoản lên cấp bậc Author tại mục Quản lý tài khoản.";
-            return RedirectToAuthorsIndex();
+            if (!IsAdminManagementRequest())
+            {
+                return RedirectToRoute("AdminAuthors",
+                    new { action = "Create" });
+            }
+
+            ViewBag.IsAdminManagement = true;
+
+            return View();
         }
 
+        // =========================
+        // THÊM TÁC GIẢ - POST
+        // =========================
         [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(Author author, HttpPostedFileBase imageFile)
         {
-            TempData["Error"] = "Không thể tạo tác giả thủ công. Tác giả được đồng bộ tự động từ tài khoản có cấp bậc Author.";
-            return RedirectToAuthorsIndex();
-        }
+            ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
+            {
+                imageFile = Request.Files[0];
+            }
 
-         
+            if (author.AuthorName != null)
+                author.AuthorName = author.AuthorName.Trim();
+
+            if (author.Email != null)
+                author.Email = author.Email.Trim();
+
+            if (db.Authors.Any(a => a.Email == author.Email))
+            {
+                ModelState.AddModelError("Email", "Email đã được sử dụng");
+            }
+
+            string imageError;
+
+            if (!ValidateImage(imageFile, out imageError))
+            {
+                ModelState.AddModelError("Images", imageError);
+            }
+
+            if (ModelState.IsValid)
+            {
+                string imagePath = SaveAuthorImage(imageFile);
+
+                db.Authors.Add(author);
+                db.SaveChanges();
+
+                if (!string.IsNullOrEmpty(imagePath))
+                {
+                    db.Database.ExecuteSqlCommand(
+                        "UPDATE dbo.Authors SET Images = @p0 WHERE AuthorID = @p1",
+                        imagePath,
+                        author.AuthorID
+                    );
+                }
+
+                TempData["Success"] = "Thêm tác giả thành công";
+
+                return RedirectToAuthorsIndex();
+            }
+
+            return View(author);
+        }
 
         // =========================
         // SỬA TÁC GIẢ - GET

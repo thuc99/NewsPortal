@@ -348,7 +348,7 @@
         <h2>@(isAdminUser ? "Thêm bài viết mới" : "Soạn bài viết mới")</h2>
         <p>
             Điền thông tin bên dưới để
-            @(isAdminUser ? "tạo và xuất bản bài viết." : "lưu nháp hoặc gửi Biên tập viên duyệt.")
+            @(isAdminUser ? "tạo và xuất bản bài viết." : "lưu nháp hoặc gửi Admin phê duyệt.")
         </p>
     </div>
 
@@ -356,9 +356,9 @@
     {
         <div class="workflow-notice">
             <strong>Quy trình duyệt bài:</strong>
-            Tác giả có thể <strong>Lưu bản nháp (Draft)</strong>
-            để chỉnh sửa tiếp hoặc bấm <strong>Gửi Biên tập viên duyệt (Pending)</strong>.
-            Bài viết sẽ đăng lên trang chủ sau khi được Biên tập viên chấp thuận.
+            Phóng viên có thể <strong>Lưu bản nháp (Draft)</strong>
+            để chỉnh sửa tiếp hoặc bấm <strong>Gửi Admin duyệt (Pending)</strong>.
+            Bài viết sẽ tự động đăng lên trang chủ ngay khi được Admin chấp nhận.
         </div>
     }
 
@@ -535,7 +535,7 @@
                         value="Pending"
                         class="btn-create btn-save">
                     <i class="glyphicon glyphicon-send"></i>
-                    Gửi Biên tập viên duyệt
+                    Gửi Admin duyệt
                 </button>
 
                 <button type="submit"

@@ -260,12 +260,7 @@ namespace NewsPortal.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                Session["Role"] = string.Equals(
-                    databaseRole,
-                    "Author",
-                    StringComparison.OrdinalIgnoreCase)
-                    ? "Author"
-                    : "Reader";
+                Session["Role"] = "User";
 
                 return RedirectToRoute("Default", new { controller = "Articles", action = "Index" });
             }

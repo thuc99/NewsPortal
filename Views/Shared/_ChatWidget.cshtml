@@ -1,0 +1,25 @@
+<div class="news-chat" data-chat-url="@Url.Action("Ask", "Chat")">
+    <button class="news-chat__toggle" type="button" aria-controls="news-chat-panel" aria-expanded="false">
+        <span aria-hidden="true">💬</span>
+        <span>Hỏi AI về tin tức</span>
+    </button>
+    <section class="news-chat__panel" id="news-chat-panel" aria-label="Chatbot tin tức" hidden>
+        <header class="news-chat__header">
+            <div>
+                <strong>Trợ lí AI Tin Nhanh</strong>
+                <span>Trả lời dựa trên bài viết đã đăng</span>
+            </div>
+            <button class="news-chat__close" type="button" aria-label="Đóng chatbot">×</button>
+        </header>
+        <div class="news-chat__messages" aria-live="polite" aria-relevant="additions text">
+            <p class="news-chat__message news-chat__message--bot">Xin chào! Mình là trợ lí AI Tin Nhanh. Bạn có thể hỏi về tin tức, nhờ tóm tắt bài viết hoặc hỏi thời tiết hôm nay.</p>
+        </div>
+        <form class="news-chat__form" method="post">
+            @Html.AntiForgeryToken()
+            <label class="news-chat__sr-only" for="news-chat-input">Câu hỏi của bạn</label>
+            <input id="news-chat-input" name="message" type="text" maxlength="500" autocomplete="off" placeholder="Nhập câu hỏi về tin tức..." required />
+            <button type="submit">Gửi</button>
+        </form>
+        <p class="news-chat__status" aria-live="polite"></p>
+    </section>
+</div>

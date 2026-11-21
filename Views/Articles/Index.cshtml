@@ -7,8 +7,6 @@
     bool canManageArticles = ViewBag.CanManageArticles == true;
     bool isAdminManagement = ViewBag.IsAdminManagement == true;
     bool isAdminUser = ViewBag.IsAdminUser == true;
-    bool isEditorUser = ViewBag.IsEditorUser == true;
-    bool isAuthorUser = ViewBag.IsAuthorUser == true;
     string currentStatusFilter = ViewBag.Status as string ?? "";
 
     string articleIndexUrl = isAdminManagement
@@ -79,29 +77,6 @@
         max-width: 1208px;
     }
 
-    .admin-dashboard-back {
-        display: inline-block;
-        margin-bottom: 8px;
-        color: #b91c32;
-        font-size: 13px;
-        font-weight: 700;
-        text-decoration: none;
-    }
-
-    .admin-dashboard-back:hover {
-        color: #861b2b;
-        text-decoration: underline;
-    }
-
-    .admin-articles-page .management-header {
-        margin-bottom: 18px;
-    }
-
-    .admin-articles-page .management-header h2 {
-        color: #172033;
-        font-size: 28px;
-    }
-
     .management-header {
         display: flex;
         justify-content: space-between;
@@ -145,6 +120,21 @@
 
         .btn-add:hover {
             background: #991b1b;
+        }
+
+    .btn-admin-dash {
+        display: inline-block;
+        padding: 11px 15px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #1e293b !important;
+        text-decoration: none !important;
+        font-weight: 600;
+    }
+
+        .btn-admin-dash:hover {
+            background: #e2e8f0;
         }
 
     .workflow-tabs {
@@ -327,37 +317,6 @@
         table-layout: fixed;
     }
 
-    .admin-articles-page .management-card {
-        padding: 18px;
-        border: 1px solid #e2e7ef;
-        border-radius: 12px;
-        box-shadow: 0 4px 14px rgba(23, 32, 51, .04);
-    }
-
-    .admin-articles-page .management-table th {
-        padding: 11px 10px;
-        background: #f5f6f8;
-        border-bottom: 2px solid #e9e9ed;
-        color: #737985;
-        font-size: 12px;
-    }
-
-    .admin-articles-page .management-table td {
-        padding: 12px 10px;
-        border-bottom-color: #e9e9ed;
-    }
-
-    .admin-articles-page .workflow-tabs {
-        margin-bottom: 14px;
-    }
-
-    .admin-articles-page .advanced-filter {
-        padding: 14px;
-        border: 1px solid #e2e7ef;
-        border-radius: 10px;
-        background: #fff;
-    }
-
     .admin-articles-page .management-table th:nth-child(1),
     .admin-articles-page .management-table td:nth-child(1) {
         width: 110px;
@@ -381,7 +340,7 @@
     .admin-articles-page .management-table th:nth-child(5),
     .admin-articles-page .management-table td:nth-child(5) {
         width: 240px;
-        padding-left: 16px;
+        padding-left: 28px;
     }
 
     .admin-articles-page .article-title {
@@ -491,120 +450,45 @@
     }
 
     .action-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 34px;
-        padding: 7px 12px;
+        display: inline-block;
+        padding: 7px 10px;
         margin: 2px;
-        border: 1px solid transparent;
-        border-radius: 8px;
+        border: 0;
+        border-radius: 6px;
         text-decoration: none !important;
         font-size: 12.5px;
-        font-weight: 700;
+        font-weight: 600;
         white-space: nowrap;
         cursor: pointer;
-        transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
-    }
-
-    .action-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(15, 23, 42, .14);
-    }
-
-    .action-btn:focus-visible {
-        outline: 3px solid rgba(59, 130, 246, .35);
-        outline-offset: 2px;
     }
 
     .btn-edit {
-        background: #fff7d6;
-        border-color: #f4d36a;
+        background: #fef08a;
         color: #854d0e !important;
     }
 
     .btn-detail {
-        background: #eff6ff;
-        border-color: #bfdbfe;
+        background: #dbeafe;
         color: #1d4ed8 !important;
     }
 
     .btn-submit-wf {
-        background: #ecfdf3;
-        border-color: #bbf7d0;
+        background: #dcfce7;
         color: #166534 !important;
     }
 
     .btn-reject-wf {
-        background: #fff7ed;
-        border-color: #fed7aa;
+        background: #ffedd5;
         color: #c2410c !important;
     }
 
-    .reject-modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        background: rgba(15, 23, 42, .55);
-    }
-
-    .reject-modal-overlay.is-open {
-        display: flex;
-    }
-
-    .reject-modal-card {
-        width: 100%;
-        max-width: 595px;
-        padding: 28px 30px;
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, .25);
-    }
-
-    .reject-modal-card h3 {
-        margin: 0 0 8px;
-        color: #b91c1c;
-        font-size: 21px;
-    }
-
-    .reject-modal-title {
-        margin: 0 0 18px;
-        color: #737985;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-
-    .reject-modal-card textarea {
-        width: 100%;
-        min-height: 128px;
-        padding: 12px 14px;
-        border: 1.5px solid #ef4444;
-        border-radius: 10px;
-        font: inherit;
-        resize: vertical;
-    }
-
-    .reject-modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        margin-top: 16px;
-    }
-
     .btn-archive-wf {
-        background: #f1f5f9;
-        border-color: #cbd5e1;
+        background: #e2e8f0;
         color: #334155 !important;
     }
 
     .btn-delete {
-        background: #fff1f2;
-        border-color: #fecdd3;
+        background: #fee2e2;
         color: #b91c1c !important;
     }
 
@@ -687,22 +571,15 @@
 
 <div class="management-page @(isAdminManagement ? "admin-articles-page" : "public-articles-page")">
 
-    @if (isAdminUser && isAdminManagement)
-    {
-        <a class="admin-dashboard-back" href="@Url.Action("Index", "Admin")">&larr; Quay lại Bảng điều khiển Admin</a>
-    }
-
     <div class="management-header">
         <div>
-            <h2>@(canManageArticles ? (isAdminUser ? "Quản lý & Kiểm duyệt bài viết" : isEditorUser ? "Duyệt bài viết" : "Bài viết của Tác giả") : "Tin tức mới nhất")</h2>
+            <h2>@(canManageArticles ? (isAdminUser ? "Quản lý & Kiểm duyệt bài viết" : "Bài viết của Phóng viên") : "Tin tức mới nhất")</h2>
 
             <p class="management-subtitle">
                 @(canManageArticles
                     ? (isAdminUser
                         ? "Kiểm duyệt bài chờ duyệt (Pending), xuất bản lên trang chủ, từ chối hoặc lưu trữ bài viết."
-                        : isEditorUser
-                            ? "Xem xét bài viết do Tác giả gửi, sau đó phê duyệt hoặc từ chối."
-                            : "Soạn bài, chỉnh sửa bài viết của bạn và gửi Biên tập viên duyệt.")
+                        : "Soạn bài, chỉnh sửa bài viết ở mọi trạng thái; các chỉnh sửa bài đã xuất bản sẽ được gửi Admin duyệt lại.")
                     : "Cập nhật những tin tức mới nhất trên NewsPortal.")
             </p>
         </div>
@@ -710,10 +587,11 @@
         @if (canManageArticles)
         {
             <div class="header-actions">
-                @if (isAdminUser || isAuthorUser)
+                @if (isAdminUser)
                 {
-                    <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create", returnUrl = Request.RawUrl + "#article-results" })">+ Thêm bài viết</a>
+                    <a class="btn-admin-dash" href="@Url.Action("Index", "Admin")">Bảng điều khiển Admin</a>
                 }
+                <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create", returnUrl = Request.RawUrl + "#article-results" })">+ Thêm bài viết</a>
             </div>
         }
     </div>
@@ -908,10 +786,6 @@
                                 {
                                     <div class="article-excerpt">@item.PlainSummary</div>
                                 }
-                                @if (isAuthorUser && item.Status == "Rejected" && !string.IsNullOrWhiteSpace(item.RejectionReason))
-                                {
-                                    <div class="article-excerpt"><strong>Lý do từ chối:</strong> @item.RejectionReason</div>
-                                }
                             </td>
 
                             <td class="article-date">
@@ -985,49 +859,6 @@
                                             @Html.RouteLink("Sửa", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
                                             @Html.RouteLink("Xóa", "AdminArticles", new { action = "Delete", id = item.Id }, new { @class = "action-btn btn-delete" })
                                         }
-                                        else if (isEditorUser)
-                                        {
-                                            @Html.RouteLink("Xem bài", "AdminArticles", new { action = "Details", id = item.Id }, new { @class = "action-btn btn-detail" })
-                                            if (item.Status == "Pending")
-                                            {
-                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
-                                                {
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@item.Id" />
-                                                    <input type="hidden" name="newStatus" value="Published" />
-                                                    <input type="hidden" name="returnStatus" value="Pending" />
-                                                    <button type="submit" class="action-btn btn-submit-wf">Duyệt đăng</button>
-                                                }
-                                                <button type="button"
-                                                        class="action-btn btn-reject-wf js-open-reject-modal"
-                                                        data-article-id="@item.Id"
-                                                        data-article-title="@item.Title">
-                                                    Từ chối
-                                                </button>
-                                            }
-                                            else if (item.Status == "Published")
-                                            {
-                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
-                                                {
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@item.Id" />
-                                                    <input type="hidden" name="newStatus" value="Archived" />
-                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
-                                                    <button type="submit" class="action-btn btn-archive-wf">Lưu trữ</button>
-                                                }
-                                            }
-                                            else if (item.Status == "Archived")
-                                            {
-                                                using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { @class = "inline-wf-form" }))
-                                                {
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@item.Id" />
-                                                    <input type="hidden" name="newStatus" value="Published" />
-                                                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
-                                                    <button type="submit" class="action-btn btn-submit-wf">Xuất bản lại</button>
-                                                }
-                                            }
-                                        }
                                         else
                                         {
                                             if (item.Status == "Draft")
@@ -1072,6 +903,7 @@
                                             {
                                                 @Html.RouteLink("Xem bài", "AdminArticles", new { action = "Details", id = item.Id }, new { @class = "action-btn btn-detail" })
                                                 @Html.RouteLink("Sửa bài", "AdminArticles", new { action = "Edit", id = item.Id }, new { @class = "action-btn btn-edit" })
+                                                @Html.RouteLink("Xóa", "AdminArticles", new { action = "Delete", id = item.Id }, new { @class = "action-btn btn-delete" })
                                             }
                                         }
                                     </div>
@@ -1093,30 +925,6 @@
             </tbody>
         </table>
     </div>
-
-    @if (isEditorUser)
-    {
-        <div id="rejectModal" class="reject-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rejectModalHeading">
-            <div class="reject-modal-card">
-                <h3 id="rejectModalHeading">Từ chối bài viết</h3>
-                <p id="rejectModalArticleTitle" class="reject-modal-title"></p>
-                @using (Html.BeginForm("ChangeWorkflowStatus", "Articles", FormMethod.Post, new { id = "rejectModalForm" }))
-                {
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" id="rejectArticleId" value="" />
-                    <input type="hidden" name="newStatus" value="Rejected" />
-                    <input type="hidden" name="returnStatus" value="@currentStatusFilter" />
-                    <label for="rejectReasonInput">Lý do từ chối <strong style="color:#b91c1c;">*</strong></label>
-                    <textarea id="rejectReasonInput" name="rejectionReason" maxlength="500" required placeholder="Nhập lý do từ chối để người viết biết cần chỉnh sửa nội dung gì..."></textarea>
-                    <div class="article-excerpt">Tối đa 500 ký tự. Lý do sẽ hiển thị cho người viết khi sửa bài.</div>
-                    <div class="reject-modal-actions">
-                        <button type="button" id="rejectModalCancel" class="action-btn btn-detail">Hủy</button>
-                        <button type="submit" class="action-btn btn-reject-wf">Xác nhận từ chối</button>
-                    </div>
-                }
-            </div>
-        </div>
-    }
 
     @if (totalPages > 1)
     {
@@ -1188,41 +996,3 @@
         }
     })();
 </script>
-
-@if (isEditorUser)
-{
-    <script>
-        (function () {
-            var modal = document.getElementById("rejectModal");
-            var idInput = document.getElementById("rejectArticleId");
-            var title = document.getElementById("rejectModalArticleTitle");
-            var reason = document.getElementById("rejectReasonInput");
-            var cancel = document.getElementById("rejectModalCancel");
-            if (!modal || !idInput || !title || !reason || !cancel) return;
-
-            function closeModal() {
-                modal.classList.remove("is-open");
-                idInput.value = "";
-                reason.value = "";
-            }
-
-            document.querySelectorAll(".js-open-reject-modal").forEach(function (button) {
-                button.addEventListener("click", function () {
-                    idInput.value = button.getAttribute("data-article-id") || "";
-                    title.textContent = "Bài viết: " + (button.getAttribute("data-article-title") || "");
-                    reason.value = "";
-                    modal.classList.add("is-open");
-                    reason.focus();
-                });
-            });
-
-            cancel.addEventListener("click", closeModal);
-            modal.addEventListener("click", function (event) {
-                if (event.target === modal) closeModal();
-            });
-            document.addEventListener("keydown", function (event) {
-                if (event.key === "Escape" && modal.classList.contains("is-open")) closeModal();
-            });
-        })();
-    </script>
-}

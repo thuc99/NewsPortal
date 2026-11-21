@@ -7,7 +7,6 @@ namespace NewsPortal
     {
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
-            filters.Add(new Controllers.RefreshUserRoleAttribute());
             filters.Add(new HandleErrorAttribute());
         }
     }

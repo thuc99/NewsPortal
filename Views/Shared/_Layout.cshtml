@@ -6,6 +6,7 @@
     <title>@ViewBag.Title - TinNhanh</title>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Content/chatbot.css")" />
 
     @{
         string currentController = Convert.ToString(ViewContext.RouteData.Values["controller"]);
@@ -603,6 +604,11 @@
             transition: background .2s, transform .2s, box-shadow .2s;
         }
 
+        .news-chat-open .back-to-top {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
             .back-to-top:hover {
                 background: #861b2b;
                 color: #fff;
@@ -1122,13 +1128,9 @@
                             {
                                 <a href="@Url.Action("Index", "Admin")" class="account-menu-link">Bảng điều khiển Admin</a>
                             }
-                            string role = Convert.ToString(Session["Role"]);
-                            if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase) ||
-                                string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase))
+                            if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
                             {
-                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })" class="account-menu-link">
-                                    @(string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase) ? "Duyệt bài viết" : "Bài viết của tôi")
-                                </a>
+                                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })" class="account-menu-link">Quản lý bài viết</a>
                             }
                             <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
                             <a href="@Url.Action("Info", "Profile")" class="account-menu-link" style="display:flex; align-items:center; gap:10px; padding:10px 16px;">
@@ -1592,6 +1594,8 @@
             }
     </style>
 
+    @Html.Partial("_ChatWidget")
+    <script src="@Url.Content("~/Scripts/chatbot.js")" defer></script>
     @RenderSection("scripts", required: false)
 </body>
 </html>

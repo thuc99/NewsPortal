@@ -6,11 +6,11 @@
     int rejectedCount = ViewBag.RejectedArticles == null ? 0 : (int)ViewBag.RejectedArticles;
     int archivedCount = ViewBag.ArchivedArticles == null ? 0 : (int)ViewBag.ArchivedArticles;
     var rejectionReasons = ViewBag.RejectionReasons as Dictionary<int, string> ?? new Dictionary<int, string>();
-    var categoryStats = ViewBag.CategoryStats as List<NewsPortal.Controllers.AdminController.CategoryStatusStat>
-        ?? new List<NewsPortal.Controllers.AdminController.CategoryStatusStat>();
+    var categoryStats = ViewBag.CategoryStats as List<NewsPortal.Models.AdminCategoryStatusStat>
+        ?? new List<NewsPortal.Models.AdminCategoryStatusStat>();
     int totalForBar = Model.TotalArticles > 0 ? Model.TotalArticles : 1;
-    var articleRatingStats = ViewBag.ArticleRatingStats as List<NewsPortal.Controllers.AdminController.ArticleRatingStat>
-        ?? new List<NewsPortal.Controllers.AdminController.ArticleRatingStat>();
+    var articleRatingStats = ViewBag.ArticleRatingStats as List<NewsPortal.Models.AdminArticleRatingStat>
+        ?? new List<NewsPortal.Models.AdminArticleRatingStat>();
     int totalRatings = ViewBag.TotalRatings == null ? 0 : (int)ViewBag.TotalRatings;
     double overallAvgRating = ViewBag.OverallAverageRating == null ? 0 : (double)ViewBag.OverallAverageRating;
     int[] starCounts = ViewBag.StarCounts as int[] ?? new int[6];
@@ -140,69 +140,6 @@
             border: 1px solid var(--line);
             border-radius: 12px;
             padding: 20px;
-        }
-
-        .adm-panel-toggle {
-            display: inline-flex;
-            width: 34px;
-            height: 34px;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--line);
-            border-radius: 7px;
-            background: #fff;
-            color: var(--ink);
-            cursor: pointer;
-        }
-
-        .adm-panel-toggle:hover {
-            border-color: var(--red);
-            color: var(--red);
-        }
-
-        .adm-panel-content.is-collapsed {
-            display: none;
-        }
-
-        .adm-pagination {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 16px;
-        }
-
-        .adm-pagination a,
-        .adm-pagination span:not(.adm-page-summary) {
-            display: inline-flex;
-            min-width: 34px;
-            height: 34px;
-            align-items: center;
-            justify-content: center;
-            padding: 0 9px;
-            border: 1px solid var(--line);
-            border-radius: 7px;
-            background: #fff;
-            color: var(--ink);
-            text-decoration: none;
-        }
-
-        .adm-pagination a.active {
-            border-color: var(--red);
-            background: var(--red);
-            color: #fff;
-        }
-
-        .adm-pagination .disabled {
-            color: #a0a5ae;
-            background: var(--soft);
-        }
-
-        .adm-page-summary {
-            margin-left: 8px;
-            color: var(--muted);
-            font-size: 12px;
         }
 
         .adm-toolbar {
@@ -385,32 +322,32 @@
 
         .reject-modal-card {
             width: 100%;
-            max-width: 595px;
+            max-width: 480px;
             background: #fff;
-            border-radius: 16px;
-            padding: 28px 30px;
+            border-radius: 12px;
+            padding: 22px 24px;
             box-shadow: 0 20px 45px rgba(15, 23, 42, .25);
         }
 
             .reject-modal-card h4 {
                 margin: 0 0 6px;
-                font-size: 21px;
+                font-size: 18px;
                 color: #b91c1c;
             }
 
         .reject-modal-title {
             margin: 0 0 14px;
-            font-size: 14px;
+            font-size: 13.5px;
             color: var(--muted);
             line-height: 1.5;
         }
 
         .reject-modal-card textarea {
             width: 100%;
-            min-height: 128px;
-            padding: 12px 14px;
-            border: 1.5px solid #ef4444;
-            border-radius: 10px;
+            min-height: 105px;
+            padding: 10px 12px;
+            border: 1.5px solid var(--line);
+            border-radius: 8px;
             font: inherit;
             font-size: 14px;
             box-sizing: border-box;
@@ -497,11 +434,11 @@
 
         .rating-overview {
             display: grid;
-            grid-template-columns: 150px 1fr;
-            gap: 14px;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
             align-items: center;
-            margin: 8px 0 12px;
-            padding: 10px 12px;
+            margin: 12px 0 18px;
+            padding: 16px 18px;
             border-radius: 10px;
             background: #fffbeb;
             border: 1px solid #fde68a;
@@ -512,7 +449,7 @@
         }
 
         .rating-score-big {
-            font-size: 26px;
+            font-size: 34px;
             font-weight: 800;
             color: #b45309;
             line-height: 1.1;
@@ -520,48 +457,31 @@
 
         .rating-stars-gold {
             color: #f59e0b;
-            font-size: 13px;
+            font-size: 16px;
             letter-spacing: 1px;
-            margin: 2px 0;
+            margin: 4px 0;
         }
 
         .rating-bars {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
         .rating-bar-row {
             display: grid;
-            grid-template-columns: 42px 1fr 38px;
+            grid-template-columns: 52px 1fr 48px;
             align-items: center;
-            gap: 7px;
-            font-size: 12px;
+            gap: 10px;
+            font-size: 13px;
             color: var(--ink);
         }
 
         .rating-track {
-            height: 7px;
+            height: 9px;
             border-radius: 999px;
             background: #fef3c7;
             overflow: hidden;
-        }
-
-        .rating-panel {
-            padding: 14px 16px;
-        }
-
-        .rating-panel .adm-table {
-            font-size: 12px;
-        }
-
-        .rating-panel .adm-table th {
-            padding: 8px 7px;
-            font-size: 10px;
-        }
-
-        .rating-panel .adm-table td {
-            padding: 7px;
         }
 
         .rating-fill {
@@ -645,7 +565,7 @@
     </div>
 </div>
 
-<div class="adm-panel rating-panel" style="margin-bottom:20px;">
+<div class="adm-panel" style="margin-bottom:20px;">
     <div class="adm-toolbar" style="margin-bottom:8px;">
         <h3 style="margin:0;"><i class="fa-solid fa-chart-column" style="color:var(--red);"></i> Thống kê bài viết theo danh mục và trạng thái</h3>
     </div>
@@ -815,22 +735,12 @@
     </div>
 </div>
 
-@{ var articlePanelExpanded = string.Equals(Request.QueryString["expandPanel"], "true", StringComparison.OrdinalIgnoreCase); }
-<div class="adm-panel" id="articleManagementPanel">
+<div class="adm-panel">
     <div class="adm-toolbar">
         <h3 style="margin:0;"><i class="fa-solid fa-list-check" style="color:var(--red);"></i> Kiểm duyệt &amp; Xuất bản bài viết</h3>
 
-        <button type="button" class="adm-panel-toggle" id="articleManagementToggle" aria-controls="articleManagementContent" aria-expanded="@(articlePanelExpanded ? "true" : "false")" aria-label="@(articlePanelExpanded ? "Thu nhỏ danh sách bài viết" : "Phóng to danh sách bài viết")" title="Thu nhỏ / phóng to">
-            <i class="fa-solid @(articlePanelExpanded ? "fa-compress" : "fa-expand")" id="articleManagementToggleIcon"></i>
-        </button>
-    </div>
-
-    <div id="articleManagementContent" class="adm-panel-content@(articlePanelExpanded ? "" : " is-collapsed")">
-        <div class="adm-toolbar">
         <form method="get" action="@Url.Action("Index", "Admin")" class="adm-filter">
             <input type="text" name="search" value="@Model.SearchQuery" placeholder="Tìm theo tiêu đề..." />
-            <input type="hidden" name="page" value="1" />
-            <input type="hidden" name="expandPanel" value="true" />
             <select name="status">
                 <option value="" @(Model.StatusFilter == "" ? "selected" : "")>Tất cả trạng thái</option>
                 <option value="Pending" @(Model.StatusFilter == "Pending" ? "selected" : "")>Pending - Chờ duyệt (@pendingCount)</option>
@@ -841,17 +751,17 @@
             <button type="submit" class="search-button">Lọc</button>
             @if (!string.IsNullOrEmpty(Model.SearchQuery) || !string.IsNullOrEmpty(Model.StatusFilter))
             {
-                <a href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, expandPanel = true })#articleManagementPanel" class="search-reset">Xóa lọc</a>
+                <a href="@Url.Action("Index", "Admin")" class="search-reset">Xóa lọc</a>
             }
         </form>
-        </div>
+    </div>
 
     <div class="adm-wf-pills">
-        <a class="adm-wf-pill @(Model.StatusFilter == "" ? "active" : "")" href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, expandPanel = true })#articleManagementPanel">Tất cả (@Model.TotalArticles)</a>
-        <a class="adm-wf-pill @(Model.StatusFilter == "Pending" ? "active" : "")" href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = "Pending", expandPanel = true })#articleManagementPanel">Chờ duyệt (@pendingCount)</a>
-        <a class="adm-wf-pill @(Model.StatusFilter == "Published" ? "active" : "")" href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = "Published", expandPanel = true })#articleManagementPanel">Đã xuất bản (@Model.PublishedArticles)</a>
-        <a class="adm-wf-pill @(Model.StatusFilter == "Rejected" ? "active" : "")" href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = "Rejected", expandPanel = true })#articleManagementPanel">Bị từ chối (@rejectedCount)</a>
-        <a class="adm-wf-pill @(Model.StatusFilter == "Archived" ? "active" : "")" href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = "Archived", expandPanel = true })#articleManagementPanel">Đã lưu trữ (@archivedCount)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "" ? "active" : "")" href="@Url.Action("Index", "Admin")">Tất cả (@Model.TotalArticles)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Pending" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Pending" })">Chờ duyệt (@pendingCount)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Published" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Published" })">Đã xuất bản (@Model.PublishedArticles)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Rejected" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Rejected" })">Bị từ chối (@rejectedCount)</a>
+        <a class="adm-wf-pill @(Model.StatusFilter == "Archived" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Archived" })">Đã lưu trữ (@archivedCount)</a>
     </div>
 
     <div style="overflow-x:auto;">
@@ -928,7 +838,6 @@
                                         <input type="hidden" name="newStatus" value="Published" />
                                         <input type="hidden" name="search" value="@Model.SearchQuery" />
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
                                         <button type="submit" class="btn-mini btn-approve">Duyệt đăng</button>
                                     }
                                     <button type="button"
@@ -947,7 +856,6 @@
                                         <input type="hidden" name="newStatus" value="Archived" />
                                         <input type="hidden" name="search" value="@Model.SearchQuery" />
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
                                         <button type="submit" class="btn-mini btn-archive">Lưu trữ</button>
                                     }
                                     <button type="button"
@@ -966,7 +874,6 @@
                                         <input type="hidden" name="newStatus" value="Published" />
                                         <input type="hidden" name="search" value="@Model.SearchQuery" />
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
                                         <button type="submit" class="btn-mini btn-approve">Xuất bản lại</button>
                                     }
                                     using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
@@ -976,7 +883,6 @@
                                         <input type="hidden" name="newStatus" value="Draft" />
                                         <input type="hidden" name="search" value="@Model.SearchQuery" />
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
                                         <button type="submit" class="btn-mini">Về nháp</button>
                                     }
                                 }
@@ -989,7 +895,6 @@
                                         <input type="hidden" name="newStatus" value="Published" />
                                         <input type="hidden" name="search" value="@Model.SearchQuery" />
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
                                         <button type="submit" class="btn-mini btn-approve">Duyệt đăng</button>
                                     }
                                     using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { style = "display:inline;" }))
@@ -999,7 +904,6 @@
                                         <input type="hidden" name="newStatus" value="Archived" />
                                         <input type="hidden" name="search" value="@Model.SearchQuery" />
                                         <input type="hidden" name="status" value="@Model.StatusFilter" />
-                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
                                         <button type="submit" class="btn-mini btn-archive">Lưu trữ</button>
                                     }
                                 }
@@ -1012,34 +916,6 @@
             </tbody>
         </table>
     </div>
-
-    @if (Model.TotalPages > 1)
-    {
-        <nav class="adm-pagination" aria-label="Phân trang danh sách bài viết">
-            @if (Model.CurrentPage > 1)
-            {
-                <a href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = Model.CurrentPage - 1, expandPanel = true })#articleManagementPanel" aria-label="Trang trước"><i class="fa-solid fa-chevron-left"></i></a>
-            }
-            else
-            {
-                <span class="disabled" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span>
-            }
-            @for (int pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
-            {
-                <a class="@(pageNumber == Model.CurrentPage ? "active" : "")" href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = pageNumber, expandPanel = true })#articleManagementPanel">@pageNumber</a>
-            }
-            @if (Model.CurrentPage < Model.TotalPages)
-            {
-                <a href="@Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = Model.CurrentPage + 1, expandPanel = true })#articleManagementPanel" aria-label="Trang sau"><i class="fa-solid fa-chevron-right"></i></a>
-            }
-            else
-            {
-                <span class="disabled" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-            }
-            <span class="adm-page-summary">Trang @Model.CurrentPage / @Model.TotalPages · @Model.FilteredArticleCount bài viết</span>
-        </nav>
-    }
-</div>
 </div>
 
 <div id="rejectModal" class="reject-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rejectModalHeading">
@@ -1053,7 +929,6 @@
             <input type="hidden" name="newStatus" value="Rejected" />
             <input type="hidden" name="search" value="@Model.SearchQuery" />
             <input type="hidden" name="status" value="@Model.StatusFilter" />
-            <input type="hidden" name="page" value="@Model.CurrentPage" />
             <label for="rejectReasonInput" style="display:block; font-weight:700; font-size:13px; margin-bottom:6px;">
                 Lý do từ chối <span style="color:#b91c1c;">*</span>
             </label>
@@ -1062,7 +937,35 @@
                       maxlength="500"
                       required
                       placeholder="Nhập lý do từ chối để người viết biết cần chỉnh sửa nội dung gì..."></textarea>
-            <div style="font-size:12px; color:var(--muted); margin-top:8px;">Tối đa 500 ký tự. Lý do sẽ hiển thị cho người viết khi sửa bài.</div>
+            <div style="font-size:12px; color:var(--muted); margin-top:4px;">Tối đa 500 ký tự. Lý do sẽ hiển thị cho người viết khi sửa bài.</div>
+            <div class="reject-modal-actions">
+                <button type="button" id="rejectModalCancel" class="btn-mini">Hủy</button>
+                <button type="submit" class="btn-mini btn-reject">Xác nhận từ chối</button>
+            </div>
+        }
+    </div>
+</div>
+
+<div id="rejectModal" class="reject-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rejectModalHeading">
+    <div class="reject-modal-card">
+        <h4 id="rejectModalHeading">Từ chối bài viết</h4>
+        <p id="rejectModalArticleTitle" class="reject-modal-title"></p>
+        @using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { id = "rejectModalForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="rejectArticleId" value="" />
+            <input type="hidden" name="newStatus" value="Rejected" />
+            <input type="hidden" name="search" value="@Model.SearchQuery" />
+            <input type="hidden" name="status" value="@Model.StatusFilter" />
+            <label for="rejectReasonInput" style="display:block; font-weight:700; font-size:13px; margin-bottom:6px;">
+                Lý do từ chối <span style="color:#b91c1c;">*</span>
+            </label>
+            <textarea id="rejectReasonInput"
+                      name="rejectionReason"
+                      maxlength="500"
+                      required
+                      placeholder="Nhập lý do từ chối để người viết biết cần chỉnh sửa nội dung gì..."></textarea>
+            <div style="font-size:12px; color:var(--muted); margin-top:4px;">Tối đa 500 ký tự. Lý do sẽ hiển thị cho người viết khi sửa bài.</div>
             <div class="reject-modal-actions">
                 <button type="button" id="rejectModalCancel" class="btn-mini">Hủy</button>
                 <button type="submit" class="btn-mini btn-reject">Xác nhận từ chối</button>
@@ -1072,72 +975,50 @@
 </div>
 
 <script>
-        (function () {
-            document.addEventListener("DOMContentLoaded", function () {
-                document.getElementById("articleManagementToggle")?.addEventListener("click", function () {
-                    var isExpanded = document.getElementById("articleManagementToggle")?.getAttribute("aria-expanded") === "true";
-                    document.getElementById("articleManagementToggle")?.setAttribute("aria-expanded", isExpanded ? "false" : "true");
-                    document.getElementById("articleManagementToggle")?.setAttribute("aria-label", isExpanded ? "Phóng to danh sách bài viết" : "Thu nhỏ danh sách bài viết");
-                    document.getElementById("articleManagementContent")?.classList.toggle("is-collapsed", isExpanded);
-                    var icon = document.getElementById("articleManagementToggleIcon");
-                    if (icon) icon.className = isExpanded ? "fa-solid fa-expand" : "fa-solid fa-compress";
-                });
-            });
-        })();
-
         document.addEventListener("DOMContentLoaded", function () {
             const modal = document.getElementById("rejectModal");
             const articleIdInput = document.getElementById("rejectArticleId");
             const articleTitleText = document.getElementById("rejectModalArticleTitle");
             const reasonInput = document.getElementById("rejectReasonInput");
             const cancelBtn = document.getElementById("rejectModalCancel");
-            if (!modal || !articleIdInput || !articleTitleText || !reasonInput || !cancelBtn) return;
 
-            const modalElement = modal;
-            const idField = articleIdInput;
-            const titleElement = articleTitleText;
-            const reasonField = reasonInput;
-            const cancelButton = cancelBtn;
-
-            function closeRejectModal() {
-                modalElement.classList.remove("is-open");
-                idField.setAttribute("value", "");
-                reasonField.textContent = "";
+            if (!modal || !(articleIdInput instanceof HTMLInputElement) || !(reasonInput instanceof HTMLTextAreaElement)) {
+                return;
             }
 
-            document.querySelectorAll(".js-open-reject-modal").forEach(function (element) {
-                if (!(element instanceof HTMLButtonElement)) return;
-                var btn = element;
+            function closeRejectModal() {
+                modal.classList.remove("is-open");
+                articleIdInput.value = "";
+                reasonInput.value = "";
+            }
+
+            document.querySelectorAll(".js-open-reject-modal").forEach(function (btn) {
                 btn.addEventListener("click", function () {
                     const id = btn.getAttribute("data-article-id") || "";
                     const title = btn.getAttribute("data-article-title") || "";
 
-                    idField.setAttribute("value", id);
-                    titleElement.textContent = "Bài viết: " + title;
-                    reasonField.textContent = "";
-                    modalElement.classList.add("is-open");
-                    reasonField.focus();
+                    articleIdInput.value = id;
+                    if (articleTitleText) {
+                        articleTitleText.textContent = "Bài viết: " + title;
+                    }
+                    reasonInput.value = "";
+                    modal.classList.add("is-open");
+                    reasonInput.focus();
                 });
             });
 
-            var reopenArticleId = "@Convert.ToString(ViewBag.RejectionArticleId)";
-            if (reopenArticleId) {
-                document.querySelectorAll(".js-open-reject-modal").forEach(function (element) {
-                    if (element instanceof HTMLButtonElement && element.getAttribute("data-article-id") === reopenArticleId)
-                        element.click();
-                });
+            if (cancelBtn) {
+                cancelBtn.addEventListener("click", closeRejectModal);
             }
 
-            cancelButton.addEventListener("click", closeRejectModal);
-
-            modalElement.addEventListener("click", function (e) {
-                if (e.target === modalElement) {
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) {
                     closeRejectModal();
                 }
             });
 
             document.addEventListener("keydown", function (e) {
-                if (e.key === "Escape" && modalElement.classList.contains("is-open")) {
+                if (e.key === "Escape" && modal.classList.contains("is-open")) {
                     closeRejectModal();
                 }
             });

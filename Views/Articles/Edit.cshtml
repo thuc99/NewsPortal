@@ -402,13 +402,13 @@
         <p class="form-sub">
             @(isAdminUser
                 ? "Cập nhật nội dung và trạng thái kiểm duyệt bài viết."
-                : "Chỉnh sửa bài viết của bạn để lưu nháp hoặc gửi Biên tập viên duyệt.")
+                : "Chỉnh sửa nội dung để lưu nháp hoặc gửi Admin xét duyệt.")
         </p>
 
         @if (Model.Status == "Rejected")
         {
             <div class="rejected-banner">
-                <strong>Bài viết này đã bị Biên tập viên từ chối (Rejected).</strong>
+                <strong>Bài viết này đã bị Admin từ chối (Rejected).</strong>
                 @if (!string.IsNullOrWhiteSpace(rejectionReason))
                 {
                     <div style="margin-top:6px;">
@@ -417,14 +417,14 @@
                 }
                 <div style="margin-top:6px;">
                     Vui lòng chỉnh sửa lại nội dung rồi bấm
-                    <strong>Gửi duyệt lại</strong> để chuyển về hàng đợi chờ Biên tập viên duyệt.
+                    <strong>Gửi duyệt lại</strong> để chuyển về hàng đợi chờ Admin duyệt.
                 </div>
             </div>
         }
         else if (!isAdminUser && Model.Status == "Pending")
         {
             <div class="pending-banner">
-                <strong>Bài viết đang chờ Biên tập viên duyệt (Pending).</strong>
+                <strong>Bài viết đang chờ Admin duyệt (Pending).</strong>
                 Bạn có thể cập nhật nội dung và tiếp tục giữ ở hàng đợi duyệt
                 hoặc lưu tạm về bản nháp.
             </div>
@@ -433,7 +433,7 @@
         {
             <div class="pending-banner">
                 <strong>Bạn có thể chỉnh sửa bài viết này.</strong>
-                Khi gửi nội dung chỉnh sửa, bài sẽ chuyển sang chờ Biên tập viên duyệt;
+                Khi gửi nội dung chỉnh sửa, bài sẽ chuyển sang chờ Admin duyệt;
                 chọn lưu bản nháp nếu chưa muốn gửi.
             </div>
         }
@@ -635,7 +635,7 @@
                         class="btn-save">
                     @(Model.Status == "Rejected"
                             ? "Gửi duyệt lại"
-                            : "Gửi Biên tập viên duyệt")
+                            : "Gửi Admin duyệt")
                 </button>
 
                 <button type="submit"
@@ -873,7 +873,7 @@
             });
         }
 
-        // Hiển thị ô nhập lý do từ chối khi quản trị viên chọn trạng thái Rejected.
+        // Hiển thị ô nhập lý do từ chối khi Admin chọn trạng thái Rejected.
         const statusSelect = document.getElementById("Status");
         const rejectionReasonField = document.getElementById("rejectionReasonField");
         const rejectionReasonInput = document.getElementById("rejectionReason");

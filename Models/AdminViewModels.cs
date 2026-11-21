@@ -44,6 +44,30 @@ namespace NewsPortal.Models
         public string Status { get; set; }
     }
 
+    public class AdminCategoryStatusStat
+    {
+        public int CategoryID { get; set; }
+        public string CategoryName { get; set; }
+        public int TotalArticles { get; set; }
+        public int PublishedCount { get; set; }
+        public int PendingCount { get; set; }
+        public int DraftCount { get; set; }
+        public int RejectedCount { get; set; }
+        public int ArchivedCount { get; set; }
+        public int TotalViews { get; set; }
+    }
+
+    public class AdminArticleRatingStat
+    {
+        public int ArticleID { get; set; }
+        public string Title { get; set; }
+        public string CategoryName { get; set; }
+        public double AverageRating { get; set; }
+        public int RatingCount { get; set; }
+        public int FiveStarCount { get; set; }
+        public int LowStarCount { get; set; }
+    }
+
     public class AdminDashboardViewModel
     {
         public int TotalArticles { get; set; }
@@ -56,9 +80,6 @@ namespace NewsPortal.Models
 
         public string SearchQuery { get; set; }
         public string StatusFilter { get; set; }
-        public int CurrentPage { get; set; }
-        public int TotalPages { get; set; }
-        public int FilteredArticleCount { get; set; }
 
         public List<AdminArticleRow> Articles { get; set; }
 

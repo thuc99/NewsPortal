@@ -35,8 +35,6 @@ namespace NewsPortal.Models
 
         public string Status { get; set; }
 
-        public string RejectionReason { get; set; }
-
         public int ViewCount { get; set; }
 
         [Display(Name = "Ngày đăng")]
