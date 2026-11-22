@@ -26,17 +26,6 @@ namespace NewsPortal
                 }
             );
 
-            // Trang chủ
-            routes.MapRoute(
-                name: "HomeDetailsWithoutId",
-                url: "Home/Details",
-                defaults: new
-                {
-                    controller = "Home",
-                    action = "Index"
-                }
-            );
-
             // Route mặc định (đặt trước các route Admin để menu công khai luôn sinh link chuẩn)
             routes.MapRoute(
                 name: "Default",

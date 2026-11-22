@@ -266,7 +266,6 @@ namespace NewsPortal.Controllers
                     ArticleId = c.ArticleID,
                     ArticleTitle = c.Articles != null ? c.Articles.Title : ("Bài viết #" + c.ArticleID),
                     Content = c.Content,
-                    Status = c.Status,
                     CreatedAt = c.CreatedDate
                 })
                 .ToList();

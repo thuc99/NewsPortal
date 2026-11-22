@@ -7,28 +7,29 @@
 
 <style>
     .form-page {
-        width: min(860px, 100%);
-        margin: 0 auto;
+        width: min(760px, calc(100% - 32px));
+        max-width: 760px;
+        margin: 35px auto;
+        padding: 0;
     }
 
     .form-card {
-        background: var(--admin-panel);
-        border: 1px solid var(--admin-line);
-        border-radius: 14px;
-        padding: 30px;
-        box-shadow: 0 8px 24px rgba(23, 32, 51, .06);
+        background: white;
+        border: 0;
+        border-radius: 0;
+        padding: 28px 0;
+        box-shadow: none;
     }
 
     .form-page h2 {
-        font-size: 24px;
+        font-size: 27px;
         font-weight: 750;
-        color: var(--admin-ink);
-        margin: 0 0 6px;
+        color: #1e293b;
     }
 
     .form-sub {
-        color: var(--admin-muted);
-        margin: 0 0 24px;
+        color: #64748b;
+        margin-bottom: 25px;
     }
 
     .field {
@@ -39,26 +40,25 @@
             display: block;
             font-weight: 600;
             margin-bottom: 8px;
-            color: var(--admin-ink);
+            color: #334155;
         }
 
         .field input, .field textarea {
             width: 100%;
             padding: 11px 13px;
-            border: 1px solid var(--admin-line);
+            border: 1px solid #cbd5e1;
             border-radius: 8px;
             box-sizing: border-box;
         }
 
             .field input:focus, .field textarea:focus {
                 outline: none;
-                border-color: var(--admin-red);
-                box-shadow: 0 0 0 3px rgba(185, 28, 50, .1);
+                border-color: #b91c1c;
             }
 
             .field input[readonly] {
-                background: var(--soft);
-                color: var(--admin-muted);
+                background: #f1f5f9;
+                color: #64748b;
             }
 
     .form-actions {
@@ -77,33 +77,22 @@
     }
 
     .btn-save {
-        background: var(--admin-red);
+        background: #b91c1c;
         color: white;
-        transition: background .2s, transform .2s;
-    }
-
-    .btn-save:hover {
-        background: var(--red-dark);
-        transform: translateY(-1px);
     }
 
     .btn-back {
-        background: var(--soft);
-        color: var(--admin-ink);
-    }
-
-    .btn-back:hover {
-        background: var(--admin-line);
+        background: #e2e8f0;
+        color: #334155;
     }
 
     .text-danger, .validation-summary-errors {
-        color: var(--admin-red);
+        color: #b91c1c;
         font-size: 13px;
     }
 
     @@media (max-width: 650px) {
-        .form-page { width: 100%; }
-        .form-card { padding: 22px 18px; }
+        .form-page { width: calc(100% - 24px); margin-top: 22px; }
         .form-actions { flex-wrap: wrap; }
         .btn-save, .btn-back { flex: 1 1 160px; text-align: center; }
     }

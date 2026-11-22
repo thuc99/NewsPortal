@@ -17,7 +17,7 @@ namespace NewsPortal.Models
         public int Id { get; set; }
         public int UserId { get; set; }
         public int ArticleId { get; set; }
-        public Nullable<System.DateTime> ViewedDate { get; set; }
+        public System.DateTime ViewedDate { get; set; }
     
         public virtual Articles Articles { get; set; }
         public virtual Users Users { get; set; }

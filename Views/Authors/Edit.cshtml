@@ -6,29 +6,33 @@
 }
 
 <style>
+    body {
+        background: #f8fafc;
+    }
+
     .form-page {
-        width: min(860px, 100%);
-        margin: 0 auto;
+        width: min(850px, calc(100% - 32px));
+        margin: 35px auto;
     }
 
     .form-card {
-        background: var(--admin-panel);
-        border: 1px solid var(--admin-line);
+        background: #fff;
+        border: 1px solid #e2e8f0;
         border-radius: 14px;
-        padding: 30px;
-        box-shadow: 0 8px 24px rgba(23, 32, 51, .06);
+        padding: 32px 36px;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
     }
 
     .form-page h2 {
-        font-size: 24px;
+        font-size: 27px;
         font-weight: 750;
-        color: var(--admin-ink);
-        margin: 0 0 6px;
+        color: #1e293b;
+        margin: 0 0 8px;
     }
 
     .form-sub {
-        color: var(--admin-muted);
-        margin: 0 0 24px;
+        color: #64748b;
+        margin: 0 0 28px;
     }
 
     .field {
@@ -39,13 +43,13 @@
             display: block;
             font-weight: 600;
             margin-bottom: 8px;
-            color: var(--admin-ink);
+            color: #334155;
         }
 
         .field input:not([type="file"]) {
             width: 100%;
             padding: 12px 13px;
-            border: 1px solid var(--admin-line);
+            border: 1px solid #cbd5e1;
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 14px;
@@ -54,27 +58,27 @@
 
         .field input:focus {
             outline: none;
-            border-color: var(--admin-red);
-            box-shadow: 0 0 0 3px rgba(185, 28, 50, .1);
+            border-color: #b91c1c;
+            box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.08);
         }
 
         .field input[readonly] {
-            background: var(--soft);
-            color: var(--admin-muted);
+            background: #f1f5f9;
+            color: #64748b;
         }
 
     .image-upload {
-        border: 2px dashed var(--admin-line);
+        border: 2px dashed #cbd5e1;
         border-radius: 12px;
-        background: var(--soft);
+        background: #fff;
         padding: 25px 20px;
         text-align: center;
         transition: .2s;
     }
 
         .image-upload:hover {
-            border-color: var(--admin-red);
-            background: #fff8f9;
+            border-color: #b91c1c;
+            background: #fffafa;
         }
 
         .image-upload input[type="file"] {
@@ -82,7 +86,7 @@
         }
 
     .upload-icon {
-        color: var(--admin-red);
+        color: #b91c1c;
         margin-bottom: 10px;
     }
 
@@ -93,7 +97,7 @@
 
     .choose-image-btn {
         display: inline-block;
-        background: var(--admin-red);
+        background: #b91c1c;
         color: #fff;
         padding: 11px 20px;
         border-radius: 8px;
@@ -103,17 +107,17 @@
     }
 
         .choose-image-btn:hover {
-            background: var(--red-dark);
+            background: #991b1b;
         }
 
     .upload-description {
-        color: var(--admin-muted);
+        color: #64748b;
         font-size: 13px;
         margin: 12px 0 0;
     }
 
     .file-name {
-        color: var(--admin-ink);
+        color: #475569;
         font-size: 13px;
         margin-top: 12px;
         overflow-wrap: anywhere;
@@ -129,7 +133,7 @@
             width: auto;
             max-height: 240px;
             object-fit: contain;
-            border: 1px solid var(--admin-line);
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 5px;
             background: #fff;
@@ -145,13 +149,13 @@
             max-height: 200px;
             object-fit: contain;
             margin: 10px auto 0;
-            border: 1px solid var(--admin-line);
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 5px;
         }
 
         .current-image p {
-            color: var(--admin-muted);
+            color: #64748b;
             font-size: 13px;
             margin: 0;
         }
@@ -184,26 +188,27 @@
         }
 
     .btn-back {
-        background: var(--soft);
-        color: var(--admin-ink);
+        background: #e2e8f0;
+        color: #334155;
     }
 
         .btn-back:hover {
-            background: var(--admin-line);
+            background: #cbd5e1;
         }
 
     .text-danger, .validation-summary-errors {
-        color: var(--admin-red);
+        color: #b91c1c;
         font-size: 13px;
     }
 
     @@media (max-width: 650px) {
         .form-page {
             width: calc(100% - 24px);
+            margin-top: 22px;
         }
 
         .form-card {
-            padding: 22px 18px;
+            padding: 24px 18px;
         }
 
         .form-actions {
