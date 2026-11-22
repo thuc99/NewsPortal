@@ -547,32 +547,41 @@ END";
 
         private void SyncViewAndSaved(int? id)
         {
-            if (!id.HasValue || id.Value <= 0) return;
+            if (!id.HasValue || id.Value <= 0)
+                return;
 
             int artId = id.Value;
+
+            // Chỉ ghi nhận lượt đọc bài viết đã xuất bản
+            bool articleExists = db.Articles.Any(a =>
+                a.ArticleID == artId &&
+                a.Status == "Published");
+
+            if (!articleExists)
+                return;
+
             string currentUsername = (Session["User"] ?? Session["Admin"]) as string;
-            if (!string.IsNullOrEmpty(currentUsername) && db.Articles.Any(a => a.ArticleID == artId))
+
+            if (!string.IsNullOrWhiteSpace(currentUsername))
             {
-                var viewer = db.Users.FirstOrDefault(u => u.Username == currentUsername);
+                var viewer = db.Users.FirstOrDefault(u =>
+                    u.Username == currentUsername);
+
                 if (viewer != null)
                 {
-                    var history = db.ArticleViewHistory.FirstOrDefault(h => h.UserId == viewer.UserId && h.ArticleId == artId);
-                    if (history != null)
+                    // Mỗi lần mở bài viết sẽ thêm một bản ghi lịch sử mới
+                    db.ArticleViewHistory.Add(new ArticleViewHistory
                     {
-                        history.ViewedDate = DateTime.Now;
-                    }
-                    else
-                    {
-                        db.ArticleViewHistory.Add(new ArticleViewHistory
-                        {
-                            UserId = viewer.UserId,
-                            ArticleId = artId,
-                            ViewedDate = DateTime.Now
-                        });
-                    }
+                        UserId = viewer.UserId,
+                        ArticleId = artId,
+                        ViewedDate = DateTime.Now
+                    });
+
                     db.SaveChanges();
 
-                    ViewBag.IsSavedArticle = db.SavedArticles.Any(s => s.UserId == viewer.UserId && s.ArticleId == artId);
+                    ViewBag.IsSavedArticle = db.SavedArticles.Any(s =>
+                        s.UserId == viewer.UserId &&
+                        s.ArticleId == artId);
                 }
             }
 

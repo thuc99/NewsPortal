@@ -15,7 +15,7 @@
         <AssociationConnector Association="NewsPortalDBModel.FK_Comments_Articles" />
         <EntityTypeShape EntityType="NewsPortalDBModel.ArticleRatings" Width="1.5" PointX="6" PointY="3.375" />
         <AssociationConnector Association="NewsPortalDBModel.FK_ArticleRatings_Articles" />
-        <EntityTypeShape EntityType="NewsPortalDBModel.ArticleViewHistory" Width="1.5" PointX="10.875" PointY="0.75" />
+        <EntityTypeShape EntityType="NewsPortalDBModel.ArticleViewHistory" Width="1.5" PointX="11.375" PointY="0.75" />
         <EntityTypeShape EntityType="NewsPortalDBModel.SavedArticles" Width="1.5" PointX="10.875" PointY="3.75" />
         <AssociationConnector Association="NewsPortalDBModel.FK_Comments_Users" />
         <AssociationConnector Association="NewsPortalDBModel.FK_Saved_Users" />

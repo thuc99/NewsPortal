@@ -1,16 +1,29 @@
-﻿@model IEnumerable<NewsPortal.Models.Articles>
+﻿
+@model IEnumerable<NewsPortal.Models.Articles>
 @using System
 @using System.Linq
+@using System.Collections.Generic
 
 @{
     ViewBag.Title = "Trang chủ";
+
     var articles = (Model ?? Enumerable.Empty<NewsPortal.Models.Articles>())
         .Where(a => a.Status == "Published")
         .OrderByDescending(a => a.CreatedDate)
         .ToList();
+
     var featured = ViewBag.FeaturedArticle as NewsPortal.Models.Articles;
+
     var latestArticles = ViewBag.LatestArticles as IEnumerable<NewsPortal.Models.Articles>
-        ?? new System.Collections.Generic.List<NewsPortal.Models.Articles>();
+        ?? new List<NewsPortal.Models.Articles>();
+
+    var breakingNews = ViewBag.BreakingNews as IEnumerable<NewsPortal.Models.Articles>
+        ?? Enumerable.Empty<NewsPortal.Models.Articles>();
+
+    var topViewedArticles = ViewBag.TopViewedArticles
+        as IEnumerable<Tuple<NewsPortal.Models.Articles, int>>
+        ?? Enumerable.Empty<Tuple<NewsPortal.Models.Articles, int>>();
+
     var remaining = articles;
     var currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
     var totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
@@ -254,6 +267,100 @@
         text-align: center;
     }
 
+    /* THANH TIN NONG */
+    .breaking-news {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 44px;
+        margin: 0 0 22px;
+        background: #fff;
+        border: 1px solid #e9e9ed;
+        border-radius: 6px;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .breaking-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 100%;
+        padding: 0 16px;
+        flex-shrink: 0;
+        background: #b91c32;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+        z-index: 2;
+    }
+
+    .breaking-dot {
+        width: 8px;
+        height: 8px;
+        background: #fff;
+        border-radius: 50%;
+        animation: breakingPulse 1s infinite;
+    }
+
+    .breaking-track-wrapper {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .breaking-track {
+        display: inline-flex;
+        align-items: center;
+        width: max-content;
+        animation: breakingScroll 35s linear infinite;
+    }
+
+        .breaking-track:hover {
+            animation-play-state: paused;
+        }
+
+    .breaking-item {
+        display: inline-flex;
+        align-items: center;
+        padding: 0 28px;
+        color: #252830;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+        .breaking-item:before {
+            content: "●";
+            color: #b91c32;
+            margin-right: 10px;
+            font-size: 10px;
+        }
+
+        .breaking-item:hover {
+            color: #b91c32;
+            text-decoration: none;
+        }
+
+    @@keyframes breakingScroll {
+        from {
+            transform: translateX(0);
+        }
+
+        to {
+            transform: translateX(-50%);
+        }
+    }
+
+    @@keyframes breakingPulse {
+        50% {
+            opacity: .3;
+        }
+    }
+
+    /* THOI TIET */
     .weather-feature {
         width: 100%;
         margin: 18px 0 0;
@@ -323,6 +430,157 @@
         font-size: 10px;
     }
 
+    /* GIA VANG */
+    .gold-feature {
+        width: 100%;
+        margin: 14px 0 0;
+        padding: 15px 16px;
+        box-sizing: border-box;
+        background: #fffaf0;
+        border: 1px solid #f0dfb8;
+    }
+
+    .gold-feature-heading {
+        margin: 0 0 12px;
+        color: #9a6814;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .gold-feature-name {
+        margin-bottom: 10px;
+        color: #555;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .gold-price-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 0;
+        border-top: 1px solid #f0e6d2;
+    }
+
+    .gold-price-label {
+        color: #666;
+        font-size: 12px;
+    }
+
+    .gold-price-value {
+        color: #292929;
+        font-size: 14px;
+        font-weight: 800;
+        text-align: right;
+    }
+
+    .gold-change {
+        display: block;
+        margin-top: 4px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .gold-up {
+        color: #16a34a;
+    }
+
+    .gold-down {
+        color: #dc2626;
+    }
+
+    .gold-no-change {
+        color: #888;
+    }
+
+    .gold-feature-status {
+        margin-top: 10px;
+        color: #777;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .gold-feature-source {
+        display: block;
+        margin-top: 4px;
+        color: #9a6814;
+        font-size: 10px;
+        text-decoration: underline;
+    }
+
+    /* TOP 5 BAI VIET DOC NHIEU */
+    .top-viewed-panel {
+        margin-top: 14px;
+        padding: 16px;
+        background: #fff;
+        border: 1px solid #e9e9ed;
+        border-radius: 6px;
+    }
+
+    .top-viewed-heading {
+        margin: 0 0 12px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #b91c32;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .top-viewed-item {
+        display: flex;
+        gap: 10px;
+        padding: 11px 0;
+        border-bottom: 1px solid #ededf0;
+    }
+
+        .top-viewed-item:last-child {
+            border-bottom: none;
+        }
+
+    .top-viewed-number {
+        flex: 0 0 22px;
+        color: #b91c32;
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .top-viewed-thumb {
+        width: 75px;
+        height: 58px;
+        flex: 0 0 75px;
+        object-fit: cover;
+        background: #f1f5f9;
+    }
+
+    .top-viewed-copy {
+        min-width: 0;
+    }
+
+    .top-viewed-title {
+        display: block;
+        margin-bottom: 6px;
+        color: #252830;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+        text-decoration: none;
+    }
+
+        .top-viewed-title:hover {
+            color: #b91c32;
+        }
+
+    .top-viewed-count {
+        color: #858995;
+        font-size: 11px;
+    }
+
+    .top-viewed-empty {
+        color: #858995;
+        font-size: 13px;
+        text-align: center;
+        padding: 15px 0;
+    }
+
     .latest-panel {
         margin-bottom: 0;
     }
@@ -365,6 +623,20 @@
         .weather-city-chip {
             font-size: 10px;
         }
+
+        .breaking-news {
+            height: 40px;
+        }
+
+        .breaking-label {
+            padding: 0 10px;
+            font-size: 11px;
+        }
+
+        .breaking-item {
+            padding: 0 18px;
+            font-size: 12px;
+        }
     }
 
     @@media (max-width: 480px) {
@@ -372,29 +644,89 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .breaking-track,
+        .breaking-dot {
+            animation: none;
+        }
+    }
 </style>
 
 <div class="home-page">
+
     <div class="section-heading">
         <h2 class="section-title">Tin mới nhất</h2>
     </div>
 
+    <!-- THANH TIN NONG CHAY NGANG -->
+    @if (breakingNews.Any())
+    {
+        <div class="breaking-news">
+            <div class="breaking-label">
+                <span class="breaking-dot"></span>
+                TIN NÓNG
+            </div>
+
+            <div class="breaking-track-wrapper">
+                <div class="breaking-track">
+                    @foreach (var item in breakingNews)
+                    {
+                        <a class="breaking-item"
+                           href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                            @item.Title
+                        </a>
+                    }
+
+                    @foreach (var item in breakingNews)
+                    {
+                        <a class="breaking-item"
+                           href="@Url.Action("View", "Articles", new { id = item.ArticleID })"
+                           aria-hidden="true"
+                           tabindex="-1">
+                            @item.Title
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
     <section class="hero-grid @(featured == null ? "without-featured" : "")">
+
         @if (featured != null)
         {
             <article class="featured-card">
-                <a class="featured-visual article-link" href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
+                <a class="featured-visual article-link"
+                   href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
+
                     @if (!string.IsNullOrWhiteSpace(featured.ImageUrl))
                     {
                         <img src="@featured.ImageUrl" alt="@featured.Title" />
                     }
+
                     <span class="featured-label">TIN NỔI BẬT</span>
                 </a>
+
                 <div class="featured-body">
-                    <h1 class="featured-title"><a href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">@featured.Title</a></h1>
-                    <a class="article-link" href="@Url.Action("View", "Articles", new { id = featured.ArticleID })"><p class="featured-summary">@featured.Summary</p></a>
-                    <div class="article-meta">@featured.CreatedDate.ToString("dd/MM/yyyy HH:mm")</div>
-                    @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = featured.ArticleID }, new { @class = "read-more" })
+                    <h1 class="featured-title">
+                        <a href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
+                            @featured.Title
+                        </a>
+                    </h1>
+
+                    <a class="article-link"
+                       href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
+                        <p class="featured-summary">@featured.Summary</p>
+                    </a>
+
+                    <div class="article-meta">
+                        @featured.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+
+                    @Html.ActionLink("Đọc tiếp", "View", "Articles",
+                             new { id = featured.ArticleID },
+                             new { @class = "read-more" })
                 </div>
             </article>
         }
@@ -402,36 +734,147 @@
         <aside>
             <div class="latest-panel">
                 <h3 class="latest-heading">TIN MỚI NHẤT</h3>
+
                 @foreach (var item in latestArticles)
                 {
                     <div class="latest-item">
                         @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                         {
                             <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
-                                <img class="latest-thumb" src="@item.ImageUrl" alt="@item.Title" />
+                                <img class="latest-thumb"
+                                     src="@item.ImageUrl"
+                                     alt="@item.Title" />
                             </a>
                         }
+
                         <div class="latest-copy">
-                            @Html.ActionLink(item.Title, "View", "Articles", new { id = item.ArticleID }, new { @class = "latest-title" })
-                            <span class="article-meta">@item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                            @Html.ActionLink(item.Title, "View", "Articles",
+                                     new { id = item.ArticleID },
+                                     new { @class = "latest-title" })
+
+                            <span class="article-meta">
+                                @item.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                            </span>
                         </div>
                     </div>
                 }
             </div>
+
+            <!-- THOI TIET -->
             <section class="weather-feature" aria-label="Dự báo thời tiết hôm nay">
                 <h2 class="weather-feature-heading">Thời tiết</h2>
+
                 <div class="weather-feature-content">
                     <div class="weather-feature-copy">
-                        <h3 class="weather-feature-title" id="home-weather-title">Cập nhật dự báo thời tiết hôm nay</h3>
+                        <h3 class="weather-feature-title" id="home-weather-title">
+                            Cập nhật dự báo thời tiết hôm nay
+                        </h3>
+
                         <div class="weather-city-forecasts" aria-live="polite">
                             <span class="weather-city-chip" id="home-weather-hcm">TP. HCM —</span>
                             <span class="weather-city-chip" id="home-weather-hanoi">Hà Nội —</span>
                             <span class="weather-city-chip" id="home-weather-danang">Đà Nẵng —</span>
                         </div>
-                        <div class="weather-feature-status" id="home-weather-status">Đang tải dữ liệu dự báo…</div>
+
+                        <div class="weather-feature-status" id="home-weather-status">
+                            Đang tải dữ liệu dự báo…
+                        </div>
                     </div>
-                    <div class="weather-feature-art" aria-hidden="true"><i class="fa-solid fa-cloud-sun" id="home-weather-icon"></i></div>
+
+                    <div class="weather-feature-art" aria-hidden="true">
+                        <i class="fa-solid fa-cloud-sun" id="home-weather-icon"></i>
+                    </div>
                 </div>
+            </section>
+
+            <!-- GIA VANG -->
+            <section class="gold-feature" aria-label="Giá vàng hôm nay">
+                <h2 class="gold-feature-heading">
+                    <i class="fa-solid fa-coins"></i> Giá vàng
+                </h2>
+
+                <div class="gold-feature-name">Vàng miếng SJC 9999</div>
+
+                <div class="gold-price-row">
+                    <div class="gold-price-label">Mua vào</div>
+                    <div class="gold-price-value">
+                        <span id="gold-buy">Đang tải...</span>
+                        <span id="gold-buy-change" class="gold-change"></span>
+                    </div>
+                </div>
+
+                <div class="gold-price-row">
+                    <div class="gold-price-label">Bán ra</div>
+                    <div class="gold-price-value">
+                        <span id="gold-sell">Đang tải...</span>
+                        <span id="gold-sell-change" class="gold-change"></span>
+                    </div>
+                </div>
+
+                <div class="gold-feature-status" id="gold-status">
+                    Đang tải dữ liệu giá vàng...
+                </div>
+
+                <a class="gold-feature-source"
+                   href="https://www.vang.today/vi/api"
+                   target="_blank" rel="noopener noreferrer">
+                    Nguồn dữ liệu: Vang.today
+                </a>
+            </section>
+
+            <!-- TOP 5 BAI VIET DOC NHIEU -->
+            <section class="top-viewed-panel">
+                <h3 class="top-viewed-heading">
+                    <i class="fa-solid fa-fire" style="color:#b91c32"></i>
+                    TIN ĐỌC NHIỀU TRONG TUẦN
+                </h3>
+
+                @if (topViewedArticles.Any())
+                {
+                    var rank = 1;
+
+                    foreach (var item in topViewedArticles)
+                    {
+                        var article = item.Item1;
+
+                        string image = !string.IsNullOrWhiteSpace(article.ImageUrl)
+                            ? article.ImageUrl
+                            : article.Image;
+
+                        <div class="top-viewed-item">
+                            <span class="top-viewed-number">@rank</span>
+
+                            @if (!string.IsNullOrWhiteSpace(image))
+                            {
+                                <a href="@Url.Action("View", "Articles", new { id = article.ArticleID })">
+                                    <img class="top-viewed-thumb"
+                                         src="@image"
+                                         alt="@article.Title" />
+                                </a>
+                            }
+
+                            <div class="top-viewed-copy">
+                                <a class="top-viewed-title"
+                                   href="@Url.Action("View", "Articles", new { id = article.ArticleID })">
+                                    @article.Title
+                                </a>
+
+                                <span class="top-viewed-count">
+                                    <i class="fa-solid fa-eye"></i>
+                                    @item.Item2 lượt đọc trong tuần
+                                </span>
+                            </div>
+                        </div>
+
+                        rank++;
+                    }
+                }
+                else
+                {
+                    <div class="top-viewed-empty">
+                        Chưa có dữ liệu lượt đọc trong tuần.
+                    </div>
+                }
             </section>
         </aside>
     </section>
@@ -446,19 +889,35 @@
             @foreach (var item in remaining)
             {
                 <article class="news-card">
-                    <a class="news-card-visual article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                    <a class="news-card-visual article-link"
+                       href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+
                         @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                         {
                             <img src="@item.ImageUrl" alt="@item.Title" />
                         }
                     </a>
-                    <div class="news-card-body">
-                        <div class="news-tag">@(item.Categories == null ? "TIN TỨC" : item.Categories.CategoryName)</div>
-                        <h3 class="news-card-title"><a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">@item.Title</a></h3>
-                        <a class="article-link" href="@Url.Action("View", "Articles", new { id = item.ArticleID })"><p class="news-summary">@item.Summary</p></a>
-                        @Html.ActionLink("Đọc tiếp", "View", "Articles", new { id = item.ArticleID }, new { @class = "read-more" })
-                    </div>
 
+                    <div class="news-card-body">
+                        <div class="news-tag">
+                            @(item.Categories == null ? "TIN TỨC" : item.Categories.CategoryName)
+                        </div>
+
+                        <h3 class="news-card-title">
+                            <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                                @item.Title
+                            </a>
+                        </h3>
+
+                        <a class="article-link"
+                           href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                            <p class="news-summary">@item.Summary</p>
+                        </a>
+
+                        @Html.ActionLink("Đọc tiếp", "View", "Articles",
+                                 new { id = item.ArticleID },
+                                 new { @class = "read-more" })
+                    </div>
                 </article>
             }
         </section>
@@ -474,7 +933,9 @@
             @if (currentPage > 1)
             {
                 <a class="pagination-direction"
-                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage - 1 }) + "#other-articles")">Trước</a>
+                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage - 1 }) + "#other-articles")">
+                    Trước
+                </a>
             }
             else
             {
@@ -484,13 +945,17 @@
             @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
             {
                 <a class="@(pageNumber == currentPage ? "active" : "")"
-                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = pageNumber }) + "#other-articles")">@pageNumber</a>
+                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = pageNumber }) + "#other-articles")">
+                    @pageNumber
+                </a>
             }
 
             @if (currentPage < totalPages)
             {
                 <a class="pagination-direction"
-                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage + 1 }) + "#other-articles")">Sau</a>
+                   href="@(Url.Action("Index", "Home", new { searchString = ViewBag.SearchString, categoryId = ViewBag.CategoryId, authorId = ViewBag.AuthorId, fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = currentPage + 1 }) + "#other-articles")">
+                    Sau
+                </a>
             }
             else
             {
@@ -500,58 +965,158 @@
     }
 </div>
 
+<!-- SCRIPT THOI TIET -->
 <script>
-        (function () {
-            var cities = [
-                { name: 'TP. HCM', latitude: 10.8231, longitude: 106.6297, element: 'home-weather-hcm' },
-                { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342, element: 'home-weather-hanoi' },
-                { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022, element: 'home-weather-danang' }
-            ];
-            var title = document.getElementById('home-weather-title');
-            var status = document.getElementById('home-weather-status');
-            var icon = document.getElementById('home-weather-icon');
-            var currentWeatherCode = 0;
+    (function () {
+        var cities = [
+            { name: 'TP. HCM', latitude: 10.8231, longitude: 106.6297, element: 'home-weather-hcm' },
+            { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342, element: 'home-weather-hanoi' },
+            { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022, element: 'home-weather-danang' }
+        ];
 
-            function conditionFor() {
-                var code = currentWeatherCode;
-                if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
-                if (code <= 2) return { text: 'Có nắng, mây', icon: 'fa-cloud-sun' };
-                if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
-                if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
-                if (code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
-                if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Có mưa', icon: 'fa-cloud-showers-heavy' };
-                if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
-                return { text: 'Dự báo hôm nay', icon: 'fa-cloud' };
-            }
+        var title = document.getElementById('home-weather-title');
+        var status = document.getElementById('home-weather-status');
+        var icon = document.getElementById('home-weather-icon');
+        var currentWeatherCode = 0;
 
-            Promise.all(cities.map(function (city) {
-                var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
-                    '&longitude=' + city.longitude + '&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=1';
-                return fetch(url).then(function (response) {
+        function conditionFor() {
+            var code = currentWeatherCode;
+
+            if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
+            if (code <= 2) return { text: 'Có nắng, mây', icon: 'fa-cloud-sun' };
+            if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
+            if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
+            if (code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
+            if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Có mưa', icon: 'fa-cloud-showers-heavy' };
+            if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
+
+            return { text: 'Dự báo hôm nay', icon: 'fa-cloud' };
+        }
+
+        Promise.all(cities.map(function (city) {
+            var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
+                '&longitude=' + city.longitude +
+                '&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=1';
+
+            return fetch(url)
+                .then(function (response) {
                     if (!response.ok) throw new Error('Weather request failed');
                     return response.json();
-                }).then(function (data) {
+                })
+                .then(function (data) {
                     if (!data.daily || !data.daily.temperature_2m_min || !data.daily.temperature_2m_max) {
                         throw new Error('Weather data unavailable');
                     }
+
                     var min = Math.round(data.daily.temperature_2m_min[0]);
                     var max = Math.round(data.daily.temperature_2m_max[0]);
                     var chip = document.getElementById(city.element);
-                    if (chip) chip.textContent = city.name + ' ' + min + '° - ' + max + '°C';
-                    return { city: city, conditionCode: data.daily.weather_code[0] };
+
+                    if (chip) {
+                        chip.textContent = city.name + ' ' + min + '° - ' + max + '°C';
+                    }
+
+                    return {
+                        city: city,
+                        conditionCode: data.daily.weather_code[0]
+                    };
                 });
-            })).then(function (forecasts) {
+        }))
+            .then(function (forecasts) {
                 currentWeatherCode = Number(forecasts[0].conditionCode);
+
                 var condition = conditionFor();
-                if (title) title.textContent = condition.text + ' tại ' + forecasts[0].city.name + ' hôm nay';
-                if (icon) icon.className = 'fa-solid ' + condition.icon;
-                if (status) status.textContent = 'Dự báo nhiệt độ trong ngày · Dữ liệu Open-Meteo';
-            }).catch(function () {
-                if (status) status.textContent = 'Không thể tải dữ liệu dự báo lúc này.';
+
+                if (title) {
+                    title.textContent = condition.text + ' tại ' + forecasts[0].city.name + ' hôm nay';
+                }
+
+                if (icon) {
+                    icon.className = 'fa-solid ' + condition.icon;
+                }
+
+                if (status) {
+                    status.textContent = 'Dự báo nhiệt độ trong ngày · Dữ liệu Open-Meteo';
+                }
+            })
+            .catch(function () {
+                if (status) {
+                    status.textContent = 'Không thể tải dữ liệu dự báo lúc này.';
+                }
+
                 cities.forEach(function (city) {
                     var chip = document.getElementById(city.element);
-                    if (chip && chip.textContent.indexOf('—') !== -1) chip.textContent = city.name + ' —';
+
+                    if (chip && chip.textContent.indexOf('—') !== -1) {
+                        chip.textContent = city.name + ' —';
+                    }
                 });
             });
-        }());
+    })();
+</script>
+
+<!-- SCRIPT GIA VANG -->
+<script>
+    (function () {
+        var apiUrl = 'https://www.vang.today/api/prices?type=SJL1L10';
+
+        var buyElement = document.getElementById('gold-buy');
+        var sellElement = document.getElementById('gold-sell');
+        var buyChangeElement = document.getElementById('gold-buy-change');
+        var sellChangeElement = document.getElementById('gold-sell-change');
+        var statusElement = document.getElementById('gold-status');
+
+        function formatPrice(value) {
+            return Number(value).toLocaleString('vi-VN') + ' đ';
+        }
+
+        function showChange(element, value) {
+            var change = Number(value || 0);
+
+            if (change > 0) {
+                element.textContent = '▲ Tăng ' + formatPrice(change);
+                element.className = 'gold-change gold-up';
+            } else if (change < 0) {
+                element.textContent = '▼ Giảm ' + formatPrice(Math.abs(change));
+                element.className = 'gold-change gold-down';
+            } else {
+                element.textContent = '— Không thay đổi';
+                element.className = 'gold-change gold-no-change';
+            }
+        }
+
+        function loadGoldPrice() {
+            fetch(apiUrl, { cache: 'no-store' })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Không thể kết nối API giá vàng');
+                    }
+
+                    return response.json();
+                })
+                .then(function (result) {
+                    if (!result.success || result.buy == null || result.sell == null) {
+                        throw new Error('Không có dữ liệu giá vàng');
+                    }
+
+                    buyElement.textContent = formatPrice(result.buy);
+                    sellElement.textContent = formatPrice(result.sell);
+
+                    showChange(buyChangeElement, result.change_buy);
+                    showChange(sellChangeElement, result.change_sell);
+
+                    statusElement.textContent =
+                        'Cập nhật: ' + (result.time || '--:--') +
+                        ' · ' + (result.date || '') +
+                        ' · Đơn vị: đồng/lượng';
+                })
+                .catch(function (error) {
+                    console.error('Lỗi giá vàng:', error);
+                    statusElement.textContent = 'Không thể tải giá vàng.';
+                });
+        }
+
+        loadGoldPrice();
+        setInterval(loadGoldPrice, 5 * 60 * 1000);
+    })();
 </script>

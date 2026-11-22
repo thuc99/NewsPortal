@@ -1,11 +1,19 @@
-﻿@model NewsPortal.Models.Article
+﻿
+@model NewsPortal.Models.Article
 @using NewsPortal.Models
 @using System.Collections.Generic
 @using System.Linq
+@using System.Web
 
 @{
     ViewBag.Title = "Chi tiết bài viết";
     var comments = ViewBag.Comments as IEnumerable<Comments> ?? new List<Comments>();
+
+    string articleUrl = Request.Url != null
+        ? new Uri(Request.Url, Url.Action("View", "Articles", new { id = Model.Id })).AbsoluteUri
+        : "";
+
+    string encodedUrl = HttpUtility.UrlEncode(articleUrl);
 }
 
 <style>
@@ -65,9 +73,9 @@
         white-space: nowrap;
     }
 
-    .article-stat strong {
-        color: #f59e0b;
-    }
+        .article-stat strong {
+            color: #f59e0b;
+        }
 
     .favorite-form {
         margin: 0;
@@ -92,16 +100,16 @@
         transition: .2s ease;
     }
 
-    .favorite-button:hover {
-        border-color: #b91c32;
-        background: #fff1f2;
-        color: #b91c32;
-        transform: translateY(-1px);
-    }
+        .favorite-button:hover {
+            border-color: #b91c32;
+            background: #fff1f2;
+            color: #b91c32;
+            transform: translateY(-1px);
+        }
 
-    .favorite-button i {
-        font-size: 15px;
-    }
+        .favorite-button i {
+            font-size: 15px;
+        }
 
     .rating-card {
         display: flex;
@@ -146,29 +154,29 @@
         order: 2;
     }
 
-    .rating-stars input {
-        display: none !important;
-    }
+        .rating-stars input {
+            display: none !important;
+        }
 
-    .rating-stars label {
-        display: inline-block !important;
-        color: #cbd5e1 !important;
-        font-size: 30px;
-        line-height: 1;
-        cursor: pointer;
-        transition: color .15s ease, transform .15s ease;
-    }
+        .rating-stars label {
+            display: inline-block !important;
+            color: #cbd5e1 !important;
+            font-size: 30px;
+            line-height: 1;
+            cursor: pointer;
+            transition: color .15s ease, transform .15s ease;
+        }
 
-    .rating-stars label:hover,
-    .rating-stars label:hover ~ label,
-    .rating-stars input:checked + label,
-    .rating-stars input:checked ~ label {
-        color: #fbbf24 !important;
-    }
+            .rating-stars label:hover,
+            .rating-stars label:hover ~ label,
+            .rating-stars input:checked + label,
+            .rating-stars input:checked ~ label {
+                color: #fbbf24 !important;
+            }
 
-    .rating-stars label:hover {
-        transform: scale(1.12);
-    }
+            .rating-stars label:hover {
+                transform: scale(1.12);
+            }
 
     .detail-image {
         display: block;
@@ -182,6 +190,7 @@
         border-radius: 12px;
         margin: 0 0 25px;
     }
+
     .detail-content {
         color: #334155;
         font-size: 16px;
@@ -304,6 +313,132 @@
         text-decoration: none;
     }
 
+    /* Khu vực chia sẻ bài viết */
+    .share-section {
+        margin: 16px 0 24px;
+        padding: 13px 16px;
+        background: #f8fafc;
+        border: 1px solid #e8edf3;
+        border-radius: 12px;
+    }
+
+    .share-heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 11px;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+        .share-heading i {
+            color: #b91c1c;
+            font-size: 15px;
+        }
+
+    .share-tools {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin: 0;
+    }
+
+    .share-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        height: 36px;
+        min-width: 36px;
+        padding: 0 13px;
+        border: none;
+        border-radius: 50px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: .2s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, .08);
+    }
+
+        .share-btn:hover {
+            color: #fff;
+            text-decoration: none;
+            transform: translateY(-2px);
+            opacity: .9;
+        }
+
+        .share-btn i {
+            font-size: 15px;
+        }
+
+    /* Facebook: logo và chữ Chia sẻ */
+    .share-facebook {
+        background: #1877f2;
+    }
+
+        .share-facebook:hover {
+            background: #0d65d9;
+        }
+
+    /* Zalo: chỉ hiển thị logo */
+    .share-zalo {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        padding: 0;
+        background: #0068ff;
+        border-radius: 50%;
+    }
+
+        .share-zalo:hover {
+            background: #0052cc;
+        }
+
+        .share-zalo img {
+            display: block;
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+    /* Sao chép liên kết */
+    .share-copy {
+        background: #475569;
+    }
+
+        .share-copy:hover {
+            background: #334155;
+        }
+
+    .copy-message {
+        display: none;
+        margin-top: 9px;
+        color: #15803d;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+        .copy-message.show {
+            display: block;
+            animation: shareFadeIn .25s ease;
+        }
+
+    @@keyframes shareFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .comments-card {
         max-width: 900px;
         margin: 30px auto 0;
@@ -392,15 +527,15 @@
         font-size: 14px;
     }
 
-    .article-author a {
-        color: #b91c1c;
-        font-weight: 700;
-        text-decoration: none;
-    }
+        .article-author a {
+            color: #b91c1c;
+            font-weight: 700;
+            text-decoration: none;
+        }
 
-    .article-author a:hover {
-        text-decoration: underline;
-    }
+            .article-author a:hover {
+                text-decoration: underline;
+            }
 
     .comment-message {
         padding: 10px 12px;
@@ -444,10 +579,10 @@
         transition: .2s ease;
     }
 
-    .recommendation-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 18px rgba(30, 41, 59, .08);
-    }
+        .recommendation-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(30, 41, 59, .08);
+        }
 
     .recommendation-image {
         display: block;
@@ -455,22 +590,22 @@
         background: #f8fafc;
     }
 
-    .recommendation-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+        .recommendation-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
     .recommendation-body {
         padding: 12px;
     }
 
-    .recommendation-body h4 {
-        margin: 0;
-        color: #1e293b;
-        font-size: 15px;
-        line-height: 1.4;
-    }
+        .recommendation-body h4 {
+            margin: 0;
+            color: #1e293b;
+            font-size: 15px;
+            line-height: 1.4;
+        }
 
     .recommendation-excerpt {
         display: -webkit-box;
@@ -526,6 +661,16 @@
             text-align: left;
         }
 
+        .share-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .share-btn {
+            width: auto;
+        }
+
         .recommendations-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -542,163 +687,220 @@
 
     <div class="detail-header">
         <h2>@Model.Title</h2>
+
         @if (ViewBag.AuthorId != null && !string.IsNullOrWhiteSpace(ViewBag.AuthorName as string))
         {
             <div class="article-author">
                 Tác giả:
-                <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index", id = ViewBag.AuthorId })">@ViewBag.AuthorName</a>
+                <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index", id = ViewBag.AuthorId })">
+                    @ViewBag.AuthorName
+                </a>
             </div>
         }
 
+        <div class="detail-meta">
+            <div class="detail-date">
+                <i class="glyphicon glyphicon-calendar"></i>
+                Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+            </div>
 
-
-    <div class="detail-meta">
-        <div class="detail-date">
-            <i class="glyphicon glyphicon-calendar"></i>
-            Ngày đăng: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
-        </div>
-
-        <div style="margin-left:auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-            @if (ViewBag.CanComment == true || ViewBag.CanManageArticles == true)
-            {
-                <div class="article-tools">
-                    <span class="article-stat article-views">
-                        <span aria-hidden="true">👁</span>
-                        @Model.ViewCount lượt xem
-                    </span>
-                    <span class="article-stat">
-                        <strong>★ @(((double)ViewBag.AverageRating).ToString("0.0"))/5</strong>
-                        <span>(@ViewBag.RatingCount lượt đánh giá)</span>
-                    </span>
-                </div>
-            }
-
-            @if (ViewBag.IsAdminManagement != true)
-            {
-                bool isSaved = ViewBag.IsSavedArticle != null && (bool)ViewBag.IsSavedArticle;
-                using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { style = "display:inline-block; margin:0;" }))
+            <div style="margin-left:auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                @if (ViewBag.CanComment == true || ViewBag.CanManageArticles == true)
                 {
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="articleId" value="@Model.Id" />
-                    <button type="submit" style="padding:5px 14px; border-radius:6px; border:1px solid #b91c1c; background:@(isSaved ? "#b91c1c" : "#fff"); color:@(isSaved ? "#fff" : "#b91c1c"); font-weight:700; cursor:pointer;">
-                        <i class="fa-@(isSaved ? "solid" : "regular") fa-bookmark"></i> @(isSaved ? "Đã lưu tin" : "Lưu tin")
-                    </button>
+                    <div class="article-tools">
+                        <span class="article-stat article-views">
+                            <span aria-hidden="true">👁</span>
+                            @Model.ViewCount lượt xem
+                        </span>
+
+                        <span class="article-stat">
+                            <strong>★ @(((double)ViewBag.AverageRating).ToString("0.0"))/5</strong>
+                            <span>(@ViewBag.RatingCount lượt đánh giá)</span>
+                        </span>
+                    </div>
                 }
-            }
+
+                @if (ViewBag.IsAdminManagement != true)
+                {
+                    bool isSaved = ViewBag.IsSavedArticle != null && (bool)ViewBag.IsSavedArticle;
+
+                    using (Html.BeginForm("ToggleFavorite", "Articles", FormMethod.Post, new { style = "display:inline-block; margin:0;" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="articleId" value="@Model.Id" />
+
+                        <button type="submit"
+                                style="padding:5px 14px; border-radius:6px; border:1px solid #b91c1c; background:@(isSaved ? "#b91c1c" : "#fff"); color:@(isSaved ? "#fff" : "#b91c1c"); font-weight:700; cursor:pointer;">
+                            <i class="fa-@(isSaved ? "solid" : "regular") fa-bookmark"></i>
+                            @(isSaved ? "Đã lưu tin" : "Lưu tin")
+                        </button>
+                    }
+                }
+            </div>
         </div>
-        
-    </div>
     </div>
 
-<div class="detail-content">
-    @{
-        var sanitizer = new Ganss.Xss.HtmlSanitizer();
-        var safeContent = sanitizer.Sanitize(Model.Content ?? string.Empty);
-    }
+    <!-- Chức năng chia sẻ bài viết -->
+    <div class="share-section">
 
-    @Html.Raw(safeContent)
-</div>
+        <div class="share-heading">
+            <i class="fa-solid fa-share-nodes"></i>
+            Chia sẻ bài viết
+        </div>
+
+        <div class="share-tools">
+
+            <!-- Facebook: logo và chữ Chia sẻ -->
+            <a class="share-btn share-facebook"
+               href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
+               target="_blank"
+               rel="noopener noreferrer"
+               title="Chia sẻ lên Facebook">
+                <i class="fa-brands fa-facebook-f"></i>
+                Chia sẻ
+            </a>
+
+            <!-- Zalo: chỉ có logo -->
+            <a class="share-btn share-zalo"
+               href="https://zalo.me/share?url=@encodedUrl"
+               target="_blank"
+               rel="noopener noreferrer"
+               title="Chia sẻ qua Zalo"
+               aria-label="Chia sẻ qua Zalo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg"
+                     alt="Zalo" />
+            </a>
+
+            <!-- Sao chép liên kết -->
+            <button type="button"
+                    class="share-btn share-copy"
+                    onclick="copyArticleLink()">
+                <i class="fa-solid fa-link"></i>
+                Sao chép
+            </button>
+
+        </div>
+
+        <div id="copyMessage" class="copy-message">
+            <i class="fa-solid fa-circle-check"></i>
+            Đã sao chép liên kết bài viết!
+        </div>
+
+    </div>
+
+    <div class="detail-content">
+        @{
+            var sanitizer = new Ganss.Xss.HtmlSanitizer();
+            var safeContent = sanitizer.Sanitize(Model.Content ?? string.Empty);
+        }
+
+        @Html.Raw(safeContent)
+    </div>
 
     @if (ViewBag.CanManageArticles == true)
     {
         <div class="view-actions">
             @Html.RouteLink("Quay lại danh sách", "AdminArticles",
-                new { action = "Index" },
-                new { @class = "btn-detail btn-back" })
+                               new { action = "Index" },
+                               new { @class = "btn-detail btn-back" })
         </div>
     }
 
- <section class="comments-card">
-     <h3 class="comments-title">Bình luận (@comments.Count())</h3>
+    <section class="comments-card">
+        <h3 class="comments-title">Bình luận (@comments.Count())</h3>
 
-    @if (ViewBag.CanComment == true)
-    {
-        if (TempData["CommentSuccess"] != null)
+        @if (ViewBag.CanComment == true)
         {
-            <div class="comment-message comment-success">@TempData["CommentSuccess"]</div>
-        }
-
-        if (TempData["CommentError"] != null)
-        {
-            <div class="comment-message comment-error">@TempData["CommentError"]</div>
-        }
-
-        using (Html.BeginForm("AddComment", "Articles", FormMethod.Post, new { @class = "comment-form" }))
-        {
-            @Html.AntiForgeryToken()
-            @Html.Hidden("articleId", Model.Id)
-
-            string loggedInName = Convert.ToString(Session["UserFullName"]);
-            if (string.IsNullOrWhiteSpace(loggedInName) && (Session["User"] != null || Session["Admin"] != null))
+            if (TempData["CommentSuccess"] != null)
             {
-                string uname = Convert.ToString(Session["User"] ?? Session["Admin"]);
-                using (var _db = new NewsPortal.Models.NewsPortalDBEntities())
+                <div class="comment-message comment-success">@TempData["CommentSuccess"]</div>
+            }
+
+            if (TempData["CommentError"] != null)
+            {
+                <div class="comment-message comment-error">@TempData["CommentError"]</div>
+            }
+
+            using (Html.BeginForm("AddComment", "Articles", FormMethod.Post, new { @class = "comment-form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.Hidden("articleId", Model.Id)
+
+                string loggedInName = Convert.ToString(Session["UserFullName"]);
+
+                if (string.IsNullOrWhiteSpace(loggedInName) && (Session["User"] != null || Session["Admin"] != null))
                 {
-                    var _u = _db.Users.FirstOrDefault(x => x.Username == uname);
-                    loggedInName = (_u != null && !string.IsNullOrWhiteSpace(_u.FullName)) ? _u.FullName : uname;
-                    Session["UserFullName"] = loggedInName;
+                    string uname = Convert.ToString(Session["User"] ?? Session["Admin"]);
+
+                    using (var _db = new NewsPortal.Models.NewsPortalDBEntities())
+                    {
+                        var _u = _db.Users.FirstOrDefault(x => x.Username == uname);
+                        loggedInName = (_u != null && !string.IsNullOrWhiteSpace(_u.FullName)) ? _u.FullName : uname;
+                        Session["UserFullName"] = loggedInName;
+                    }
                 }
-            }
 
-            if (!string.IsNullOrWhiteSpace(loggedInName))
-            {
-                <input type="text" name="commenterName" class="comment-input"
-                       value="@loggedInName" readonly
-                       style="background-color:#f3f4f6; color:#1f2937; font-weight:600; cursor:not-allowed;" />
-            }
-            else
-            {
-                <input type="text" name="commenterName" class="comment-input"
-                       maxlength="100" placeholder="Tên của bạn" required />
-            }
+                if (!string.IsNullOrWhiteSpace(loggedInName))
+                {
+                    <input type="text" name="commenterName" class="comment-input"
+                           value="@loggedInName" readonly
+                           style="background-color:#f3f4f6; color:#1f2937; font-weight:600; cursor:not-allowed;" />
+                }
+                else
+                {
+                    <input type="text" name="commenterName" class="comment-input"
+                           maxlength="100" placeholder="Tên của bạn" required />
+                }
 
-            <textarea name="content" class="comment-textarea"
-                      maxlength="1000" placeholder="Viết bình luận..." required></textarea>
+                <textarea name="content" class="comment-textarea"
+                          maxlength="1000" placeholder="Viết bình luận..." required></textarea>
 
-            <button type="submit" class="comment-submit">Gửi bình luận</button>
+                <button type="submit" class="comment-submit">Gửi bình luận</button>
+            }
         }
-    }
-    else
-    {
-        <p class="comments-readonly">Khu vực bình luận chỉ được gửi tại trang đọc bài viết.</p>
-    }
-
-    @if (comments.Any())
-    {
-        foreach (var comment in comments)
+        else
         {
-
-            string cmtAvatar = (comment.Users != null && !string.IsNullOrWhiteSpace(comment.Users.AvatarUrl))
-                ? comment.Users.AvatarUrl
-                : null;
-            string cmtInitial = !string.IsNullOrWhiteSpace(comment.CommenterName)
-                ? comment.CommenterName.Trim().Substring(0, 1).ToUpper()
-                : "U";
-
-            <div class="comment-item" style="display:flex; align-items:flex-start; gap:12px;">
-                <div style="width:38px; height:38px; border-radius:50%; overflow:hidden; background:#b91c1c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0; margin-top:2px;">
-                    @if (cmtAvatar != null)
-                    {
-                        <img src="@Url.Content(cmtAvatar)" alt="@comment.CommenterName" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
-                    }
-                    else
-                    {
-                        <span>@cmtInitial</span>
-                    }
-                </div>
-                <div style="flex:1; min-width:0;">
-                    <span class="comment-author">@comment.CommenterName</span>
-                    <span class="comment-date">@comment.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
-                    <p class="comment-content">@comment.Content</p>
-                </div>
-            </div>
+            <p class="comments-readonly">Khu vực bình luận chỉ được gửi tại trang đọc bài viết.</p>
         }
-    }
-    else
-    {
-        <p class="comments-empty">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ ý kiến.</p>
-    }
-</section>
+
+        @if (comments.Any())
+        {
+            foreach (var comment in comments)
+            {
+                string cmtAvatar = (comment.Users != null && !string.IsNullOrWhiteSpace(comment.Users.AvatarUrl))
+                    ? comment.Users.AvatarUrl
+                    : null;
+
+                string cmtInitial = !string.IsNullOrWhiteSpace(comment.CommenterName)
+                    ? comment.CommenterName.Trim().Substring(0, 1).ToUpper()
+                    : "U";
+
+                <div class="comment-item" style="display:flex; align-items:flex-start; gap:12px;">
+                    <div style="width:38px; height:38px; border-radius:50%; overflow:hidden; background:#b91c1c; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0; margin-top:2px;">
+                        @if (cmtAvatar != null)
+                        {
+                            <img src="@Url.Content(cmtAvatar)" alt="@comment.CommenterName"
+                                 style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+                        }
+                        else
+                        {
+                            <span>@cmtInitial</span>
+                        }
+                    </div>
+
+                    <div style="flex:1; min-width:0;">
+                        <span class="comment-author">@comment.CommenterName</span>
+                        <span class="comment-date">@comment.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        <p class="comment-content">@comment.Content</p>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="comments-empty">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ ý kiến.</p>
+        }
+    </section>
 
     @if (ViewBag.CanComment == true)
     {
@@ -709,6 +911,7 @@
             {
                 <div class="comment-message comment-success">@TempData["RatingSuccess"]</div>
             }
+
             @if (TempData["RatingError"] != null)
             {
                 <div class="comment-message comment-error">@TempData["RatingError"]</div>
@@ -718,6 +921,7 @@
             {
                 @Html.AntiForgeryToken()
                 @Html.Hidden("articleId", Model.Id)
+
                 <div class="rating-stars" role="radiogroup" aria-label="Chọn số sao đánh giá">
                     @for (var star = 5; star >= 1; star--)
                     {
@@ -725,39 +929,56 @@
                         <label for="rating-@star" title="@star sao">★</label>
                     }
                 </div>
+
                 <button type="submit" class="rating-submit">Gửi đánh giá</button>
             }
         </div>
     }
 
-    @{ var recommendedArticles = ViewBag.RecommendedArticles as IEnumerable<Articles> ?? new List<Articles>(); }
+    @{
+        var recommendedArticles = ViewBag.RecommendedArticles as IEnumerable<Articles> ?? new List<Articles>();
+    }
+
     @if (ViewBag.CanComment == true && recommendedArticles.Any())
     {
         <section class="recommendations-card">
             <h3 class="recommendations-title">Đề xuất dành cho bạn</h3>
+
             <div class="recommendations-grid">
                 @foreach (var recommendation in recommendedArticles)
                 {
                     var recommendationExcerpt = (recommendation.Content ?? string.Empty).Trim();
+
                     if (recommendationExcerpt.Length > 120)
                     {
                         recommendationExcerpt = recommendationExcerpt.Substring(0, 120).TrimEnd() + "…";
                     }
 
                     <article class="recommendation-item">
-                        <a class="recommendation-image" href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">
+                        <a class="recommendation-image"
+                           href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">
+
                             @if (!string.IsNullOrWhiteSpace(recommendation.ImageUrl))
                             {
                                 <img src="@recommendation.ImageUrl" alt="@recommendation.Title" />
                             }
                         </a>
+
                         <div class="recommendation-body">
-                            <h4><a href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">@recommendation.Title</a></h4>
+                            <h4>
+                                <a href="@Url.Action("View", "Articles", new { id = recommendation.ArticleID })">
+                                    @recommendation.Title
+                                </a>
+                            </h4>
+
                             @if (!string.IsNullOrWhiteSpace(recommendationExcerpt))
                             {
                                 <p class="recommendation-excerpt">@recommendationExcerpt</p>
                             }
-                            <span class="recommendation-date">@recommendation.CreatedDate.ToString("dd/MM/yyyy")</span>
+
+                            <span class="recommendation-date">
+                                @recommendation.CreatedDate.ToString("dd/MM/yyyy")
+                            </span>
                         </div>
                     </article>
                 }
@@ -765,3 +986,52 @@
         </section>
     }
 </div>
+
+<script>
+    function copyArticleLink() {
+        var articleUrl = @Html.Raw(Json.Encode(articleUrl));
+
+        function showCopyMessage() {
+            var message = document.getElementById("copyMessage");
+
+            message.classList.add("show");
+
+            setTimeout(function () {
+                message.classList.remove("show");
+            }, 2500);
+        }
+
+        function fallbackCopyLink() {
+            var input = document.createElement("textarea");
+
+            input.value = articleUrl;
+            input.style.position = "fixed";
+            input.style.left = "-9999px";
+
+            document.body.appendChild(input);
+            input.select();
+
+            try {
+                var copied = document.execCommand("copy");
+
+                if (copied) {
+                    showCopyMessage();
+                } else {
+                    alert("Không thể sao chép liên kết!");
+                }
+            } catch (e) {
+                alert("Không thể sao chép liên kết!");
+            }
+
+            document.body.removeChild(input);
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(articleUrl)
+                .then(showCopyMessage)
+                .catch(fallbackCopyLink);
+        } else {
+            fallbackCopyLink();
+        }
+    }
+</script>
