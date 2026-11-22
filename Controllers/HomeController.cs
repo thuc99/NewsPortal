@@ -248,7 +248,7 @@ namespace NewsPortal.Controllers
                 CommenterName = commenterName,
                 Content = content,
                 CreatedDate = DateTime.Now,
-                Status = "Approved"
+                Status = "Pending"
             });
 
             db.SaveChanges();

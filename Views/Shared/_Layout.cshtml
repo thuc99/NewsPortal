@@ -6,6 +6,7 @@
     <title>@ViewBag.Title - TinNhanh</title>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Content/chatbot.css")" />
 
     @{
         string currentController = Convert.ToString(ViewContext.RouteData.Values["controller"]);
@@ -94,10 +95,10 @@
             white-space: nowrap;
         }
 
-            .weather-summary:hover,
-            .weather-summary[aria-expanded="true"] {
-                color: #fff;
-            }
+        .weather-summary:hover,
+        .weather-summary[aria-expanded="true"] {
+            color: #fff;
+        }
 
         .weather-summary-date {
             padding-right: 12px;
@@ -196,14 +197,14 @@
             color: #64748b;
         }
 
-            .weather-detail-row:last-child {
-                border-bottom: 0;
-            }
+        .weather-detail-row:last-child {
+            border-bottom: 0;
+        }
 
-            .weather-detail-row strong {
-                color: #334155;
-                font-weight: 600;
-            }
+        .weather-detail-row strong {
+            color: #334155;
+            font-weight: 600;
+        }
 
         .weather-status {
             margin: 8px 0 0;
@@ -339,10 +340,10 @@
                 border-bottom-color: var(--red);
             }
 
-                .nav-link.active:hover {
-                    color: var(--red);
-                    border-bottom-color: var(--red);
-                }
+            .nav-link.active:hover {
+                color: var(--red);
+                border-bottom-color: var(--red);
+            }
 
         .nav-dropdown {
             position: relative;
@@ -367,19 +368,19 @@
             transition: background .2s ease, color .2s ease;
         }
 
-            .hamburger-toggle:hover,
-            .nav-dropdown.open .hamburger-toggle {
-                background: #fff1f2;
-                color: var(--red);
-            }
+        .hamburger-toggle:hover,
+        .nav-dropdown.open .hamburger-toggle {
+            background: #fff1f2;
+            color: var(--red);
+        }
 
-            .hamburger-toggle span {
-                width: 22px;
-                height: 2px;
-                border-radius: 2px;
-                background: currentColor;
-                transition: transform .25s ease, opacity .2s ease;
-            }
+        .hamburger-toggle span {
+            width: 22px;
+            height: 2px;
+            border-radius: 2px;
+            background: currentColor;
+            transition: transform .25s ease, opacity .2s ease;
+        }
 
         .nav-dropdown.open .hamburger-toggle span:first-child {
             transform: translateY(7px) rotate(45deg);
@@ -426,11 +427,11 @@
             white-space: nowrap;
         }
 
-            .nav-dropdown-link:hover,
-            .nav-dropdown-link.active {
-                background: #fff1f2;
-                color: var(--red);
-            }
+        .nav-dropdown-link:hover,
+        .nav-dropdown-link.active {
+            background: #fff1f2;
+            color: var(--red);
+        }
 
         /* TÌM KIẾM */
 
@@ -564,11 +565,11 @@
             background: var(--line);
         }
 
-        .account-menu-link:hover,
-        .account-menu-link.favorite-active {
-            background: #fff1f2;
-            color: var(--red) !important;
-        }
+            .account-menu-link:hover,
+            .account-menu-link.favorite-active {
+                background: #fff1f2;
+                color: var(--red) !important;
+            }
 
         main {
             min-height: 60vh;
@@ -601,6 +602,11 @@
             line-height: 1;
             box-shadow: 0 4px 16px rgba(15, 23, 42, .3);
             transition: background .2s, transform .2s, box-shadow .2s;
+        }
+
+        .news-chat-open .back-to-top {
+            visibility: hidden;
+            pointer-events: none;
         }
 
             .back-to-top:hover {
@@ -863,10 +869,10 @@
                 padding: 3px 0;
             }
 
-                .nav-links .nav-link {
-                    min-height: 36px;
-                    padding-top: 0;
-                }
+            .nav-links .nav-link {
+                min-height: 36px;
+                padding-top: 0;
+            }
 
             .nav-dropdown {
                 flex: 0 0 auto;
@@ -897,10 +903,7 @@
                 gap: 12px;
             }
 
-            .top-inner {
-                align-items: flex-start;
-                flex-direction: column;
-            }
+            .top-inner { align-items: flex-start; flex-direction: column; }
 
             .brand {
                 font-size: 27px;
@@ -918,9 +921,7 @@
                 padding-top: 0;
             }
 
-            .nav-links {
-                gap: 2px 10px;
-            }
+            .nav-links { gap: 2px 10px; }
 
             .nav-link {
                 min-height: 48px;
@@ -937,40 +938,26 @@
                 min-width: 0;
             }
 
-            .search-form {
-                flex: 1;
-                min-width: 0;
-            }
-
-            .search-button {
-                padding: 0 10px;
-            }
+            .search-form { flex: 1; min-width: 0; }
+            .search-button { padding: 0 10px; }
 
             .footer-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
 
-            .top-strip {
-                padding: 5px 0;
-            }
+            .top-strip { padding: 5px 0; }
 
             .top-inner {
                 justify-content: center;
                 gap: 0;
             }
 
-                .top-inner > span {
-                    display: none;
-                }
+            .top-inner > span { display: none; }
 
-            .weather-strip {
-                margin-right: 0;
-            }
+            .weather-strip { margin-right: 0; }
 
-            .weather-strip-inner {
-                min-height: 30px;
-            }
+            .weather-strip-inner { min-height: 30px; }
 
             .weather-summary {
                 gap: 8px;
@@ -978,9 +965,7 @@
                 font-size: 11px;
             }
 
-            .weather-summary-icon {
-                font-size: 16px;
-            }
+            .weather-summary-icon { font-size: 16px; }
 
             .weather-summary-date {
                 padding-right: 9px;
@@ -1135,19 +1120,13 @@
                         }
                         else
                         {
-                            string rawRole = Convert.ToString(Session["Role"]);
-                            string displayRole = string.Equals(rawRole, "Admin", StringComparison.OrdinalIgnoreCase)
-                                ? "Tổng biên tập"
-                                : (string.Equals(rawRole, "Editor", StringComparison.OrdinalIgnoreCase)
-                                    ? "Biên tập"
-                                    : rawRole);
                             <div style="padding: 8px 14px; font-size: 13px; font-weight: 700; color: #b91c1c;">
                                 Xin chào, @(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])
-                                <span style="font-size:11px; color:var(--muted);">(@displayRole)</span>
+                                <span style="font-size:11px; color:var(--muted);">(@Session["Role"])</span>
                             </div>
                             if (Session["Admin"] != null)
                             {
-                                <a href="@Url.Action("Index", "Admin")" class="account-menu-link">Bảng điều khiển Tổng biên tập</a>
+                                <a href="@Url.Action("Index", "Admin")" class="account-menu-link">Bảng điều khiển Admin</a>
                             }
                             if (string.Equals(Convert.ToString(Session["Role"]), "Editor", StringComparison.OrdinalIgnoreCase))
                             {
@@ -1162,7 +1141,7 @@
                                 <i class="fa-solid fa-lock" style="width:18px; color:#b91c1c;"></i>
                                 <span>Đổi mật khẩu</span>
                             </a>
-
+                          
                             <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e5e7eb;" />
                             using (Html.BeginForm("Logout", "Profile", FormMethod.Post, new { style = "margin:0;" }))
                             {
@@ -1335,265 +1314,265 @@
 
     <!-- JAVASCRIPT TÀI KHOẢN -->
     <script>
-                        var backToTop = document.getElementById('back-to-top');
-                        if (backToTop) {
-                            backToTop.addEventListener('click', function () {
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            });
-                        }
+                var backToTop = document.getElementById('back-to-top');
+                if (backToTop) {
+                    backToTop.addEventListener('click', function () {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
 
-                        (function () {
-                            var strip = document.getElementById('weather-strip');
-                            var toggle = document.getElementById('weather-toggle');
-                            var panel = document.getElementById('weather-panel');
-                            var citySelect = document.getElementById('weather-city-select');
-                            var status = document.getElementById('weather-status');
-                            if (!strip || !toggle || !panel || !citySelect || !status) return;
+                (function () {
+                    var strip = document.getElementById('weather-strip');
+                    var toggle = document.getElementById('weather-toggle');
+                    var panel = document.getElementById('weather-panel');
+                    var citySelect = document.getElementById('weather-city-select');
+                    var status = document.getElementById('weather-status');
+                    if (!strip || !toggle || !panel || !citySelect || !status) return;
 
-                            var cities = {
-                                'Ho Chi Minh City': { name: 'Hồ Chí Minh', latitude: 10.8231, longitude: 106.6297 },
-                                'Da Nang': { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022 },
-                                'Hanoi': { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342 },
-                                'Can Tho': { name: 'Cần Thơ', latitude: 10.0452, longitude: 105.7469 },
-                                'Hai Phong': { name: 'Hải Phòng', latitude: 20.8449, longitude: 106.6881 },
-                                'Nha Trang': { name: 'Nha Trang', latitude: 12.2388, longitude: 109.1967 }
-                            };
+                    var cities = {
+                        'Ho Chi Minh City': { name: 'Hồ Chí Minh', latitude: 10.8231, longitude: 106.6297 },
+                        'Da Nang': { name: 'Đà Nẵng', latitude: 16.0544, longitude: 108.2022 },
+                        'Hanoi': { name: 'Hà Nội', latitude: 21.0278, longitude: 105.8342 },
+                        'Can Tho': { name: 'Cần Thơ', latitude: 10.0452, longitude: 105.7469 },
+                        'Hai Phong': { name: 'Hải Phòng', latitude: 20.8449, longitude: 106.6881 },
+                        'Nha Trang': { name: 'Nha Trang', latitude: 12.2388, longitude: 109.1967 }
+                    };
 
-                            var weatherLabels = function (code) {
-                                if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
-                                if (code === 1 || code === 2) return { text: 'Ít mây', icon: 'fa-cloud-sun' };
-                                if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
-                                if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
-                                if (code >= 51 && code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
-                                if (code >= 61 && code <= 67) return { text: 'Mưa', icon: 'fa-cloud-showers-heavy' };
-                                if (code >= 71 && code <= 77) return { text: 'Tuyết', icon: 'fa-snowflake' };
-                                if (code >= 80 && code <= 82) return { text: 'Mưa rào', icon: 'fa-cloud-showers-heavy' };
-                                if (code >= 85 && code <= 86) return { text: 'Mưa tuyết', icon: 'fa-snowflake' };
-                                if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
-                                return { text: 'Chưa rõ', icon: 'fa-cloud' };
-                            };
+                    var weatherLabels = function (code) {
+                        if (code === 0) return { text: 'Trời quang', icon: 'fa-sun' };
+                        if (code === 1 || code === 2) return { text: 'Ít mây', icon: 'fa-cloud-sun' };
+                        if (code === 3) return { text: 'Nhiều mây', icon: 'fa-cloud' };
+                        if (code === 45 || code === 48) return { text: 'Sương mù', icon: 'fa-smog' };
+                        if (code >= 51 && code <= 57) return { text: 'Mưa phùn', icon: 'fa-cloud-rain' };
+                        if (code >= 61 && code <= 67) return { text: 'Mưa', icon: 'fa-cloud-showers-heavy' };
+                        if (code >= 71 && code <= 77) return { text: 'Tuyết', icon: 'fa-snowflake' };
+                        if (code >= 80 && code <= 82) return { text: 'Mưa rào', icon: 'fa-cloud-showers-heavy' };
+                        if (code >= 85 && code <= 86) return { text: 'Mưa tuyết', icon: 'fa-snowflake' };
+                        if (code >= 95) return { text: 'Có dông', icon: 'fa-cloud-bolt' };
+                        return { text: 'Chưa rõ', icon: 'fa-cloud' };
+                    };
 
-                            var formatDate = function (date, options) {
-                                return new Intl.DateTimeFormat('vi-VN', options).format(date);
-                            };
+                    var formatDate = function (date, options) {
+                        return new Intl.DateTimeFormat('vi-VN', options).format(date);
+                    };
 
-                            document.getElementById('weather-date').textContent = formatDate(new Date(), {
-                                weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-                            });
+                    document.getElementById('weather-date').textContent = formatDate(new Date(), {
+                        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+                    });
 
-                            try {
-                                var savedCity = localStorage.getItem('newsPortalWeatherCity');
-                                if (savedCity && cities[savedCity]) citySelect.value = savedCity;
-                            } catch (ignore) { }
+                    try {
+                        var savedCity = localStorage.getItem('newsPortalWeatherCity');
+                        if (savedCity && cities[savedCity]) citySelect.value = savedCity;
+                    } catch (ignore) { }
 
-                            var loadWeather = function () {
-                                var city = cities[citySelect.value];
-                                if (!city) return;
-                                status.textContent = 'Đang tải dữ liệu thời tiết…';
-                                document.getElementById('weather-city-summary').textContent = city.name;
+                    var loadWeather = function () {
+                        var city = cities[citySelect.value];
+                        if (!city) return;
+                        status.textContent = 'Đang tải dữ liệu thời tiết…';
+                        document.getElementById('weather-city-summary').textContent = city.name;
 
-                                var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
-                                    '&longitude=' + city.longitude +
-                                    '&current=temperature_2m,relative_humidity_2m,weather_code' +
-                                    '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
-                                    '&timezone=auto&forecast_days=1';
+                        var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.latitude +
+                            '&longitude=' + city.longitude +
+                            '&current=temperature_2m,relative_humidity_2m,weather_code' +
+                            '&daily=temperature_2m_max,temperature_2m_min,weather_code' +
+                            '&timezone=auto&forecast_days=1';
 
-                                fetch(url)
-                                    .then(function (response) {
-                                        if (!response.ok) throw new Error('Weather request failed');
-                                        return response.json();
-                                    })
-                                    .then(function (data) {
-                                        if (!data.current || !data.daily) throw new Error('Weather data unavailable');
-                                        var current = data.current;
-                                        var daily = data.daily;
-                                        var condition = weatherLabels(current.weather_code);
-                                        var temperature = Math.round(current.temperature_2m);
-                                        var iconClass = 'fa-solid ' + condition.icon;
+                        fetch(url)
+                            .then(function (response) {
+                                if (!response.ok) throw new Error('Weather request failed');
+                                return response.json();
+                            })
+                            .then(function (data) {
+                                if (!data.current || !data.daily) throw new Error('Weather data unavailable');
+                                var current = data.current;
+                                var daily = data.daily;
+                                var condition = weatherLabels(current.weather_code);
+                                var temperature = Math.round(current.temperature_2m);
+                                var iconClass = 'fa-solid ' + condition.icon;
 
-                                        document.getElementById('weather-temp-summary').textContent = temperature + '°C';
-                                        document.getElementById('weather-temp').textContent = temperature + '°';
-                                        document.getElementById('weather-condition').textContent = condition.text;
-                                        document.getElementById('weather-range').textContent =
-                                            Math.round(daily.temperature_2m_min[0]) + '° - ' + Math.round(daily.temperature_2m_max[0]) + '°';
-                                        document.getElementById('weather-humidity').textContent = Math.round(current.relative_humidity_2m) + '%';
-                                        document.getElementById('weather-date-full').textContent = formatDate(new Date(daily.time[0] + 'T12:00:00'), {
-                                            weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-                                        });
-                                        document.getElementById('weather-icon').className = 'weather-condition-icon ' + iconClass;
-                                        document.getElementById('weather-icon-summary').className = 'weather-summary-icon ' + iconClass;
-                                        status.textContent = 'Dữ liệu thời tiết trực tiếp từ Open-Meteo.';
-                                    })
-                                    .catch(function () {
-                                        status.textContent = 'Không thể tải thời tiết. Vui lòng kiểm tra kết nối mạng.';
-                                        document.getElementById('weather-condition').textContent = 'Chưa có dữ liệu';
-                                    });
-                            };
-
-                            toggle.addEventListener('click', function () {
-                                var isOpen = strip.classList.toggle('is-open');
-                                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-                                panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-                            });
-
-                            citySelect.addEventListener('change', function () {
-                                try { localStorage.setItem('newsPortalWeatherCity', citySelect.value); } catch (ignore) { }
-                                loadWeather();
-                            });
-
-                            document.addEventListener('click', function (event) {
-                                if (!strip.contains(event.target)) {
-                                    strip.classList.remove('is-open');
-                                    toggle.setAttribute('aria-expanded', 'false');
-                                    panel.setAttribute('aria-hidden', 'true');
-                                }
-                            });
-
-                            document.addEventListener('keydown', function (event) {
-                                if (event.key === 'Escape') {
-                                    strip.classList.remove('is-open');
-                                    toggle.setAttribute('aria-expanded', 'false');
-                                    panel.setAttribute('aria-hidden', 'true');
-                                }
-                            });
-
-                            loadWeather();
-                        }());
-
-                        (function () {
-                            var contentDropdown = document.getElementById('content-nav-dropdown');
-                            var contentToggle = document.getElementById('content-nav-toggle');
-                            var accountArea = document.getElementById('account-area');
-                            var userToggle = document.getElementById('user-toggle');
-
-                            if (contentDropdown && contentToggle) {
-                                contentToggle.addEventListener('click', function (event) {
-                                    event.stopPropagation();
-                                    var isOpen = contentDropdown.classList.toggle('open');
-                                    contentToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-                                    contentToggle.setAttribute('aria-label', isOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng');
-                                    if (isOpen && accountArea && userToggle) {
-                                        accountArea.classList.remove('open');
-                                        userToggle.setAttribute('aria-expanded', 'false');
-                                    }
+                                document.getElementById('weather-temp-summary').textContent = temperature + '°C';
+                                document.getElementById('weather-temp').textContent = temperature + '°';
+                                document.getElementById('weather-condition').textContent = condition.text;
+                                document.getElementById('weather-range').textContent =
+                                    Math.round(daily.temperature_2m_min[0]) + '° - ' + Math.round(daily.temperature_2m_max[0]) + '°';
+                                document.getElementById('weather-humidity').textContent = Math.round(current.relative_humidity_2m) + '%';
+                                document.getElementById('weather-date-full').textContent = formatDate(new Date(daily.time[0] + 'T12:00:00'), {
+                                    weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
                                 });
-                            }
-
-                            document.addEventListener('click', function (event) {
-                                if (contentDropdown && !contentDropdown.contains(event.target)) {
-                                    contentDropdown.classList.remove('open');
-                                    if (contentToggle) {
-                                        contentToggle.setAttribute('aria-expanded', 'false');
-                                        contentToggle.setAttribute('aria-label', 'Mở menu điều hướng');
-                                    }
-                                }
+                                document.getElementById('weather-icon').className = 'weather-condition-icon ' + iconClass;
+                                document.getElementById('weather-icon-summary').className = 'weather-summary-icon ' + iconClass;
+                                status.textContent = 'Dữ liệu thời tiết trực tiếp từ Open-Meteo.';
+                            })
+                            .catch(function () {
+                                status.textContent = 'Không thể tải thời tiết. Vui lòng kiểm tra kết nối mạng.';
+                                document.getElementById('weather-condition').textContent = 'Chưa có dữ liệu';
                             });
+                    };
 
-                            document.addEventListener('keydown', function (event) {
-                                if (event.key === 'Escape' && contentDropdown) {
-                                    contentDropdown.classList.remove('open');
-                                    if (contentToggle) {
-                                        contentToggle.setAttribute('aria-expanded', 'false');
-                                        contentToggle.setAttribute('aria-label', 'Mở menu điều hướng');
-                                    }
-                                }
-                            });
-                        }());
+                    toggle.addEventListener('click', function () {
+                        var isOpen = strip.classList.toggle('is-open');
+                        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                        panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+                    });
 
-                        (function () {
-                            var accountArea = document.getElementById('account-area');
-                            var userToggle = document.getElementById('user-toggle');
+                    citySelect.addEventListener('change', function () {
+                        try { localStorage.setItem('newsPortalWeatherCity', citySelect.value); } catch (ignore) { }
+                        loadWeather();
+                    });
 
-                            if (!accountArea || !userToggle) return;
-
-                            userToggle.addEventListener('click', function (event) {
-                                event.stopPropagation();
-
-                                var isOpen = accountArea.classList.toggle('open');
-
-                                var contentDropdown = document.getElementById('content-nav-dropdown');
-                                var contentToggle = document.getElementById('content-nav-toggle');
-                                if (isOpen && contentDropdown) {
-                                    contentDropdown.classList.remove('open');
-                                    if (contentToggle) {
-                                        contentToggle.setAttribute('aria-expanded', 'false');
-                                        contentToggle.setAttribute('aria-label', 'Mở menu điều hướng');
-                                    }
-                                }
-
-                                userToggle.setAttribute(
-                                    'aria-expanded',
-                                    isOpen ? 'true' : 'false'
-                                );
-                            });
-
-                            document.addEventListener('click', function (event) {
-                                if (!accountArea.contains(event.target)) {
-                                    accountArea.classList.remove('open');
-                                    userToggle.setAttribute('aria-expanded', 'false');
-                                }
-                            });
-
-                            document.addEventListener('keydown', function (event) {
-                                if (event.key === 'Escape') {
-                                    accountArea.classList.remove('open');
-                                    userToggle.setAttribute('aria-expanded', 'false');
-                                }
-                            });
-                        }());
-
-                        // MỞ CỬA SỔ ĐĂNG NHẬP
-                        function openLogin() {
-                            var modal = document.getElementById("loginModal");
-
-                            if (modal) {
-                                var accountArea = document.getElementById("account-area");
-
-                                if (accountArea) {
-                                    accountArea.classList.remove("open");
-
-                                    var toggle = document.getElementById("user-toggle");
-
-                                    if (toggle) {
-                                        toggle.setAttribute("aria-expanded", "false");
-                                    }
-                                }
-
-                                modal.classList.add("show");
-                                document.body.style.overflow = "hidden";
-                            }
+                    document.addEventListener('click', function (event) {
+                        if (!strip.contains(event.target)) {
+                            strip.classList.remove('is-open');
+                            toggle.setAttribute('aria-expanded', 'false');
+                            panel.setAttribute('aria-hidden', 'true');
                         }
+                    });
 
-                        // ĐÓNG CỬA SỔ ĐĂNG NHẬP
-                        function closeLogin() {
-                            var modal = document.getElementById("loginModal");
-
-                            if (modal) {
-                                modal.classList.remove("show");
-                                document.body.style.overflow = "";
-                            }
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape') {
+                            strip.classList.remove('is-open');
+                            toggle.setAttribute('aria-expanded', 'false');
+                            panel.setAttribute('aria-hidden', 'true');
                         }
+                    });
 
+                    loadWeather();
+                }());
 
+                (function () {
+                    var contentDropdown = document.getElementById('content-nav-dropdown');
+                    var contentToggle = document.getElementById('content-nav-toggle');
+                    var accountArea = document.getElementById('account-area');
+                    var userToggle = document.getElementById('user-toggle');
 
-                        // ĐÓNG KHI NHẤN BÊN NGOÀI HOẶC PHÍM ESC
-                        document.addEventListener("DOMContentLoaded", function () {
-                            var modal = document.getElementById("loginModal");
-
-                            if (modal) {
-                                modal.addEventListener("click", function (event) {
-                                    if (event.target === modal) {
-                                        closeLogin();
-                                    }
-                                });
-
-                                document.addEventListener("keydown", function (event) {
-                                    if (event.key === "Escape") {
-                                        closeLogin();
-                                    }
-                                });
+                    if (contentDropdown && contentToggle) {
+                        contentToggle.addEventListener('click', function (event) {
+                            event.stopPropagation();
+                            var isOpen = contentDropdown.classList.toggle('open');
+                            contentToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                            contentToggle.setAttribute('aria-label', isOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng');
+                            if (isOpen && accountArea && userToggle) {
+                                accountArea.classList.remove('open');
+                                userToggle.setAttribute('aria-expanded', 'false');
                             }
                         });
+                    }
+
+                    document.addEventListener('click', function (event) {
+                        if (contentDropdown && !contentDropdown.contains(event.target)) {
+                            contentDropdown.classList.remove('open');
+                            if (contentToggle) {
+                                contentToggle.setAttribute('aria-expanded', 'false');
+                                contentToggle.setAttribute('aria-label', 'Mở menu điều hướng');
+                            }
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape' && contentDropdown) {
+                            contentDropdown.classList.remove('open');
+                            if (contentToggle) {
+                                contentToggle.setAttribute('aria-expanded', 'false');
+                                contentToggle.setAttribute('aria-label', 'Mở menu điều hướng');
+                            }
+                        }
+                    });
+                }());
+
+                (function () {
+                    var accountArea = document.getElementById('account-area');
+                    var userToggle = document.getElementById('user-toggle');
+
+                    if (!accountArea || !userToggle) return;
+
+                    userToggle.addEventListener('click', function (event) {
+                        event.stopPropagation();
+
+                        var isOpen = accountArea.classList.toggle('open');
+
+                        var contentDropdown = document.getElementById('content-nav-dropdown');
+                        var contentToggle = document.getElementById('content-nav-toggle');
+                        if (isOpen && contentDropdown) {
+                            contentDropdown.classList.remove('open');
+                            if (contentToggle) {
+                                contentToggle.setAttribute('aria-expanded', 'false');
+                                contentToggle.setAttribute('aria-label', 'Mở menu điều hướng');
+                            }
+                        }
+
+                        userToggle.setAttribute(
+                            'aria-expanded',
+                            isOpen ? 'true' : 'false'
+                        );
+                    });
+
+                    document.addEventListener('click', function (event) {
+                        if (!accountArea.contains(event.target)) {
+                            accountArea.classList.remove('open');
+                            userToggle.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape') {
+                            accountArea.classList.remove('open');
+                            userToggle.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                }());
+
+                // MỞ CỬA SỔ ĐĂNG NHẬP
+                function openLogin() {
+                    var modal = document.getElementById("loginModal");
+
+                    if (modal) {
+                        var accountArea = document.getElementById("account-area");
+
+                        if (accountArea) {
+                            accountArea.classList.remove("open");
+
+                            var toggle = document.getElementById("user-toggle");
+
+                            if (toggle) {
+                                toggle.setAttribute("aria-expanded", "false");
+                            }
+                        }
+
+                        modal.classList.add("show");
+                        document.body.style.overflow = "hidden";
+                    }
+                }
+
+                // ĐÓNG CỬA SỔ ĐĂNG NHẬP
+                function closeLogin() {
+                    var modal = document.getElementById("loginModal");
+
+                    if (modal) {
+                        modal.classList.remove("show");
+                        document.body.style.overflow = "";
+                    }
+                }
+
+
+
+                // ĐÓNG KHI NHẤN BÊN NGOÀI HOẶC PHÍM ESC
+                document.addEventListener("DOMContentLoaded", function () {
+                    var modal = document.getElementById("loginModal");
+
+                    if (modal) {
+                        modal.addEventListener("click", function (event) {
+                            if (event.target === modal) {
+                                closeLogin();
+                            }
+                        });
+
+                        document.addEventListener("keydown", function (event) {
+                            if (event.key === "Escape") {
+                                closeLogin();
+                            }
+                        });
+                    }
+                });
     </script>
 
     <style>
@@ -1604,17 +1583,19 @@
             border-radius: 0 !important;
         }
 
-        /* ===== CÁCH B: ảnh bớt dẹt (tỉ lệ 4:3), cắt gọn không méo ===== */
-        .article-image,
-        .article-card img, .news-card img, .card img,
-        .article-info img, .sr-item img {
-            width: 100% !important;
-            aspect-ratio: 4 / 3 !important;
-            height: auto !important;
-            object-fit: cover !important;
-        }
+            /* ===== CÁCH B: ảnh bớt dẹt (tỉ lệ 4:3), cắt gọn không méo ===== */
+            .article-image,
+            .article-card img, .news-card img, .card img,
+            .article-info img, .sr-item img {
+                width: 100% !important;
+                aspect-ratio: 4 / 3 !important;
+                height: auto !important;
+                object-fit: cover !important;
+            }
     </style>
 
+    @Html.Partial("_ChatWidget")
+    <script src="@Url.Content("~/Scripts/chatbot.js")" defer></script>
     @RenderSection("scripts", required: false)
 </body>
 </html>
