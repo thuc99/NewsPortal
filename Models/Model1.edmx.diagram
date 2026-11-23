@@ -22,6 +22,8 @@
         <AssociationConnector Association="NewsPortalDBModel.FK_ArticleViewHistory_Articles" />
         <AssociationConnector Association="NewsPortalDBModel.FK_ArticleViewHistory_Users" />
         <AssociationConnector Association="NewsPortalDBModel.FK_SavedArticles_Articles" />
+        <AssociationConnector Association="NewsPortalDBModel.FK_ArticleViewHistory_Articles1" />
+        <AssociationConnector Association="NewsPortalDBModel.FK_SavedArticles_Articles1" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
