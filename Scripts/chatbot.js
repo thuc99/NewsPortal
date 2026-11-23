@@ -11,16 +11,32 @@
     var submitButton = form.querySelector('button[type="submit"]');
     var messages = widget.querySelector('.news-chat__messages');
     var status = widget.querySelector('.news-chat__status');
+    var historyKey = 'tinNhanhChatHistory';
+    var chatHistory = loadHistory();
 
-    function addMessage(text, isUser) {
-        var message = document.createElement('p');
-        message.className = 'news-chat__message ' + (isUser ? 'news-chat__message--user' : 'news-chat__message--bot');
-        message.textContent = text;
-        messages.appendChild(message);
-        messages.scrollTop = messages.scrollHeight;
+    function loadHistory() {
+        try {
+            var stored = window.localStorage.getItem(historyKey);
+            if (!stored) {
+                stored = window.sessionStorage.getItem(historyKey) || '[]';
+                window.localStorage.setItem(historyKey, stored);
+            }
+            var history = JSON.parse(stored);
+            return Array.isArray(history) ? history.slice(-60) : [];
+        } catch (error) {
+            return [];
+        }
     }
 
-    function addSources(sources) {
+    function saveHistory() {
+        try {
+            window.localStorage.setItem(historyKey, JSON.stringify(chatHistory.slice(-60)));
+        } catch (error) {
+            return;
+        }
+    }
+
+    function renderSources(sources) {
         if (!Array.isArray(sources) || sources.length === 0) return;
 
         var list = document.createElement('ul');
@@ -46,11 +62,34 @@
             list.appendChild(item);
         });
 
-        if (list.children.length > 0) {
-            messages.appendChild(list);
-            messages.scrollTop = messages.scrollHeight;
+        if (list.children.length > 0) messages.appendChild(list);
+    }
+
+    function addMessage(text, isUser, sources, persist) {
+        var message = document.createElement('p');
+        message.className = 'news-chat__message ' + (isUser ? 'news-chat__message--user' : 'news-chat__message--bot');
+        message.textContent = text;
+        messages.appendChild(message);
+
+        renderSources(sources);
+        messages.scrollTop = messages.scrollHeight;
+
+        if (persist !== false) {
+            chatHistory.push({
+                text: String(text).substring(0, 2000),
+                isUser: !!isUser,
+                sources: Array.isArray(sources) ? sources.slice(0, 10) : []
+            });
+            chatHistory = chatHistory.slice(-60);
+            saveHistory();
         }
     }
+
+    chatHistory.forEach(function (entry) {
+        if (entry && typeof entry.text === 'string') {
+            addMessage(entry.text, !!entry.isUser, entry.sources, false);
+        }
+    });
 
     function setPanelOpen(isOpen) {
         panel.hidden = !isOpen;
@@ -135,8 +174,7 @@
                 });
             })
             .then(function (data) {
-                addMessage(data.answer || 'Chatbot chưa tạo được câu trả lời.', false);
-                addSources(data.sources);
+                addMessage(data.answer || 'Chatbot chưa tạo được câu trả lời.', false, data.sources);
                 status.textContent = '';
             })
             .catch(function (error) {
