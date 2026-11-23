@@ -4,9 +4,11 @@
 @using System.Collections.Generic
 @using System.Linq
 @using System.Web
+@using System.Text.RegularExpressions
+@using System.Net
 
 @{
-    ViewBag.Title = "Chi tiết bài viết";
+    ViewBag.Title = Model.Title;
     var comments = ViewBag.Comments as IEnumerable<Comments> ?? new List<Comments>();
 
     string articleUrl = Request.Url != null
@@ -958,8 +960,9 @@
             <div class="recommendations-grid">
                 @foreach (var recommendation in recommendedArticles)
                 {
-                    var recommendationExcerpt = (recommendation.Content ?? string.Empty).Trim();
-
+                    var recommendationExcerpt = WebUtility.HtmlDecode(
+                        Regex.Replace(recommendation.Content ?? string.Empty, "<[^>]*>", " "));
+                    recommendationExcerpt = Regex.Replace(recommendationExcerpt, @"\s+", " ").Trim();
                     if (recommendationExcerpt.Length > 120)
                     {
                         recommendationExcerpt = recommendationExcerpt.Substring(0, 120).TrimEnd() + "…";

@@ -280,8 +280,6 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Shared\_ChatWidget.cshtml" />
-    <Content Include="Views\Home\About.cshtml" />
-    <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Articles\Index.cshtml" />
     <Content Include="Views\Articles\Create.cshtml" />
@@ -296,7 +294,6 @@
     <Content Include="Views\Authors\Create.cshtml" />
     <Content Include="Views\Authors\Edit.cshtml" />
     <Content Include="Views\Authors\Delete.cshtml" />
-    <Content Include="Views\Home\Details.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Articles\Favorites.cshtml" />
     <Content Include="Views\Admin\Index.cshtml" />
@@ -314,6 +311,9 @@
     <Content Include="Views\Profile\Saved.cshtml" />
     <Content Include="Views\Profile\History.cshtml" />
     <Content Include="Views\Admin\Comments.cshtml" />
+    <Content Include="Views\Account\ForgotPassword.cshtml" />
+    <Content Include="Views\Account\ResetPassword.cshtml" />
+    <Content Include="Views\Account\VerifyOtp.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
