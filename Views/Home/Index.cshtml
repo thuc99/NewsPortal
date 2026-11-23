@@ -11,6 +11,8 @@
         .Where(a => a.Status == "Published")
         .OrderByDescending(a => a.CreatedDate)
         .ToList();
+    var popularKeywords = ViewBag.PopularKeywords as IEnumerable<string>
+    ?? Enumerable.Empty<string>();
 
     var featured = ViewBag.FeaturedArticle as NewsPortal.Models.Articles;
 
@@ -30,6 +32,75 @@
 }
 
 <style>
+
+
+/* THANH TU KHOA PHO BIEN */
+.popular-keywords {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 24px;
+    padding: 16px 20px;
+    background: #fff;
+    border: 1px solid #e9e9ed;
+    border-radius: 8px;
+}
+
+.popular-keywords-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 8px 0 0;
+    color: #252830;
+    font-size: 15px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.popular-keywords-heading i {
+    color: #b91c32;
+    font-size: 18px;
+}
+
+.popular-keyword {
+    display: inline-block;
+    padding: 8px 13px;
+    border: 1px solid #f0d5da;
+    border-radius: 20px;
+    background: #fff7f8;
+    color: #b91c32;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: .2s ease;
+}
+
+.popular-keyword:hover {
+    background: #b91c32;
+    border-color: #b91c32;
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+@@media (max-width: 600px) {
+    .popular-keywords {
+        padding: 13px;
+        gap: 8px;
+    }
+
+    .popular-keywords-heading {
+        width: 100%;
+        margin-bottom: 4px;
+    }
+
+    .popular-keyword {
+        padding: 7px 11px;
+        font-size: 12px;
+    }
+}
+
     .home-page {
         max-width: 1160px;
         margin: 0 auto;
@@ -508,90 +579,236 @@
         text-decoration: underline;
     }
 
-    /* TOP 5 BAI VIET DOC NHIEU */
+
+
+
+
+
+
+    /* TIN DOC NHIEU TRONG TUAN */
     .top-viewed-panel {
-        margin-top: 0;
-        padding: 16px;
-        background: #075746;
-        border: 1px solid #15806a;
-        border-radius: 6px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.05);
+        overflow: hidden;
     }
 
     .top-viewed-heading {
-        margin: 0 0 12px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255,255,255,.2);
-        font-size: 16px;
+        font-size: 21px;
         font-weight: 800;
+        color: #222;
+        margin: 0 0 20px;
+        padding-bottom: 13px;
+        border-bottom: 2px solid #b91c32;
     }
 
+        .top-viewed-heading i {
+            color: #b91c32 !important;
+            margin-right: 7px;
+        }
+
+    /* CÁC TIN */
     .top-viewed-item {
+        position: relative;
         display: flex;
-        gap: 10px;
-        padding: 11px 0;
-        border-bottom: 1px solid rgba(255,255,255,.16);
+        align-items: flex-start;
+        gap: 12px;
+        padding: 13px 10px;
+        border-bottom: 1px solid #eee;
+        border-radius: 9px;
+        transition: transform .25s ease, box-shadow .25s ease;
+        box-sizing: border-box;
+        min-width: 0;
     }
 
         .top-viewed-item:last-child {
             border-bottom: none;
         }
 
+        /* HIỆU ỨNG BONG BÓNG - KHÔNG PHÓNG TO KHUNG */
+        .top-viewed-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,.09);
+            background: #fff;
+            z-index: 2;
+        }
+
+    /* SỐ THỨ TỰ */
     .top-viewed-number {
-        flex: 0 0 22px;
-        color: #78d3b6;
-        font-size: 18px;
-        font-weight: 900;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        color: #555;
+        font-size: 17px;
+        font-weight: 800;
+        border-radius: 5px;
+        transition: transform .25s ease;
+    }
+
+    .top-viewed-item:first-of-type .top-viewed-number {
+        background: #b91c32;
+        color: #fff;
+    }
+
+    .top-viewed-item:hover .top-viewed-number {
+        transform: scale(1.08);
+    }
+
+    /* ẢNH */
+    .top-viewed-item > a {
+        display: block;
+        flex-shrink: 0;
+        overflow: hidden;
+        border-radius: 6px;
     }
 
     .top-viewed-thumb {
-        width: 75px;
-        height: 58px;
-        flex: 0 0 75px;
+        width: 105px;
+        height: 75px;
         object-fit: cover;
-        background: #f1f5f9;
+        border-radius: 6px;
+        display: block;
+        transition: transform .3s ease;
     }
 
+    .top-viewed-item:hover .top-viewed-thumb {
+        transform: scale(1.03);
+    }
+
+    /* NỘI DUNG */
     .top-viewed-copy {
+        flex: 1;
         min-width: 0;
     }
 
     .top-viewed-title {
         display: block;
-        margin-bottom: 6px;
-        color: #252830;
-        font-size: 13px;
+        color: #222;
+        font-size: 15px;
         font-weight: 700;
         line-height: 1.45;
         text-decoration: none;
+        overflow-wrap: anywhere;
+        transition: color .2s ease;
     }
 
-        .top-viewed-title:hover {
+        .top-viewed-title:hover,
+        .top-viewed-item:hover .top-viewed-title {
             color: #b91c32;
+            text-decoration: none;
         }
 
     .top-viewed-count {
-        color: #b4d7cd;
-        font-size: 11px;
+        display: block;
+        margin-top: 7px;
+        color: #888;
+        font-size: 12px;
+    }
+
+        .top-viewed-count i {
+            color: #b91c32;
+            margin-right: 4px;
+        }
+
+    /* TIN ĐẦU TIÊN - ẢNH LỚN, CHỮ CÙNG CHIỀU RỘNG */
+    .top-viewed-item:first-of-type {
+        display: block;
+        padding: 0 0 18px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+        .top-viewed-item:first-of-type .top-viewed-number {
+            margin-bottom: 10px;
+        }
+
+        .top-viewed-item:first-of-type > a {
+            display: block;
+            width: 100%;
+            margin: 0 0 12px;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .top-viewed-item:first-of-type .top-viewed-thumb {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            height: 190px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .top-viewed-item:first-of-type .top-viewed-copy {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .top-viewed-item:first-of-type .top-viewed-title {
+            font-size: 19px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .top-viewed-item:first-of-type .top-viewed-count {
+            margin-top: 9px;
+        }
+
+
+        /* TẠO KHOẢNG CÁCH CHO CHỮ TIN ĐẦU TIÊN */
+        .top-viewed-item:first-of-type .top-viewed-copy {
+            padding: 0 8px 5px;
+            box-sizing: border-box;
+        }
+
+        .top-viewed-item:first-of-type .top-viewed-title {
+            padding: 3px 0;
+            line-height: 1.5;
+        }
+
+        .top-viewed-item:first-of-type .top-viewed-count {
+            padding-top: 3px;
+        }
+
+    /* CÁC TIN SAU */
+    .top-viewed-item:not(:first-of-type) .top-viewed-thumb {
+        width: 100px;
+        height: 72px;
     }
 
     .top-viewed-empty {
-        color: #858995;
-        font-size: 13px;
-        text-align: center;
+        color: #888;
+        font-size: 14px;
         padding: 15px 0;
     }
 
-    .latest-panel {
-        margin-bottom: 0;
-    }
-
-    .article-link {
-        display: block;
-    }
-
-        .article-link:hover {
-            color: inherit;
+    /* ĐIỆN THOẠI */
+    @@media (max-width: 600px) {
+        .top-viewed-panel {
+            padding: 15px;
         }
+
+        .top-viewed-item:first-of-type .top-viewed-thumb {
+            height: 170px;
+        }
+
+        .top-viewed-item:first-of-type .top-viewed-title {
+            font-size: 17px;
+        }
+
+        .top-viewed-item:not(:first-of-type) .top-viewed-thumb {
+            width: 85px;
+            height: 65px;
+        }
+    }
+
 
     @@media (max-width: 760px) {
         .hero-grid {
@@ -690,83 +907,104 @@
                 </div>
             </div>
         </div>
+
+    }
+
+    @* THANH TU KHOA PHO BIEN *@
+    @if (popularKeywords.Any())
+    {
+        <section class="popular-keywords">
+            <h3 class="popular-keywords-heading">
+                <i class="fa-solid fa-fire"></i>
+                TIÊU ĐIỂM
+            </h3>
+
+            @foreach (var keyword in popularKeywords)
+            {
+                <a class="popular-keyword" href="@Url.Action("Keyword", "Articles", new { keyword = keyword })">
+                    #@keyword
+                </a>
+            }
+        </section>
+    }
     }
 
     <section class="hero-grid @(featured == null ? "without-featured" : "")">
+
         <div class="hero-main">
 
-        @if (featured != null)
-        {
-            <article class="featured-card">
-                <a class="featured-visual article-link"
-                   href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
-
-                    @if (!string.IsNullOrWhiteSpace(featured.ImageUrl))
-                    {
-                        <img src="@featured.ImageUrl" alt="@featured.Title" />
-                    }
-
-                    <span class="featured-label">TIN NỔI BẬT</span>
-                </a>
-
-                <div class="featured-body">
-                    <h1 class="featured-title">
-                        <a href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
-                            @featured.Title
-                        </a>
-                    </h1>
-
-                    <a class="article-link"
+            @if (featured != null)
+            {
+                <article class="featured-card">
+                    <a class="featured-visual article-link"
                        href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
-                        <p class="featured-summary">@featured.Summary</p>
+
+                        @if (!string.IsNullOrWhiteSpace(featured.ImageUrl))
+                        {
+                            <img src="@featured.ImageUrl" alt="@featured.Title" />
+                        }
+
+                        <span class="featured-label">TIN NỔI BẬT</span>
                     </a>
 
-                    <div class="article-meta">
-                        @featured.CreatedDate.ToString("dd/MM/yyyy HH:mm")
-                    </div>
-
-                    @Html.ActionLink("Đọc tiếp", "View", "Articles",
-                             new { id = featured.ArticleID },
-                             new { @class = "read-more" })
-                </div>
-            </article>
-        }
-
-        <section class="top-viewed-panel">
-            <h3 class="top-viewed-heading">
-                <i class="fa-solid fa-fire" style="color:#b91c32"></i>
-                TIN ĐỌC NHIỀU TRONG TUẦN
-            </h3>
-
-            @if (topViewedArticles.Any())
-            {
-                var rank = 1;
-
-                foreach (var item in topViewedArticles)
-                {
-                    var article = item.Item1;
-                    var image = !string.IsNullOrWhiteSpace(article.ImageUrl) ? article.ImageUrl : article.Image;
-                    <div class="top-viewed-item">
-                        <span class="top-viewed-number">@rank</span>
-                        @if (!string.IsNullOrWhiteSpace(image))
-                        {
-                            <a href="@Url.Action("View", "Articles", new { id = article.ArticleID })">
-                                <img class="top-viewed-thumb" src="@image" alt="@article.Title" />
+                    <div class="featured-body">
+                        <h1 class="featured-title">
+                            <a href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
+                                @featured.Title
                             </a>
-                        }
-                        <div class="top-viewed-copy">
-                            <a class="top-viewed-title" href="@Url.Action("View", "Articles", new { id = article.ArticleID })">@article.Title</a>
-                            <span class="top-viewed-count"><i class="fa-solid fa-eye"></i> @item.Item2 lượt đọc trong tuần</span>
+                        </h1>
+
+                        <a class="article-link"
+                           href="@Url.Action("View", "Articles", new { id = featured.ArticleID })">
+                            <p class="featured-summary">@featured.Summary</p>
+                        </a>
+
+                        <div class="article-meta">
+                            @featured.CreatedDate.ToString("dd/MM/yyyy HH:mm")
                         </div>
+
+                        @Html.ActionLink("Đọc tiếp", "View", "Articles",
+                                 new { id = featured.ArticleID },
+                                 new { @class = "read-more" })
                     </div>
-                    rank++;
+                </article>
+             }
+
+            <section class="top-viewed-panel">
+                <h3 class="top-viewed-heading">
+                    <i class="fa-solid fa-fire" style="color:#b91c32"></i>
+                    TIN ĐỌC NHIỀU TRONG TUẦN
+                </h3>
+
+                @if (topViewedArticles.Any())
+                {
+                    var rank = 1;
+
+                    foreach (var item in topViewedArticles)
+                    {
+                        var article = item.Item1;
+                        var image = !string.IsNullOrWhiteSpace(article.ImageUrl) ? article.ImageUrl : article.Image;
+                        <div class="top-viewed-item">
+                            <span class="top-viewed-number">@rank</span>
+                            @if (!string.IsNullOrWhiteSpace(image))
+                            {
+                                <a href="@Url.Action("View", "Articles", new { id = article.ArticleID })">
+                                    <img class="top-viewed-thumb" src="@image" alt="@article.Title" />
+                                </a>
+                            }
+                            <div class="top-viewed-copy">
+                                <a class="top-viewed-title" href="@Url.Action("View", "Articles", new { id = article.ArticleID })">@article.Title</a>
+                                <span class="top-viewed-count"><i class="fa-solid fa-eye"></i> @item.Item2 lượt đọc trong tuần</span>
+                            </div>
+                        </div>
+                        rank++;
+                    }
                 }
-            }
-            else
-            {
-                <div class="top-viewed-empty">Chưa có dữ liệu lượt đọc trong tuần.</div>
-            }
-        </section>
+                else
+                {
+                    <div class="top-viewed-empty">Chưa có dữ liệu lượt đọc trong tuần.</div>
+                }
+            </section>
         </div>
 
         <aside class="hero-sidebar">

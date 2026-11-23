@@ -327,19 +327,15 @@
     }
 
     /* Khu vực chia sẻ bài viết */
-    .share-section {
-        margin: 16px 0 24px;
-        padding: 13px 16px;
-        background: #f8fafc;
-        border: 1px solid #e8edf3;
-        border-radius: 12px;
-    }
+
+    /* Khu vực chia sẻ bài viết */
+    
 
     .share-heading {
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 11px;
+        gap: 7px;
+        margin-bottom: 8px;
         color: #334155;
         font-size: 14px;
         font-weight: 700;
@@ -347,14 +343,14 @@
 
         .share-heading i {
             color: #b91c1c;
-            font-size: 15px;
+            font-size: 14px;
         }
 
     .share-tools {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 9px;
+        gap: 8px;
         margin: 0;
     }
 
@@ -363,9 +359,10 @@
         align-items: center;
         justify-content: center;
         gap: 7px;
-        height: 36px;
-        min-width: 36px;
-        padding: 0 13px;
+        height: 34px;
+        min-width: 34px;
+        padding: 0 12px;
+        box-sizing: border-box;
         border: none;
         border-radius: 50px;
         color: #fff;
@@ -380,15 +377,15 @@
         .share-btn:hover {
             color: #fff;
             text-decoration: none;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             opacity: .9;
         }
 
         .share-btn i {
-            font-size: 15px;
+            font-size: 14px;
         }
 
-    /* Facebook: logo và chữ Chia sẻ */
+    /* Facebook */
     .share-facebook {
         background: #1877f2;
     }
@@ -397,11 +394,11 @@
             background: #0d65d9;
         }
 
-    /* Zalo: chỉ hiển thị logo */
+    /* Zalo */
     .share-zalo {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
         padding: 0;
         background: #0068ff;
         border-radius: 50%;
@@ -413,8 +410,8 @@
 
         .share-zalo img {
             display: block;
-            width: 20px;
-            height: 20px;
+            width: 19px;
+            height: 19px;
             object-fit: contain;
         }
 
@@ -429,7 +426,7 @@
 
     .copy-message {
         display: none;
-        margin-top: 9px;
+        margin-top: 6px;
         color: #15803d;
         font-size: 12px;
         font-weight: 600;
@@ -439,6 +436,19 @@
             display: block;
             animation: shareFadeIn .25s ease;
         }
+
+    @@keyframes shareFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
 
     @@keyframes shareFadeIn {
         from {

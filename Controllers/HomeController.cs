@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using System.Web.Mvc;
 using System.Data.Entity;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NewsPortal.Models;
 
 namespace NewsPortal.Controllers
@@ -23,13 +25,14 @@ namespace NewsPortal.Controllers
                 .Include(a => a.Authors)
                 .Where(a => a.Status == "Published");
 
-            // ==========================================
             // THANH TIN NÓNG - 10 BÀI VIẾT MỚI NHẤT
-            // ==========================================
             ViewBag.BreakingNews = publishedArticles
                 .OrderByDescending(a => a.CreatedDate)
                 .Take(10)
                 .ToList();
+
+            // TỪ KHÓA PHỔ BIẾN - THỐNG KÊ CỤM TỪ 2-3 TỪ
+            ViewBag.PopularKeywords = GetPopularKeywords(publishedArticles);
 
             // Lấy 3 bài viết mới nhất
             var latestArticles = publishedArticles
@@ -51,9 +54,7 @@ namespace NewsPortal.Controllers
                 featured = latestArticles.FirstOrDefault();
             }
 
-            // ==========================================
             // TOP 5 BÀI VIẾT ĐỌC NHIỀU TRONG 7 NGÀY
-            // ==========================================
             var sevenDaysAgo = DateTime.Now.AddDays(-7);
 
             var weeklyViews = db.ArticleViewHistory
@@ -79,9 +80,7 @@ namespace NewsPortal.Controllers
                 .Take(5)
                 .ToList();
 
-            // ==========================================
             // TÌM KIẾM VÀ LỌC BÀI VIẾT
-            // ==========================================
             var query = publishedArticles;
 
             if (!string.IsNullOrWhiteSpace(searchString))
@@ -122,9 +121,7 @@ namespace NewsPortal.Controllers
                 query = query.Where(a => a.ArticleID != featuredId);
             }
 
-            // ==========================================
             // PHÂN TRANG
-            // ==========================================
             var totalArticles = query.Count();
 
             var totalPages = Math.Max(
@@ -138,9 +135,7 @@ namespace NewsPortal.Controllers
                 .Take(pageSize)
                 .ToList();
 
-            // ==========================================
             // TRUYỀN DỮ LIỆU SANG VIEW
-            // ==========================================
             ViewBag.SearchString = searchString;
             ViewBag.CategoryId = categoryId;
             ViewBag.AuthorId = authorId;
@@ -157,8 +152,6 @@ namespace NewsPortal.Controllers
 
             ViewBag.FeaturedArticle = featured;
             ViewBag.LatestArticles = latestArticles;
-
-            // Dữ liệu Top 5 bài viết đọc nhiều
             ViewBag.TopViewedArticles = topViewedArticles;
 
             ViewBag.CurrentPage = page;
@@ -166,6 +159,176 @@ namespace NewsPortal.Controllers
             ViewBag.TotalArticles = totalArticles;
 
             return View(result);
+        }
+
+        // THỐNG KÊ CÁC CỤM TỪ KHÓA 2-3 TỪ
+        private List<string> GetPopularKeywords(IQueryable<Articles> articles)
+        {
+            // Các từ không có nhiều ý nghĩa khi làm từ khóa
+            var stopWords = new HashSet<string>(
+                new[]
+                {
+                    "những", "được", "trong", "ngoài", "đang",
+                    "các", "một", "này", "đó", "cho", "với",
+                    "của", "theo", "từ", "tại", "vào", "khi",
+                    "sau", "trước", "trên", "dưới", "đến",
+                    "như", "là", "và", "có", "không", "đã",
+                    "sẽ", "bị", "bởi", "nếu", "thì", "mà",
+                    "về", "ra", "để", "nhiều", "đây", "việc",
+                    "người", "bài", "viết", "tin", "the", "and",
+                    "for", "with", "from", "this", "that",
+                    "theo đó", "cho biết", "được biết",
+                    "hiện nay", "mới đây", "thời gian",
+                    "liên quan", "tiếp tục", "đồng thời"
+                },
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            // Chỉ lấy tiêu đề và tóm tắt, không lấy toàn bộ nội dung
+            var articleTexts = articles
+                .Select(a => new
+                {
+                    a.Title,
+                    a.Summary
+                })
+                .ToList();
+
+            // Điểm của từng cụm từ khóa
+            var keywordScores = new Dictionary<string, int>(
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            // Số bài viết có chứa từng cụm từ
+            var keywordArticleCounts = new Dictionary<string, int>(
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            foreach (var article in articleTexts)
+            {
+                var articleKeywords = new Dictionary<string, int>(
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+                // Từ khóa trong tiêu đề được ưu tiên cao hơn
+                var titleKeywords = ExtractPhrases(
+                    article.Title ?? "",
+                    stopWords
+                );
+
+                foreach (var keyword in titleKeywords)
+                {
+                    articleKeywords[keyword] = 3;
+                }
+
+                // Từ khóa trong phần tóm tắt có điểm thấp hơn
+                var summaryKeywords = ExtractPhrases(
+                    article.Summary ?? "",
+                    stopWords
+                );
+
+                foreach (var keyword in summaryKeywords)
+                {
+                    if (!articleKeywords.ContainsKey(keyword))
+                    {
+                        articleKeywords[keyword] = 1;
+                    }
+                }
+
+                // Mỗi bài viết chỉ tính một lần cho mỗi cụm từ
+                foreach (var item in articleKeywords)
+                {
+                    if (keywordScores.ContainsKey(item.Key))
+                    {
+                        keywordScores[item.Key] += item.Value;
+                        keywordArticleCounts[item.Key]++;
+                    }
+                    else
+                    {
+                        keywordScores[item.Key] = item.Value;
+                        keywordArticleCounts[item.Key] = 1;
+                    }
+                }
+            }
+
+            // Ưu tiên cụm từ xuất hiện trong nhiều bài viết
+            return keywordArticleCounts
+                .Where(x => x.Value >= 1)
+                .OrderByDescending(x => x.Value)
+                .ThenByDescending(x => keywordScores[x.Key])
+                .Take(10)
+                .Select(x => FormatKeyword(x.Key))
+                .ToList();
+        }
+
+        // TÁCH CỤM TỪ GỒM 2-3 TỪ LIỀN NHAU
+        private List<string> ExtractPhrases(
+            string text,
+            HashSet<string> stopWords)
+        {
+            var words = Regex.Matches(
+                text.ToLowerInvariant(),
+                @"[\p{L}\p{N}]{2,}"
+            )
+            .Cast<Match>()
+            .Select(m => m.Value)
+            .ToList();
+
+            var phrases = new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            // Tạo cụm từ gồm 2 từ và 3 từ
+            for (int length = 2; length <= 3; length++)
+            {
+                for (int i = 0; i <= words.Count - length; i++)
+                {
+                    var phraseWords = words
+                        .Skip(i)
+                        .Take(length)
+                        .ToList();
+
+                    // Không cho cụm từ bắt đầu hoặc kết thúc bằng từ vô nghĩa
+                    if (stopWords.Contains(phraseWords.First()) ||
+                        stopWords.Contains(phraseWords.Last()))
+                    {
+                        continue;
+                    }
+
+                    // Loại cụm từ có quá nhiều từ nối
+                    int stopWordCount = phraseWords
+                        .Count(w => stopWords.Contains(w));
+
+                    if (stopWordCount > 1)
+                    {
+                        continue;
+                    }
+
+                    // Ghép thành cụm từ hoàn chỉnh
+                    var phrase = string.Join(" ", phraseWords);
+
+                    // Không lấy cụm từ chỉ chứa số
+                    if (!phrase.Any(char.IsLetter))
+                    {
+                        continue;
+                    }
+
+                    phrases.Add(phrase);
+                }
+            }
+
+            return phrases.ToList();
+        }
+
+        // VIẾT HOA CHỮ CÁI ĐẦU CỦA CỤM TỪ
+        private string FormatKeyword(string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return keyword;
+            }
+
+            return char.ToUpperInvariant(keyword[0]) +
+                keyword.Substring(1);
         }
 
         protected override void Dispose(bool disposing)

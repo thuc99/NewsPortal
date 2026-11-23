@@ -13,6 +13,34 @@ namespace NewsPortal.Controllers
 {
     public class ArticlesController : Controller
     {
+
+        public ActionResult Keyword(string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            keyword = keyword.Trim();
+
+            var articles = db.Articles
+                .Include(a => a.Categories)
+                .Include(a => a.Authors)
+                .Where(a => a.Status == "Published" &&
+                    (
+                        a.Title.Contains(keyword) ||
+                        a.Summary.Contains(keyword) ||
+                        a.Content.Contains(keyword)
+                    ))
+                .OrderByDescending(a => a.CreatedDate)
+                .ToList();
+
+            ViewBag.Keyword = keyword;
+            ViewBag.TotalArticles = articles.Count;
+
+            return View(articles);
+        }
+
         private string SanitizeArticleContent(string content)
         {
             var sanitizer = new HtmlSanitizer();

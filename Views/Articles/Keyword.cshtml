@@ -1,0 +1,202 @@
+﻿
+@model IEnumerable<NewsPortal.Models.Articles>
+@using System.Linq
+
+@{
+    ViewBag.Title = "Tiêu điểm: " + ViewBag.Keyword;
+    var keyword = ViewBag.Keyword as string ?? "";
+    var articles = Model ?? Enumerable.Empty<NewsPortal.Models.Articles>();
+}
+
+<div class="keyword-page">
+    <div class="keyword-header">
+        <span class="keyword-label">
+            <i class="fa-solid fa-fire"></i> TIÊU ĐIỂM
+        </span>
+
+        <h1>Bài viết về: @keyword</h1>
+
+        <p>Tìm thấy @ViewBag.TotalArticles bài viết liên quan đến từ khóa này.</p>
+    </div>
+
+    @if (articles.Any())
+    {
+        <div class="keyword-grid">
+            @foreach (var item in articles)
+            {
+                <article class="keyword-card">
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                            <img src="@item.ImageUrl" alt="@item.Title" />
+                        </a>
+                    }
+
+                    <div class="keyword-card-body">
+                        <span class="keyword-category">
+                            @(item.Categories == null ? "TIN TỨC" : item.Categories.CategoryName)
+                        </span>
+
+                        <h2>
+                            <a href="@Url.Action("View", "Articles", new { id = item.ArticleID })">
+                                @item.Title
+                            </a>
+                        </h2>
+
+                        <p>@item.Summary</p>
+
+                        <div class="keyword-date">
+                            @item.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+
+                        @Html.ActionLink(
+                                 "Đọc bài viết",
+                                 "View",
+                                 "Articles",
+                                 new { id = item.ArticleID },
+                                 new { @class = "keyword-read-more" }
+                             )
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="keyword-empty">
+            Không tìm thấy bài viết nào chứa từ khóa "@keyword".
+        </div>
+    }
+
+    <a href="@Url.Action("Index", "Home")" class="keyword-back">
+        <i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ
+    </a>
+</div>
+
+<style>
+    .keyword-page {
+        max-width: 1160px;
+        margin: 25px auto;
+    }
+
+    .keyword-header {
+        padding: 25px;
+        margin-bottom: 25px;
+        background: #fff;
+        border: 1px solid #e9e9ed;
+        border-left: 5px solid #b91c32;
+        border-radius: 8px;
+    }
+
+    .keyword-label {
+        color: #b91c32;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .keyword-header h1 {
+        margin: 12px 0 8px;
+        color: #252830;
+        font-size: 27px;
+        font-weight: 800;
+    }
+
+    .keyword-header p {
+        margin: 0;
+        color: #737985;
+    }
+
+    .keyword-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+    }
+
+    .keyword-card {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e9e9ed;
+        border-radius: 8px;
+        transition: .2s ease;
+    }
+
+        .keyword-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.08);
+        }
+
+        .keyword-card img {
+            width: 100%;
+            height: 175px;
+            object-fit: cover;
+        }
+
+    .keyword-card-body {
+        padding: 18px;
+    }
+
+    .keyword-category {
+        color: #b91c32;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .keyword-card h2 {
+        margin: 9px 0;
+        font-size: 18px;
+        line-height: 1.45;
+    }
+
+        .keyword-card h2 a {
+            color: #252830;
+            text-decoration: none;
+        }
+
+            .keyword-card h2 a:hover {
+                color: #b91c32;
+            }
+
+    .keyword-card p {
+        color: #737985;
+        line-height: 1.6;
+    }
+
+    .keyword-date {
+        color: #858995;
+        font-size: 12px;
+    }
+
+    .keyword-read-more {
+        display: inline-block;
+        margin-top: 12px;
+        color: #b91c32;
+        font-weight: 700;
+    }
+
+    .keyword-empty {
+        padding: 35px;
+        background: #fff;
+        border: 1px dashed #d7d8de;
+        color: #737985;
+        text-align: center;
+    }
+
+    .keyword-back {
+        display: inline-block;
+        margin-top: 25px;
+        color: #b91c32;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 760px) {
+        .keyword-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 500px) {
+        .keyword-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
