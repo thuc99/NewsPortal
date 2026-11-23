@@ -572,8 +572,6 @@ END";
                 role = "Admin";
             else if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase))
                 role = "Editor";
-            else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
-                role = "User";
             else
             {
                 TempData["AdminError"] = "Vai trò không hợp lệ.";

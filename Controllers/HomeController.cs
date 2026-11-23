@@ -54,6 +54,21 @@ namespace NewsPortal.Controllers
                 featured = latestArticles.FirstOrDefault();
             }
 
+            var featuredAndLatestIds = latestArticles
+                .Select(a => a.ArticleID)
+                .ToList();
+
+            if (featured != null && !featuredAndLatestIds.Contains(featured.ArticleID))
+            {
+                featuredAndLatestIds.Add(featured.ArticleID);
+            }
+
+            var featuredGridArticles = publishedArticles
+                .Where(a => !featuredAndLatestIds.Contains(a.ArticleID))
+                .OrderByDescending(a => a.CreatedDate)
+                .Take(4)
+                .ToList();
+
             // TOP 5 BÀI VIẾT ĐỌC NHIỀU TRONG 7 NGÀY
             var sevenDaysAgo = DateTime.Now.AddDays(-7);
 
@@ -121,6 +136,12 @@ namespace NewsPortal.Controllers
                 query = query.Where(a => a.ArticleID != featuredId);
             }
 
+            var featuredGridIds = featuredGridArticles
+                .Select(a => a.ArticleID)
+                .ToList();
+
+            query = query.Where(a => !featuredGridIds.Contains(a.ArticleID));
+
             // PHÂN TRANG
             var totalArticles = query.Count();
 
@@ -151,6 +172,7 @@ namespace NewsPortal.Controllers
                 .ToList();
 
             ViewBag.FeaturedArticle = featured;
+            ViewBag.FeaturedGridArticles = featuredGridArticles;
             ViewBag.LatestArticles = latestArticles;
             ViewBag.TopViewedArticles = topViewedArticles;
 

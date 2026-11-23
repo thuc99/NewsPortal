@@ -16,6 +16,7 @@
         : "";
 
     string encodedUrl = HttpUtility.UrlEncode(articleUrl);
+
 }
 
 <style>
@@ -28,7 +29,7 @@
         width: min(1100px, calc(100% - 48px));
         max-width: 1100px;
         box-sizing: border-box;
-        overflow: hidden;
+        overflow: visible;
         margin: 35px auto 55px;
         padding: 24px 0;
         background: #fff;
@@ -56,6 +57,17 @@
         color: #64748b;
         font-size: 14px;
         white-space: nowrap;
+    }
+
+    .np-share__toggle {
+        display: none;
+    }
+
+    .np-share__actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
     }
 
     .article-tools {
@@ -326,139 +338,151 @@
         text-decoration: none;
     }
 
-    /* Khu vực chia sẻ bài viết */
-
-    /* Khu vực chia sẻ bài viết */
-    
-
-    .share-heading {
+    .np-article-layout {
         display: flex;
+        align-items: flex-start;
+        gap: 24px;
+        position: relative;
+        margin-top: 12px;
+    }
+
+    .np-share-toggle-mobile {
+        display: none;
+    }
+
+    .np-share-mobile-panel {
+        display: none;
+    }
+
+    .np-share-mobile-action {
+        display: none !important;
+    }
+
+    .np-article-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .np-share {
+        position: sticky;
+        top: 110px;
+        display: flex;
+        flex: 0 0 76px;
+        flex-direction: column;
         align-items: center;
-        gap: 7px;
-        margin-bottom: 8px;
-        color: #334155;
-        font-size: 14px;
+        gap: 12px;
+        width: 76px;
+        padding: 6px;
+        box-sizing: border-box;
+        background: #fff;
+        z-index: 5;
+    }
+
+    .np-share__label {
+        margin: 0 0 3px;
+        color: #777;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
         font-weight: 700;
+        letter-spacing: .5px;
+        white-space: nowrap;
     }
 
-        .share-heading i {
-            color: #b91c1c;
-            font-size: 14px;
-        }
-
-    .share-tools {
+    .np-share__btn {
+        position: relative;
         display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 0;
-    }
-
-    .share-btn {
-        display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 7px;
-        height: 34px;
-        min-width: 34px;
-        padding: 0 12px;
-        box-sizing: border-box;
-        border: none;
-        border-radius: 50px;
+        flex: 0 0 54px;
+        width: 54px;
+        height: 54px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
         color: #fff;
-        font-size: 12px;
-        font-weight: 600;
         text-decoration: none;
         cursor: pointer;
-        transition: .2s ease;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, .08);
+        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
     }
 
-        .share-btn:hover {
-            color: #fff;
-            text-decoration: none;
-            transform: translateY(-1px);
-            opacity: .9;
-        }
+    .np-share__facebook,
+    .np-share__zalo {
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .04), 0 3px 8px rgba(15, 23, 42, .12);
+    }
 
-        .share-btn i {
-            font-size: 14px;
-        }
+    .np-share__facebook i {
+        font-size: 25px;
+        line-height: 1;
+    }
 
-    /* Facebook */
-    .share-facebook {
+    .np-share__zalo span {
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -.5px;
+    }
+
+    .np-share__btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.08);
+        box-shadow: 0 5px 12px rgba(0, 0, 0, .15);
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .np-share__btn:focus-visible {
+        outline: 3px solid #94bfff;
+        outline-offset: 3px;
+    }
+
+    .np-share__facebook {
         background: #1877f2;
+        font-size: 26px;
     }
 
-        .share-facebook:hover {
-            background: #0d65d9;
-        }
-
-    /* Zalo */
-    .share-zalo {
-        width: 34px;
-        min-width: 34px;
-        height: 34px;
-        padding: 0;
-        background: #0068ff;
-        border-radius: 50%;
+    .np-share__zalo {
+        background: #087aff;
+        font-size: 18px;
+        font-weight: 800;
     }
 
-        .share-zalo:hover {
-            background: #0052cc;
-        }
-
-        .share-zalo img {
-            display: block;
-            width: 19px;
-            height: 19px;
-            object-fit: contain;
-        }
-
-    /* Sao chép liên kết */
-    .share-copy {
-        background: #475569;
+    .np-share__copy {
+        background: #fff;
+        border: 1px solid #dfe4ea;
+        color: #455468;
+        font-size: 21px;
+        box-shadow: 0 3px 8px rgba(15, 23, 42, .08);
     }
 
-        .share-copy:hover {
-            background: #334155;
-        }
+    .np-share__copy:hover {
+        color: #455468;
+    }
 
-    .copy-message {
-        display: none;
-        margin-top: 6px;
-        color: #15803d;
+    .np-share__status {
+        position: absolute;
+        top: 50%;
+        left: calc(100% + 10px);
+        width: max-content;
+        max-width: 180px;
+        padding: 7px 10px;
+        border-radius: 7px;
+        background: #222;
+        color: #fff;
         font-size: 12px;
-        font-weight: 600;
+        pointer-events: none;
+        transform: translateY(-50%);
     }
 
-        .copy-message.show {
-            display: block;
-            animation: shareFadeIn .25s ease;
-        }
-
-    @@keyframes shareFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(4px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .np-share__status:empty {
+        display: none;
     }
 
-
-    @@keyframes shareFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(4px);
+    @@media (prefers-reduced-motion: reduce) {
+        .np-share__btn {
+            transition: none;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        .np-share__btn:hover {
+            transform: none;
         }
     }
 
@@ -648,17 +672,143 @@
         font-size: 11px;
     }
 
-    @@media (max-width: 650px) {
+    @@media (max-width: 767px) {
         .detail-container {
-            margin-top: 22px;
-            width: calc(100% - 32px);
-            padding: 18px 0 35px;
+            margin: 12px auto 35px;
+            width: calc(100% - 28px);
+            padding: 12px 0 28px;
+        }
+
+        .detail-header {
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+        }
+
+        .detail-header h2 {
+            font-size: clamp(24px, 6vw, 32px);
+            line-height: 1.25;
+            overflow-wrap: anywhere;
         }
 
         .detail-meta,
         .rating-card {
             align-items: flex-start;
             flex-direction: column;
+        }
+
+        .detail-meta {
+            gap: 8px;
+        }
+
+        .detail-meta > div:last-child {
+            display: flex !important;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 8px !important;
+            width: 100%;
+            margin-left: 0 !important;
+            position: relative;
+        }
+
+        .detail-meta .article-tools {
+            order: -1;
+            flex: 0 0 100%;
+            width: 100%;
+        }
+
+        .np-share-toggle-mobile {
+            order: 0;
+        }
+
+        .np-article-layout + .np-share {
+            display: none !important;
+        }
+
+        .detail-meta form {
+            display: inline-flex !important;
+            flex: 0 0 auto;
+            order: 1;
+            margin-top: 0 !important;
+        }
+
+        .detail-meta form button {
+            min-height: 38px;
+            white-space: nowrap;
+        }
+
+        .np-article-layout {
+            display: block;
+            margin-top: 8px;
+        }
+
+        .np-article-layout > .np-share {
+            display: none !important;
+        }
+
+        .np-share-toggle-mobile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 38px;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: 1px solid #b91c1c;
+            border-radius: 50%;
+            background: #b91c1c;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(185, 28, 28, .2);
+        }
+
+        .np-share-toggle-mobile:hover,
+        .np-share-toggle-mobile:focus {
+            background: #991b1b;
+            color: #fff;
+        }
+
+        .np-share-mobile-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            z-index: 20;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 3px;
+            border: 1px solid #e5e7eb;
+            border-radius: 22px;
+            background: #fff;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .16);
+            transform-origin: top center;
+        }
+
+        .np-share-mobile-panel.is-open {
+            display: flex;
+            animation: mobileShareDrop .22s ease-out both;
+        }
+
+        @@keyframes mobileShareDrop {
+            from { opacity: 0; transform: translateY(-10px) scale(.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .np-share-mobile-panel .np-share__btn {
+            flex: 0 0 34px;
+            width: 34px;
+            height: 34px;
+        }
+
+        .np-share-mobile-panel .np-share-mobile-action {
+            display: flex !important;
+        }
+
+        .detail-date {
+            white-space: normal;
+            overflow-wrap: anywhere;
         }
 
         .article-tools,
@@ -676,6 +826,14 @@
             text-align: left;
         }
 
+        .np-share-mobile-status {
+            position: absolute;
+            top: 50%;
+            left: calc(100% + 8px);
+            z-index: 6;
+            transform: translateY(-50%);
+        }
+
         .rating-stars label {
             font-size: 28px;
         }
@@ -684,14 +842,27 @@
             text-align: left;
         }
 
-        .share-tools {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+        .np-article-content,
+        .detail-content {
+            min-width: 0;
+            max-width: 100%;
         }
 
-        .share-btn {
-            width: auto;
+        .detail-content {
+            overflow-wrap: anywhere;
+        }
+
+        .detail-content img,
+        .detail-content video,
+        .detail-content iframe,
+        .detail-content table {
+            max-width: 100%;
+        }
+
+        .detail-content img,
+        .detail-content video,
+        .detail-content iframe {
+            height: auto;
         }
 
         .recommendations-grid {
@@ -704,6 +875,13 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .np-share-mobile-panel.is-open {
+            animation: none;
+        }
+    }
+
 </style>
 
 <div class="detail-container">
@@ -759,57 +937,83 @@
                         </button>
                     }
                 }
+
+                <button class="np-share-toggle-mobile"
+                        id="npShareMobileToggle"
+                        type="button"
+                        aria-label="Chia sẻ bài viết"
+                        aria-expanded="false"
+                        aria-controls="npShareMobilePanel"
+                        title="Chia sẻ bài viết">
+                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                </button>
+
+                <div class="np-share-mobile-panel" id="npShareMobilePanel">
+                    <a class="np-share__btn np-share__facebook np-share-mobile-action"
+                       href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
+                       target="_blank" rel="noopener noreferrer"
+                       aria-label="Chia sẻ lên Facebook" title="Facebook">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+                    <a class="np-share__btn np-share__zalo np-share-mobile-action"
+                       href="https://zalo.me/share?url=@encodedUrl"
+                       target="_blank" rel="noopener noreferrer"
+                       aria-label="Chia sẻ qua Zalo" title="Zalo">
+                        <span>Zalo</span>
+                    </a>
+                    <button class="np-share__btn np-share__copy np-share-mobile-action"
+                            type="button"
+                            aria-label="Sao chép liên kết"
+                            title="Sao chép liên kết"
+                            onclick="copyArticleLink()">
+                        <i class="fa-solid fa-link"></i>
+                    </button>
+                </div>
+
+                <span class="np-share__status np-share-mobile-status" id="npShareMobileStatus" role="status" aria-live="polite"></span>
             </div>
         </div>
     </div>
 
-    <!-- Chức năng chia sẻ bài viết -->
-    <div class="share-section">
-
-        <div class="share-heading">
-            <i class="fa-solid fa-share-nodes"></i>
-            Chia sẻ bài viết
-        </div>
-
-        <div class="share-tools">
-
-            <!-- Facebook: logo và chữ Chia sẻ -->
-            <a class="share-btn share-facebook"
-               href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
-               target="_blank"
-               rel="noopener noreferrer"
-               title="Chia sẻ lên Facebook">
-                <i class="fa-brands fa-facebook-f"></i>
-                Chia sẻ
-            </a>
-
-            <!-- Zalo: chỉ có logo -->
-            <a class="share-btn share-zalo"
-               href="https://zalo.me/share?url=@encodedUrl"
-               target="_blank"
-               rel="noopener noreferrer"
-               title="Chia sẻ qua Zalo"
-               aria-label="Chia sẻ qua Zalo">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg"
-                     alt="Zalo" />
-            </a>
-
-            <!-- Sao chép liên kết -->
-            <button type="button"
-                    class="share-btn share-copy"
-                    onclick="copyArticleLink()">
-                <i class="fa-solid fa-link"></i>
-                Sao chép
+    <div class="np-article-layout">
+        <aside class="np-share" aria-label="Chia sẻ bài viết">
+            <button class="np-share__toggle" type="button" aria-expanded="true" aria-controls="npShareActions">
+                <span class="np-share__label">CHIA SẺ</span>
+                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
             </button>
 
-        </div>
+            <div class="np-share__actions" id="npShareActions">
+                <a class="np-share__btn np-share__facebook"
+                   href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   aria-label="Chia sẻ lên Facebook"
+                   title="Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
 
-        <div id="copyMessage" class="copy-message">
-            <i class="fa-solid fa-circle-check"></i>
-            Đã sao chép liên kết bài viết!
-        </div>
+                <a class="np-share__btn np-share__zalo"
+                   href="https://zalo.me/share?url=@encodedUrl"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   aria-label="Chia sẻ qua Zalo"
+                   title="Zalo">
+                    <span>Zalo</span>
+                </a>
 
-    </div>
+                <button class="np-share__btn np-share__copy"
+                        id="npShareCopy"
+                        type="button"
+                        aria-label="Sao chép liên kết"
+                        title="Sao chép liên kết"
+                        onclick="copyArticleLink()">
+                    <i class="fa-solid fa-link"></i>
+                </button>
+            </div>
+
+            <span class="np-share__status" id="copyMessage" role="status" aria-live="polite"></span>
+        </aside>
+        <div class="np-article-content">
 
     <div class="detail-content">
         @{
@@ -1009,20 +1213,77 @@
             </div>
         </section>
     }
+        </div>
+    </div>
 </div>
 
 <script>
+    (function () {
+        var toggle = document.getElementById("npShareMobileToggle");
+        var panel = document.getElementById("npShareMobilePanel");
+        var desktopBar = document.querySelector(".np-article-layout > .np-share");
+        var desktopActions = document.getElementById("npShareActions");
+
+        if (toggle && panel) {
+            toggle.addEventListener("click", function () {
+                var isOpen = panel.classList.toggle("is-open");
+                toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            });
+        }
+
+        if (!desktopBar || !desktopActions) return;
+
+        var desktopToggle = desktopBar.querySelector(".np-share__toggle");
+        if (!desktopToggle) return;
+
+        desktopToggle.addEventListener("click", function () {
+            var isOpen = desktopBar.classList.toggle("is-open");
+            desktopToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+    })();
+
+    (function () {
+        var shareBar = document.querySelector(".np-share");
+        var shareToggle = shareBar && shareBar.querySelector(".np-share__toggle");
+
+        if (!shareBar || !shareToggle) return;
+
+        function updateShareLayout() {
+            var isMobile = window.matchMedia("(max-width: 767px)").matches;
+            shareBar.classList.toggle("is-open", !isMobile);
+            shareToggle.setAttribute("aria-expanded", isMobile ? "false" : "true");
+        }
+
+        shareToggle.addEventListener("click", function () {
+            var isOpen = shareBar.classList.toggle("is-open");
+            shareToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        updateShareLayout();
+        window.addEventListener("resize", updateShareLayout);
+    })();
+
     function copyArticleLink() {
         var articleUrl = @Html.Raw(Json.Encode(articleUrl));
 
         function showCopyMessage() {
             var message = document.getElementById("copyMessage");
+            var mobileMessage = document.getElementById("npShareMobileStatus");
 
-            message.classList.add("show");
+            if (message) message.textContent = "Đã sao chép liên kết";
+            if (mobileMessage) mobileMessage.textContent = "Đã sao chép liên kết";
 
             setTimeout(function () {
-                message.classList.remove("show");
+                if (message) message.textContent = "";
+                if (mobileMessage) mobileMessage.textContent = "";
             }, 2500);
+        }
+
+        function showCopyError() {
+            var message = document.getElementById("copyMessage");
+            var mobileMessage = document.getElementById("npShareMobileStatus");
+            if (message) message.textContent = "Không thể sao chép liên kết";
+            if (mobileMessage) mobileMessage.textContent = "Không thể sao chép liên kết";
         }
 
         function fallbackCopyLink() {
@@ -1041,10 +1302,10 @@
                 if (copied) {
                     showCopyMessage();
                 } else {
-                    alert("Không thể sao chép liên kết!");
+                    showCopyError();
                 }
             } catch (e) {
-                alert("Không thể sao chép liên kết!");
+                showCopyError();
             }
 
             document.body.removeChild(input);
