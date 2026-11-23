@@ -524,11 +524,21 @@ namespace NewsPortal.Controllers
         private static void SendOtpEmail(string toEmail, string fullName, string otpCode)
         {
             string fromEmail = ConfigurationManager.AppSettings["SmtpEmail"];
-            string appPassword = (ConfigurationManager.AppSettings["SmtpAppPassword"] ?? "").Replace(" ", "");
+            if (string.IsNullOrWhiteSpace(fromEmail))
+            {
+                fromEmail = Environment.GetEnvironmentVariable("SMTP_EMAIL");
+            }
+
+            string appPassword = ConfigurationManager.AppSettings["SmtpAppPassword"];
+            if (string.IsNullOrWhiteSpace(appPassword))
+            {
+                appPassword = Environment.GetEnvironmentVariable("SMTP_APP_PASSWORD");
+            }
+            appPassword = (appPassword ?? "").Replace(" ", "");
 
             if (string.IsNullOrWhiteSpace(fromEmail) || string.IsNullOrWhiteSpace(appPassword))
             {
-                throw new InvalidOperationException("Chưa cấu hình SmtpEmail hoặc SmtpAppPassword trong Web.config.");
+                throw new InvalidOperationException("Chưa cấu hình SMTP. Hãy đặt SmtpEmail/SmtpAppPassword trong Web.config hoặc biến môi trường SMTP_EMAIL/SMTP_APP_PASSWORD.");
             }
 
             string displayName = string.IsNullOrWhiteSpace(fullName) ? toEmail : fullName;

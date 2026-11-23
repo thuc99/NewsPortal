@@ -510,17 +510,17 @@
 
     /* TOP 5 BAI VIET DOC NHIEU */
     .top-viewed-panel {
-        margin-top: 14px;
+        margin-top: 0;
         padding: 16px;
-        background: #fff;
-        border: 1px solid #e9e9ed;
+        background: #075746;
+        border: 1px solid #15806a;
         border-radius: 6px;
     }
 
     .top-viewed-heading {
         margin: 0 0 12px;
         padding-bottom: 12px;
-        border-bottom: 2px solid #b91c32;
+        border-bottom: 1px solid rgba(255,255,255,.2);
         font-size: 16px;
         font-weight: 800;
     }
@@ -529,7 +529,7 @@
         display: flex;
         gap: 10px;
         padding: 11px 0;
-        border-bottom: 1px solid #ededf0;
+        border-bottom: 1px solid rgba(255,255,255,.16);
     }
 
         .top-viewed-item:last-child {
@@ -538,7 +538,7 @@
 
     .top-viewed-number {
         flex: 0 0 22px;
-        color: #b91c32;
+        color: #78d3b6;
         font-size: 18px;
         font-weight: 900;
     }
@@ -570,7 +570,7 @@
         }
 
     .top-viewed-count {
-        color: #858995;
+        color: #b4d7cd;
         font-size: 11px;
     }
 
@@ -655,10 +655,6 @@
 
 <div class="home-page">
 
-    <div class="section-heading">
-        <h2 class="section-title">Tin nổi bật</h2>
-    </div>
-
     <!-- THANH TIN NONG CHAY NGANG -->
     @if (breakingNews.Any())
     {
@@ -693,6 +689,7 @@
     }
 
     <section class="hero-grid @(featured == null ? "without-featured" : "")">
+        <div class="hero-main">
 
         @if (featured != null)
         {
@@ -731,7 +728,44 @@
             </article>
         }
 
-        <aside>
+        <section class="top-viewed-panel">
+            <h3 class="top-viewed-heading">
+                <i class="fa-solid fa-fire" style="color:#b91c32"></i>
+                TIN ĐỌC NHIỀU TRONG TUẦN
+            </h3>
+
+            @if (topViewedArticles.Any())
+            {
+                var rank = 1;
+
+                foreach (var item in topViewedArticles)
+                {
+                    var article = item.Item1;
+                    var image = !string.IsNullOrWhiteSpace(article.ImageUrl) ? article.ImageUrl : article.Image;
+                    <div class="top-viewed-item">
+                        <span class="top-viewed-number">@rank</span>
+                        @if (!string.IsNullOrWhiteSpace(image))
+                        {
+                            <a href="@Url.Action("View", "Articles", new { id = article.ArticleID })">
+                                <img class="top-viewed-thumb" src="@image" alt="@article.Title" />
+                            </a>
+                        }
+                        <div class="top-viewed-copy">
+                            <a class="top-viewed-title" href="@Url.Action("View", "Articles", new { id = article.ArticleID })">@article.Title</a>
+                            <span class="top-viewed-count"><i class="fa-solid fa-eye"></i> @item.Item2 lượt đọc trong tuần</span>
+                        </div>
+                    </div>
+                    rank++;
+                }
+            }
+            else
+            {
+                <div class="top-viewed-empty">Chưa có dữ liệu lượt đọc trong tuần.</div>
+            }
+        </section>
+        </div>
+
+        <aside class="hero-sidebar">
             <div class="latest-panel">
                 <h3 class="latest-heading">TIN MỚI NHẤT</h3>
 
@@ -822,60 +856,6 @@
                 </a>
             </section>
 
-            <!-- TOP 5 BAI VIET DOC NHIEU -->
-            <section class="top-viewed-panel">
-                <h3 class="top-viewed-heading">
-                    <i class="fa-solid fa-fire" style="color:#b91c32"></i>
-                    TIN ĐỌC NHIỀU TRONG TUẦN
-                </h3>
-
-                @if (topViewedArticles.Any())
-                {
-                    var rank = 1;
-
-                    foreach (var item in topViewedArticles)
-                    {
-                        var article = item.Item1;
-
-                        string image = !string.IsNullOrWhiteSpace(article.ImageUrl)
-                            ? article.ImageUrl
-                            : article.Image;
-
-                        <div class="top-viewed-item">
-                            <span class="top-viewed-number">@rank</span>
-
-                            @if (!string.IsNullOrWhiteSpace(image))
-                            {
-                                <a href="@Url.Action("View", "Articles", new { id = article.ArticleID })">
-                                    <img class="top-viewed-thumb"
-                                         src="@image"
-                                         alt="@article.Title" />
-                                </a>
-                            }
-
-                            <div class="top-viewed-copy">
-                                <a class="top-viewed-title"
-                                   href="@Url.Action("View", "Articles", new { id = article.ArticleID })">
-                                    @article.Title
-                                </a>
-
-                                <span class="top-viewed-count">
-                                    <i class="fa-solid fa-eye"></i>
-                                    @item.Item2 lượt đọc trong tuần
-                                </span>
-                            </div>
-                        </div>
-
-                        rank++;
-                    }
-                }
-                else
-                {
-                    <div class="top-viewed-empty">
-                        Chưa có dữ liệu lượt đọc trong tuần.
-                    </div>
-                }
-            </section>
         </aside>
     </section>
 
