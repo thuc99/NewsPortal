@@ -946,34 +946,6 @@
     </div>
 </div>
 
-<div id="rejectModal" class="reject-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rejectModalHeading">
-    <div class="reject-modal-card">
-        <h4 id="rejectModalHeading">Từ chối bài viết</h4>
-        <p id="rejectModalArticleTitle" class="reject-modal-title"></p>
-        @using (Html.BeginForm("UpdateArticleStatus", "Admin", FormMethod.Post, new { id = "rejectModalForm" }))
-        {
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="id" id="rejectArticleId" value="" />
-            <input type="hidden" name="newStatus" value="Rejected" />
-            <input type="hidden" name="search" value="@Model.SearchQuery" />
-            <input type="hidden" name="status" value="@Model.StatusFilter" />
-            <label for="rejectReasonInput" style="display:block; font-weight:700; font-size:13px; margin-bottom:6px;">
-                Lý do từ chối <span style="color:#b91c1c;">*</span>
-            </label>
-            <textarea id="rejectReasonInput"
-                      name="rejectionReason"
-                      maxlength="500"
-                      required
-                      placeholder="Nhập lý do từ chối để người viết biết cần chỉnh sửa nội dung gì..."></textarea>
-            <div style="font-size:12px; color:var(--muted); margin-top:4px;">Tối đa 500 ký tự. Lý do sẽ hiển thị cho người viết khi sửa bài.</div>
-            <div class="reject-modal-actions">
-                <button type="button" id="rejectModalCancel" class="btn-mini">Hủy</button>
-                <button type="submit" class="btn-mini btn-reject">Xác nhận từ chối</button>
-            </div>
-        }
-    </div>
-</div>
-
 <script>
         document.addEventListener("DOMContentLoaded", function () {
             const modal = document.getElementById("rejectModal");

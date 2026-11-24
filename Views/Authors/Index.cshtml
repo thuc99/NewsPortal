@@ -1,23 +1,45 @@
 ﻿@model IEnumerable<NewsPortal.Models.Author>
 @using System.Linq
+@using System.Collections.Generic
 @using NewsPortal.Models
 
 @{
     var selectedAuthor = ViewBag.SelectedAuthor as Author;
     bool hasSelectedAuthor = selectedAuthor != null && ViewBag.ShowAuthorProfile == true;
     bool isAdminManagement = ViewBag.IsAdminManagement == true;
-    var articles = ViewBag.Articles as System.Collections.Generic.List<Articles> ?? new System.Collections.Generic.List<Articles>();
-    var categoryNames = ViewBag.CategoryNames as System.Collections.Generic.Dictionary<int, string> ?? new System.Collections.Generic.Dictionary<int, string>();
-    var suggestedAuthors = ViewBag.SuggestedAuthors as System.Collections.Generic.List<Author> ?? new System.Collections.Generic.List<Author>();
+    var articles = ViewBag.Articles as List<Articles> ?? new List<Articles>();
+    var categoryNames = ViewBag.CategoryNames as Dictionary<int, string> ?? new Dictionary<int, string>();
+    var suggestedAuthors = ViewBag.SuggestedAuthors as List<Author> ?? new List<Author>();
+    var articleCounts = ViewBag.ArticleCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var linkedUsernames = ViewBag.LinkedUsernames as Dictionary<int, string> ?? new Dictionary<int, string>();
     int articleCount = ViewBag.ArticleCount == null ? articles.Count : (int)ViewBag.ArticleCount;
-    ViewBag.Title = hasSelectedAuthor ? selectedAuthor.AuthorName : (isAdminManagement ? "Quản lý tác giả" : "Tác giả");
+    ViewBag.Title = hasSelectedAuthor ? selectedAuthor.AuthorName : (isAdminManagement ? "Quản lý tác giả" : "Đội ngũ tác giả");
+}
+
+@functions {
+    public static string ResolveAuthorImg(UrlHelper url, string rawPath)
+    {
+        if (string.IsNullOrWhiteSpace(rawPath)) return null;
+        rawPath = rawPath.Trim();
+        if (rawPath.StartsWith("http://", System.StringComparison.OrdinalIgnoreCase) ||
+            rawPath.StartsWith("https://", System.StringComparison.OrdinalIgnoreCase) ||
+            rawPath.StartsWith("/"))
+        {
+            return rawPath;
+        }
+        if (rawPath.StartsWith("~"))
+        {
+            return url.Content(rawPath);
+        }
+        return url.Content("~/Content/Images/Authors/" + rawPath.TrimStart('/'));
+    }
 }
 
 <style>
     .management-page {
         width: min(1150px, calc(100% - 32px));
         max-width: 1150px;
-        margin: 35px auto;
+        margin: 32px auto;
         padding: 0;
         color: #1e293b;
     }
@@ -28,7 +50,7 @@
         align-items: center;
         gap: 16px;
         flex-wrap: wrap;
-        margin-bottom: 25px;
+        margin-bottom: 22px;
     }
 
         .management-header h2 {
@@ -45,11 +67,10 @@
     }
 
     .management-card {
-        background: white;
-        border: 0;
-        border-radius: 0;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px !important;
         overflow-x: auto;
-        box-shadow: none;
     }
 
     .management-table {
@@ -63,13 +84,14 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: .5px;
-            padding: 16px;
+            padding: 15px 16px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
         }
 
         .management-table td {
-            padding: 17px 16px;
+            padding: 15px 16px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
         }
@@ -82,14 +104,19 @@
             background: #fafcff;
         }
 
+    .author-cell-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
     .author-avatar {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        margin-right: 10px;
-        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        border-radius: 50% !important;
         background: #dbeafe;
         color: #1d4ed8;
         font-weight: 700;
@@ -100,21 +127,46 @@
 
     .author-email {
         color: #64748b;
-        font-size: 13px;
+        font-size: 13.5px;
+    }
+
+    .author-count-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        padding: 3px 10px;
+        border-radius: 999px !important;
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 12.5px;
+        font-weight: 700;
+    }
+
+    .author-account-badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px !important;
+        background: #fef3c7;
+        color: #92400e;
+        font-size: 12px;
+        font-weight: 600;
     }
 
     .btn-add {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         min-height: 40px;
-        padding: 0 16px;
+        padding: 0 18px;
         border: 1px solid #b91c32;
-        border-radius: 8px;
+        border-radius: 8px !important;
         background: #b91c32;
         color: #fff !important;
         text-decoration: none !important;
         font-weight: 700;
+        font-size: 14px;
         transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
     }
 
@@ -140,8 +192,9 @@
             height: 40px;
             padding: 0 12px;
             border: 1px solid #cbd5e1;
-            border-radius: 8px;
+            border-radius: 8px !important;
             font: inherit;
+            font-size: 14px;
         }
 
         .admin-search button,
@@ -152,19 +205,30 @@
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            padding: 0 14px;
+            padding: 0 15px;
             border: 1px solid #d5dce7;
-            border-radius: 8px;
+            border-radius: 8px !important;
             background: #f8fafc;
             color: #334155;
             font: inherit;
+            font-size: 13.5px;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
             transition: background .18s ease, border-color .18s ease, color .18s ease;
         }
 
-        .admin-search button:hover,
+        .admin-search button {
+            background: #b91c32;
+            border-color: #b91c32;
+            color: #fff;
+        }
+
+            .admin-search button:hover {
+                background: #991b2b;
+                color: #fff;
+            }
+
         .admin-search a:hover {
             border-color: #b91c32;
             background: #fff1f2;
@@ -179,12 +243,22 @@
         padding: 0 11px;
         margin: 2px;
         border: 1px solid transparent;
-        border-radius: 7px;
+        border-radius: 7px !important;
         text-decoration: none !important;
         font-size: 12.5px;
         font-weight: 700;
-        transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+        transition: background .18s ease, border-color .18s ease, transform .18s ease;
     }
+
+    .action-view {
+        color: #0f766e !important;
+        border-color: #99f6e4;
+        background: #f0fdfa;
+    }
+
+        .action-view:hover {
+            background: #ccfbf1;
+        }
 
     .action-edit {
         color: #1d4ed8 !important;
@@ -192,12 +266,11 @@
         background: #eff6ff;
     }
 
-    .action-edit:hover {
-        border-color: #bfdbfe;
-        background: #dbeafe;
-        box-shadow: 0 2px 5px rgba(37, 99, 235, .12);
-        transform: translateY(-1px);
-    }
+        .action-edit:hover {
+            border-color: #bfdbfe;
+            background: #dbeafe;
+            transform: translateY(-1px);
+        }
 
     .action-delete {
         color: #b91c32 !important;
@@ -205,12 +278,11 @@
         background: #fff1f2;
     }
 
-    .action-delete:hover {
-        border-color: #fda4af;
-        background: #ffe4e6;
-        box-shadow: 0 2px 5px rgba(185, 28, 50, .12);
-        transform: translateY(-1px);
-    }
+        .action-delete:hover {
+            border-color: #fda4af;
+            background: #ffe4e6;
+            transform: translateY(-1px);
+        }
 
     .empty-message {
         text-align: center;
@@ -223,7 +295,7 @@
         grid-template-columns: minmax(240px, 310px) minmax(0, 1fr);
         gap: 24px;
         max-width: 1160px;
-        margin: 36px auto;
+        margin: 28px auto 36px;
         color: #20232a;
     }
 
@@ -234,15 +306,8 @@
     .author-profile-box, .author-suggestions {
         padding: 18px;
         border: 1px solid #e5e7eb;
-        border-radius: 5px;
+        border-radius: 8px !important;
         background: #fff;
-    }
-
-    .author-back {
-        display: inline-block;
-        margin-bottom: 10px;
-        color: #64748b;
-        font-size: 13px;
     }
 
     .author-profile-head {
@@ -259,7 +324,7 @@
         flex: 0 0 56px;
         width: 56px;
         height: 56px;
-        border-radius: 50%;
+        border-radius: 50% !important;
         background: #e2e8f0;
         color: #475569;
         font-weight: 700;
@@ -296,18 +361,20 @@
         margin-top: 3px;
         color: #64748b;
         font-size: 12px;
+        word-break: break-word;
     }
 
     .author-profile-count {
         margin: 8px 0 14px;
         color: #64748b;
-        font-size: 12px;
+        font-size: 12.5px;
+        font-weight: 600;
     }
 
     .author-email-link {
         display: block;
-        padding: 8px 10px;
-        border-radius: 4px;
+        padding: 9px 12px;
+        border-radius: 6px !important;
         background: var(--red, #b91c1c);
         color: #fff !important;
         text-align: center;
@@ -358,21 +425,24 @@
         text-decoration: none;
     }
 
+        .author-suggestion a:hover {
+            color: #b91c32;
+        }
+
     .author-articles-title {
         margin: 0 0 16px;
         padding-bottom: 8px;
-        border-bottom: 1px solid var(--red, #b91c1c);
+        border-bottom: 2px solid var(--red, #b91c1c);
         color: #1f2937;
         font-family: inherit !important;
         font-size: 22px;
         font-weight: 700;
-        letter-spacing: normal;
-        word-spacing: normal;
     }
 
         .author-articles-title span {
             font-size: 13px;
-            font-weight: 400;
+            font-weight: 500;
+            color: #64748b;
         }
 
     .author-article-month {
@@ -416,7 +486,7 @@
     }
 
     .author-article-title {
-        margin: 0 0 8px;
+        margin: 4px 0 8px;
         font-family: inherit;
         font-size: 15px;
         font-weight: 700;
@@ -457,18 +527,9 @@
         .author-article-grid {
             gap: 18px 12px;
         }
-    }
 
-    @@media (max-width: 420px) {
-        .author-article-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @@media (max-width: 650px) {
         .management-page {
             width: calc(100% - 24px);
-            padding: 0;
             margin-top: 22px;
         }
 
@@ -478,12 +539,12 @@
         }
 
         .management-table {
-            min-width: 500px;
+            min-width: 540px;
             font-size: 13px;
         }
 
         .management-header h2 {
-            font-size: 25px;
+            font-size: 24px;
         }
 
         .btn-add {
@@ -500,45 +561,42 @@
                 width: 100%;
             }
     }
+
+    @@media (max-width: 420px) {
+        .author-article-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
+
+@if (isAdminManagement && !hasSelectedAuthor)
+{
+    @Html.Partial("~/Views/Admin/_SectionNav.cshtml")
+}
 
 @if (hasSelectedAuthor)
 {
-    string backUrl = ViewBag.ReturnUrl as string;
-    if (string.IsNullOrWhiteSpace(backUrl))
-    {
-        backUrl = isAdminManagement
-            ? Url.RouteUrl("AdminAuthors", new { action = "Index" })
-            : Url.Action("Index", "Authors");
-    }
-    if (isAdminManagement)
-    {
-        <div style="max-width: 1160px; margin: 24px auto -16px;">
-            <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index",returnUrl = backUrl })" style="display: inline-block; padding: 9px 15px; background: #e2e8f0; color: #334155; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
-                ← Quay lại danh sách tác giả
-            </a>
-        </div>
-    }
+    string listBackUrl = isAdminManagement
+        ? Url.RouteUrl("AdminAuthors", new { action = "Index" })
+        : Url.RouteUrl("PublicAuthor", new { action = "Index" });
+
+    <div style="max-width: 1160px; margin: 20px auto -12px;">
+        <a href="@listBackUrl" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px !important; text-decoration: none; font-weight: 600; font-size: 13.5px;">
+            &larr; @(isAdminManagement ? "Quay lại Quản lý Tác giả" : "Xem tất cả tác giả")
+        </a>
+    </div>
 
     <div class="author-profile-layout">
         <aside class="author-profile-sidebar">
             <section class="author-profile-box">
                 <div class="author-profile-head">
                     @{
-                        string selectedAvatar = null;
-                        if (!string.IsNullOrWhiteSpace(selectedAuthor.Images))
-                        {
-                            selectedAvatar = selectedAuthor.Images.StartsWith("http", System.StringComparison.OrdinalIgnoreCase) || selectedAuthor.Images.StartsWith("/")
-                                ? selectedAuthor.Images
-                                : (selectedAuthor.Images.StartsWith("~")
-                                    ? Url.Content(selectedAuthor.Images)
-                                    : Url.Content("~/Content/Images/Authors/" + selectedAuthor.Images));
-                        }
+                        string selectedAvatar = ResolveAuthorImg(Url, selectedAuthor.Images);
                     }
                     <span class="author-profile-avatar">
                         @if (!string.IsNullOrEmpty(selectedAvatar))
                         {
-                            <img src="@selectedAvatar" alt="@selectedAuthor.AuthorName" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                            <img src="@selectedAvatar" alt="@selectedAuthor.AuthorName" />
                         }
                         else
                         {
@@ -554,14 +612,18 @@
                         }
                     </div>
                 </div>
-                <p class="author-profile-count">@articleCount bài viết đã xuất bản</p>
+                <p class="author-profile-count">
+                    @(isAdminManagement ? (articleCount + " bài viết trên hệ thống") : (articleCount + " bài viết đã xuất bản"))
+                </p>
                 @if (!string.IsNullOrWhiteSpace(selectedAuthor.Email))
                 {
                     <a class="author-email-link" href="mailto:@selectedAuthor.Email">Gửi Email cho tác giả</a>
                 }
                 @if (isAdminManagement)
                 {
-                    <a class="author-email-link" style="margin-top: 8px; background: #1d4ed8;" href="@Url.RouteUrl("AdminAuthors", new { action = "Edit", id = selectedAuthor.AuthorID })">Chỉnh sửa thông tin</a>
+                    <a class="author-email-link" style="margin-top: 8px; background: #1d4ed8;" href="@Url.RouteUrl("AdminAuthors", new { action = "Edit", id = selectedAuthor.AuthorID })">
+                        Chỉnh sửa thông tin tác giả
+                    </a>
                 }
             </section>
 
@@ -571,24 +633,16 @@
                     <h2 class="author-suggestions-title">@(isAdminManagement ? "Tác giả khác" : "Có thể bạn quan tâm")</h2>
                     @foreach (var suggested in suggestedAuthors)
                     {
-                        string suggestedAvatar = null;
-                        if (!string.IsNullOrWhiteSpace(suggested.Images))
-                        {
-                            suggestedAvatar = suggested.Images.StartsWith("http", System.StringComparison.OrdinalIgnoreCase) || suggested.Images.StartsWith("/")
-                                ? suggested.Images
-                                : (suggested.Images.StartsWith("~")
-                                    ? Url.Content(suggested.Images)
-                                    : Url.Content("~/Content/Images/Authors/" + suggested.Images));
-                        }
+                        string suggestedAvatar = ResolveAuthorImg(Url, suggested.Images);
                         var suggestedUrl = isAdminManagement
-                            ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = suggested.AuthorID, returnUrl = backUrl })
+                            ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = suggested.AuthorID })
                             : Url.RouteUrl("PublicAuthor", new { action = "Index", id = suggested.AuthorID });
 
                         <div class="author-suggestion">
                             <span class="author-suggestion-avatar">
                                 @if (!string.IsNullOrEmpty(suggestedAvatar))
                                 {
-                                    <img src="@suggestedAvatar" alt="@suggested.AuthorName" style="width:100%; height:100%; object-fit:cover; display:block;" />
+                                    <img src="@suggestedAvatar" alt="@suggested.AuthorName" />
                                 }
                                 else
                                 {
@@ -613,12 +667,12 @@
                 }
                 else
                 {
-                    <text>Danh sách bài viết <span>(@articleCount bài)</span></text>
+                    <text>Bài viết đã xuất bản <span>(@articleCount bài)</span></text>
                 }
             </h2>
             @if (!articles.Any())
             {
-                <div class="author-profile-empty">Tác giả này chưa có bài viết nào.</div>
+                <div class="author-profile-empty">Tác giả này hiện chưa có bài viết nào.</div>
             }
             else
             {
@@ -631,11 +685,18 @@
                             var articleUrl = isAdminManagement
                                 ? Url.RouteUrl("AdminArticles", new { action = "Edit", id = article.ArticleID })
                                 : Url.Action("View", "Articles", new { id = article.ArticleID });
+                            string artImg = null;
+                            if (!string.IsNullOrWhiteSpace(article.ImageUrl))
+                            {
+                                artImg = article.ImageUrl.StartsWith("~")
+                                    ? Url.Content(article.ImageUrl)
+                                    : article.ImageUrl;
+                            }
                             <article class="author-article-card">
                                 <a href="@articleUrl">
-                                    @if (!string.IsNullOrWhiteSpace(article.ImageUrl))
+                                    @if (!string.IsNullOrWhiteSpace(artImg))
                                     {
-                                        <img src="@article.ImageUrl" alt="@article.Title" />
+                                        <img src="@artImg" alt="@article.Title" />
                                     }
                                     else
                                     {
@@ -652,7 +713,7 @@
                                         @article.CreatedDate.ToString("dd/MM/yyyy")
                                         @if (isAdminManagement)
                                         {
-                                            <text> - <strong>[@article.Status]</strong></text>
+                                            <text> &bull; <strong>[@article.Status]</strong></text>
                                         }
                                     </div>
                                 </div>
@@ -666,52 +727,66 @@
 }
 else
 {
+    string searchFormAction = isAdminManagement
+        ? Url.RouteUrl("AdminAuthors", new { action = "Index" })
+        : Url.RouteUrl("PublicAuthor", new { action = "Index" });
+
     <div class="management-page">
         <div class="management-header">
             <div>
-                <h2>Quản lý tác giả</h2>
+                <h2>@(isAdminManagement ? "Quản lý tác giả" : "Đội ngũ tác giả")</h2>
                 <p class="management-subtitle">
-                    Quản lý thông tin các tác giả của NewsPortal.
+                    @(isAdminManagement
+                        ? "Quản lý danh sách tác giả, ảnh đại diện và liên kết tài khoản Tác giả trên hệ thống."
+                        : "Khám phá các tác giả và cây bút đóng góp bài viết trên TinNhanh.")
                 </p>
             </div>
+            @if (isAdminManagement)
+            {
+                <a href="@Url.RouteUrl("AdminAuthors", new { action = "Create" })" class="btn-add">
+                    + Thêm tác giả
+                </a>
+            }
         </div>
 
         @if (TempData["Success"] != null)
         {
-            <div style="padding: 14px 18px; margin-bottom: 18px; border-radius: 10px; background: #dcfce7; border: 1px solid #bbf7d0; color: #166534; font-weight: 600;">
+            <div style="padding: 14px 18px; margin-bottom: 18px; border-radius: 10px !important; background: #dcfce7; border: 1px solid #bbf7d0; color: #166534; font-weight: 600;">
                 @TempData["Success"]
             </div>
         }
 
         @if (TempData["Error"] != null)
         {
-            <div style="padding: 14px 18px; margin-bottom: 18px; border-radius: 10px; background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; font-weight: 600;">
+            <div style="padding: 14px 18px; margin-bottom: 18px; border-radius: 10px !important; background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; font-weight: 600;">
                 @TempData["Error"]
             </div>
         }
 
-        @if (isAdminManagement)
-        {
-            <form method="get" action="@Url.RouteUrl("AdminAuthors", new { action = "Index" })" class="admin-search">
-                <input type="search" name="search" value="@(ViewBag.Search ?? "")" placeholder="Tìm theo tên tác giả hoặc email..." />
-                <button type="submit">Tìm kiếm</button>
-                @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
-                {
-                    <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index" })">Xóa</a>
-                }
-            </form>
-        }
+        <form method="get" action="@searchFormAction" class="admin-search">
+            <input type="search" name="search" value="@(ViewBag.Search ?? "")" placeholder="Tìm theo tên tác giả hoặc email..." />
+            <button type="submit">Tìm kiếm</button>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
+            {
+                <a href="@searchFormAction">Xóa lọc</a>
+            }
+        </form>
 
         <div class="management-card">
             <table class="management-table">
                 <thead>
                     <tr>
                         <th>Tác giả</th>
-                        <th>Email</th>
-
+                        <th>Email liên hệ</th>
+                        <th style="text-align:center;">Số bài viết</th>
                         @if (isAdminManagement)
                         {
-                            <th style="width: 180px;">Thao tác</th>
+                            <th>Tài khoản liên kết</th>
+                            <th style="text-align:right; width: 230px;">Thao tác</th>
+                        }
+                        else
+                        {
+                            <th style="text-align:right; width: 160px;">Hồ sơ</th>
                         }
                     </tr>
                 </thead>
@@ -721,47 +796,65 @@ else
                     {
                         foreach (var item in Model)
                         {
+                            string itemAvatar = ResolveAuthorImg(Url, item.Images);
+                            int countForAuthor = articleCounts.ContainsKey(item.AuthorID) ? articleCounts[item.AuthorID] : 0;
+                            string profileUrl = isAdminManagement
+                                ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = item.AuthorID })
+                                : Url.RouteUrl("PublicAuthor", new { action = "Index", id = item.AuthorID });
+
                             <tr>
                                 <td>
-                                    @{
-                                        string itemAvatar = null;
-                                        if (!string.IsNullOrWhiteSpace(item.Images))
-                                        {
-                                            itemAvatar = item.Images.StartsWith("http", System.StringComparison.OrdinalIgnoreCase) || item.Images.StartsWith("/")
-                                                ? item.Images
-                                                : (item.Images.StartsWith("~")
-                                                    ? Url.Content(item.Images)
-                                                    : Url.Content("~/Content/Images/Authors/" + item.Images));
-                                        }
-                                    }
-                                    <span class="author-avatar">
-                                        @if (!string.IsNullOrEmpty(itemAvatar))
-                                        {
-                                            <img src="@itemAvatar" alt="@item.AuthorName" style="width:100%; height:100%; object-fit:cover; display:block;" />
-                                        }
-                                        else
-                                        {
-                                            @(string.IsNullOrWhiteSpace(item.AuthorName)
-                                                ? "?"
-                                                : item.AuthorName.Trim().Substring(0, 1).ToUpper())
-                                        }
-                                    </span>
-
-                                    <strong><a href="@(isAdminManagement ? Url.RouteUrl("AdminAuthors", new { action = "Index", id = item.AuthorID }) : Url.RouteUrl("PublicAuthor", new { action = "Index", id = item.AuthorID }))" class="name-link">@item.AuthorName</a></strong>
+                                    <div class="author-cell-wrap">
+                                        <span class="author-avatar">
+                                            @if (!string.IsNullOrEmpty(itemAvatar))
+                                            {
+                                                <img src="@itemAvatar" alt="@item.AuthorName" />
+                                            }
+                                            else
+                                            {
+                                                @(string.IsNullOrWhiteSpace(item.AuthorName)
+                                                    ? "?"
+                                                    : item.AuthorName.Trim().Substring(0, 1).ToUpper())
+                                            }
+                                        </span>
+                                        <strong>
+                                            <a href="@profileUrl" class="name-link">@item.AuthorName</a>
+                                        </strong>
+                                    </div>
                                 </td>
 
                                 <td>
                                     <span class="author-email">
-                                        @item.Email
+                                        @(string.IsNullOrWhiteSpace(item.Email) ? "---" : item.Email)
                                     </span>
+                                </td>
+
+                                <td style="text-align:center;">
+                                    <span class="author-count-pill">@countForAuthor</span>
                                 </td>
 
                                 @if (isAdminManagement)
                                 {
                                     <td>
+                                        @if (item.UserId.HasValue && linkedUsernames.ContainsKey(item.UserId.Value))
+                                        {
+                                            <span class="author-account-badge">@linkedUsernames[item.UserId.Value]</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:#94a3b8; font-size:12.5px;">Độc lập</span>
+                                        }
+                                    </td>
+                                    <td style="text-align:right; white-space:nowrap;">
+                                        <a href="@profileUrl" class="action-link action-view">Xem bài</a>
                                         @Html.RouteLink("Sửa", "AdminAuthors", new { action = "Edit", id = item.AuthorID }, new { @class = "action-link action-edit" })
-
                                         @Html.RouteLink("Xóa", "AdminAuthors", new { action = "Delete", id = item.AuthorID }, new { @class = "action-link action-delete" })
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td style="text-align:right;">
+                                        <a href="@profileUrl" class="action-link action-edit">Xem bài viết &rarr;</a>
                                     </td>
                                 }
                             </tr>
@@ -770,8 +863,10 @@ else
                     else
                     {
                         <tr>
-                            <td colspan="@(isAdminManagement ? 3 : 2)" class="empty-message">
-                                Chưa có tác giả nào.
+                            <td colspan="@(isAdminManagement ? 5 : 4)" class="empty-message">
+                                @(string.IsNullOrWhiteSpace(ViewBag.Search as string)
+                                    ? "Hiện chưa có tác giả nào trong hệ thống."
+                                    : "Không tìm thấy tác giả nào khớp với từ khóa '" + ViewBag.Search + "'.")
                             </td>
                         </tr>
                     }

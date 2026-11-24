@@ -12,13 +12,14 @@ namespace NewsPortal.Models
     public class AuthorMetadata
     {
         [Required(ErrorMessage = "Vui lòng nhập tên tác giả")]
-        [StringLength(300, ErrorMessage = "Tên tối đa 300 ký tự")]
+        [StringLength(150, ErrorMessage = "Tên tác giả tối đa 150 ký tự")]
         [Display(Name = "Tên tác giả")]
         public string AuthorName { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập email")]
-        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
-        [StringLength(300, ErrorMessage = "Email tối đa 300 ký tự")]
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ email")]
+        [EmailAddress(ErrorMessage = "Địa chỉ email không đúng định dạng")]
+        [StringLength(150, ErrorMessage = "Email tối đa 150 ký tự")]
+        [Display(Name = "Địa chỉ email")]
         public string Email { get; set; }
     }
 }

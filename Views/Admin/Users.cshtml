@@ -1,6 +1,16 @@
 ﻿@model IEnumerable<NewsPortal.Models.AdminUserRow>
 @{
     ViewBag.Title = "Quản lý Tài khoản - Admin";
+    string currentSearch = ViewBag.Search as string ?? "";
+    string currentRoleFilter = ViewBag.RoleFilter as string ?? "";
+    string currentActiveFilter = ViewBag.ActiveFilter as string ?? "";
+
+    int totalAll = ViewBag.TotalAllUsers == null ? 0 : (int)ViewBag.TotalAllUsers;
+    int countAdmin = ViewBag.CountAdmin == null ? 0 : (int)ViewBag.CountAdmin;
+    int countEditor = ViewBag.CountEditor == null ? 0 : (int)ViewBag.CountEditor;
+    int countAuthor = ViewBag.CountAuthor == null ? 0 : (int)ViewBag.CountAuthor;
+    int countReader = ViewBag.CountReader == null ? 0 : (int)ViewBag.CountReader;
+    int countLocked = ViewBag.CountLocked == null ? 0 : (int)ViewBag.CountLocked;
 }
 
 @section styles {
@@ -9,16 +19,54 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             flex-wrap: wrap;
             gap: 12px;
         }
 
-        .usr-grid {
+        .usr-stats {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            align-items: start;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .usr-stat-card {
+            display: block;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid var(--line);
+            text-decoration: none;
+            transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+            .usr-stat-card:hover,
+            .usr-stat-card.active {
+                border-color: var(--red);
+                box-shadow: 0 4px 12px rgba(185, 28, 50, .1);
+                transform: translateY(-1px);
+            }
+
+        .usr-stat-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .usr-stat-val {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--ink);
+            margin-top: 4px;
+        }
+
+        .usr-stat-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
         }
 
         .usr-box {
@@ -26,32 +74,42 @@
             border: 1px solid var(--line);
             border-radius: 12px;
             padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .usr-field {
-            margin-bottom: 14px;
+        .usr-create-panel {
+            display: none;
+            margin-bottom: 20px;
         }
 
-            .usr-field label {
+            .usr-create-panel.is-open {
                 display: block;
-                font-size: 13px;
-                font-weight: 700;
-                margin-bottom: 5px;
             }
 
-            .usr-field input, .usr-field select {
-                width: 100%;
-                height: 40px;
-                padding: 0 12px;
-                border: 1px solid var(--line);
-                border-radius: 8px;
-                font-size: 13px;
-            }
+        .usr-create-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px;
+            align-items: end;
+        }
 
-        .usr-table {
+        .usr-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--ink);
+        }
+
+        .usr-field input,
+        .usr-field select {
             width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 13.5px;
+            background: #fff;
         }
 
         .usr-search {
@@ -59,14 +117,12 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 16px;
-            max-width: 620px;
+            flex-wrap: wrap;
         }
 
-            .usr-search input {
-                flex: 1 1 320px;
-                width: 320px;
-                max-width: 100%;
-                min-width: 0;
+            .usr-search input[type="search"] {
+                flex: 1 1 260px;
+                min-width: 220px;
                 height: 40px;
                 padding: 0 12px;
                 border: 1px solid var(--line);
@@ -74,94 +130,185 @@
                 font-size: 13px;
             }
 
+            .usr-search select {
+                height: 40px;
+                padding: 0 10px;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                font-size: 13px;
+                background: #fff;
+            }
+
             .usr-search .search-button,
-            .usr-search .filter-reset {
-                flex: 0 0 auto;
+            .usr-search .filter-reset,
+            .btn-toggle-create {
                 height: 40px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                padding: 0 14px;
+                gap: 6px;
+                padding: 0 15px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 700;
+                white-space: nowrap;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+            .usr-search .search-button,
+            .btn-toggle-create {
+                border: 0;
+                background: var(--red);
+                color: #fff !important;
+            }
+
+                .usr-search .search-button:hover,
+                .btn-toggle-create:hover {
+                    background: var(--red-dark);
+                }
+
+            .usr-search .filter-reset {
+                border: 1px solid var(--line);
+                background: var(--soft);
+                color: var(--ink);
+            }
+
+        .usr-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+            .usr-table th {
+                text-align: left;
+                padding: 11px 10px;
+                background: var(--soft);
+                border-bottom: 2px solid var(--line);
+                font-size: 12px;
+                text-transform: uppercase;
+                color: var(--muted);
                 white-space: nowrap;
             }
 
-            .usr-search .search-button {
-                border: 0;
-                border-radius: 8px;
-                background: var(--red);
-                color: #fff;
-                font-weight: 700;
-                cursor: pointer;
+            .usr-table td {
+                padding: 12px 10px;
+                border-bottom: 1px solid var(--line);
+                vertical-align: middle;
             }
 
-            .usr-search .filter-reset {
-                border-radius: 8px;
-                background: var(--soft);
-                color: var(--ink);
-                text-decoration: none;
+        .role-pill {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .role-pill-admin {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .role-pill-editor {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .role-pill-author {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .role-pill-reader {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .role-form {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+            .role-form select {
+                height: 34px;
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 0 8px;
                 font-size: 13px;
                 font-weight: 600;
+                background: #fff;
             }
 
-        .usr-table th {
-            text-align: left;
-            padding: 11px 10px;
-            background: var(--soft);
-            border-bottom: 2px solid var(--line);
-            font-size: 12px;
-            text-transform: uppercase;
-            color: var(--muted);
+            .role-form button {
+                height: 34px;
+                padding: 0 12px;
+                border: 1px solid var(--red);
+                border-radius: 6px;
+                background: var(--red);
+                color: #fff;
+                cursor: pointer;
+                font-size: 12.5px;
+                font-weight: 700;
+                transition: background .18s ease;
+            }
+
+                .role-form button:hover {
+                    background: var(--red-dark);
+                }
+
+        .btn-status-toggle {
+            height: 34px;
+            padding: 0 11px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12.5px;
+            font-weight: 600;
         }
 
-        .usr-table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid var(--line);
-        }
+            .btn-status-toggle:hover {
+                border-color: var(--red);
+                color: var(--red);
+            }
 
         .msg-ok {
-            padding: 11px 15px;
+            padding: 12px 16px;
             border-radius: 8px;
             background: #ecfdf5;
+            border: 1px solid #a7f3d0;
             color: #065f46;
             margin-bottom: 16px;
             font-weight: 600;
         }
 
         .msg-err {
-            padding: 11px 15px;
+            padding: 12px 16px;
             border-radius: 8px;
             background: #fef2f2;
+            border: 1px solid #fecaca;
             color: #b91c1c;
             margin-bottom: 16px;
             font-weight: 600;
         }
-
-        @@media (max-width: 900px) {
-            .usr-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @@media (max-width: 520px) {
-            .usr-search {
-                flex-wrap: wrap;
-            }
-
-                .usr-search input {
-                    flex-basis: 100%;
-                    width: 100%;
-                }
-        }
     </style>
 }
 
+@Html.Partial("_SectionNav")
+
 <div class="usr-head">
     <div>
-        <a href="@Url.Action("Index", "Admin")" style="color:var(--red); font-weight:700; font-size:13px;">
-            &larr; Quay lại Bảng điều khiển Admin
-        </a>
-        <h2 style="margin:6px 0 0;">Quản lý Tài khoản Hệ thống</h2>
+        <h2 style="margin:0 0 4px;">Quản lý Tài khoản &amp; Phân quyền 4 cấp</h2>
+        <div style="color:var(--muted); font-size:13.5px;">
+            Phân quyền 4 cấp: <strong>Quản trị viên (Admin)</strong> &bull; <strong>Biên tập viên (Editor)</strong> &bull; <strong>Tác giả (Author)</strong> &bull; <strong>Độc giả (Reader)</strong>
+        </div>
     </div>
+    <button type="button" id="toggleCreateUserBtn" class="btn-toggle-create">
+        <i class="fa-solid fa-user-plus"></i> Tạo tài khoản mới
+    </button>
 </div>
 
 @if (TempData["AdminMessage"] != null)
@@ -173,107 +320,237 @@
     <div class="msg-err"><i class="fa-solid fa-triangle-exclamation"></i> @TempData["AdminError"]</div>
 }
 
-<div class="usr-grid">
-    <div class="usr-box" style="overflow-x:auto;">
-        <h3 style="margin-top:0;"><i class="fa-solid fa-users" style="color:var(--red);"></i> Danh sách tài khoản</h3>
-        <form method="get" action="@Url.RouteUrl("Admin", new { action = "Users" })" class="usr-search">
-            <input type="search" name="search" value="@(ViewBag.Search ?? "")" placeholder="Tìm tên đăng nhập, họ tên, email hoặc vai trò..." />
-            <button type="submit" class="search-button">Tìm kiếm</button>
-            @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
-            {
-                <a href="@Url.RouteUrl("Admin", new { action = "Users" })" class="filter-reset">Xóa</a>
-            }
-        </form>
-        <table class="usr-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tài khoản</th>
-                    <th>Họ tên</th>
-                    <th>Email</th>
-                    <th>Giới tính</th>
-                    <th>Ngày sinh</th>
-                    <th>Điện thoại</th>
-                    <th>Địa chỉ</th>
-                    <th>Vai trò</th>
-                    <th>Ngày tạo</th>
-                    <th>Trạng thái</th>
-                    <th style="text-align:right;">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var u in Model)
-                    {
-                        <tr>
-                            <td>@u.UserID</td>
-                            <td style="font-weight:700;">@u.Username</td>
-                            <td>@u.FullName</td>
-                            <td>@(string.IsNullOrEmpty(u.Email) ? "---" : u.Email)</td>
-                            <td>@(string.IsNullOrEmpty(u.Gender) ? "---" : u.Gender)</td>
-                            <td>@(u.BirthDate.HasValue ? u.BirthDate.Value.ToString("dd/MM/yyyy") : "---")</td>
-                            <td>@(string.IsNullOrEmpty(u.Phone) ? "---" : u.Phone)</td>
-                            <td>@(string.IsNullOrEmpty(u.Address) ? "---" : u.Address)</td>
-                            <td>
-                                @if (u.CanChangeRole)
-                                {
-                                    using (Html.BeginForm("UpdateUserRole", "Admin", FormMethod.Post, new { style = "display:flex; gap:5px; align-items:center;" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@u.UserID" />
-                                        <select name="role" style="height:32px; border:1px solid var(--line); border-radius:6px; padding:0 8px;">
-                                            <option value="Admin" @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Quản trị viên</option>
-                                            <option value="Editor" @(string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "selected" : "")>Biên tập viên</option>
-                                        </select>
-                                        <button type="submit" style="padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; font-weight:600;">Lưu</button>
-                                    }
-                                }
-                                else
-                                {
-                                    <strong>
-                                        @(string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? "Quản trị viên" :
-                                          string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase) ? "Biên tập viên" :
-                                          string.Equals(u.Role, "Author", StringComparison.OrdinalIgnoreCase) ? "Tác giả" : "Độc giả")
-                                    </strong>
-                                }
-                            </td>
-                            <td>@u.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>
-                                @if (u.IsActive)
-                                {
-                                    <span style="color:#16a34a; font-weight:700;">Hoạt động</span>
-                                }
-                                else
-                                {
-                                    <span style="color:#dc2626; font-weight:700;">Đã khóa</span>
-                                }
-                            </td>
-                            <td style="text-align:right;">
-                                @if (u.CanToggleStatus)
-                                {
-                                    using (Html.BeginForm("ToggleUserActive", "Admin", FormMethod.Post, new { style = "display:inline;" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@u.UserID" />
-                                        <button type="submit" style="padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; font-weight:600;">
-                                            @(u.IsActive ? "Khóa" : "Mở khóa")
-                                        </button>
-                                    }
-                                }
-                                else
-                                {
-                                    <span style="color:var(--muted); font-size:12px;">Mặc định</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr><td colspan="12" style="text-align:center; color:var(--muted); padding:24px;">Không tìm thấy tài khoản phù hợp.</td></tr>
-                }
-            </tbody>
-        </table>
-    </div>
+<div class="usr-stats">
+    <a class="usr-stat-card @(string.IsNullOrEmpty(currentRoleFilter) && string.IsNullOrEmpty(currentActiveFilter) ? "active" : "")"
+       href="@Url.Action("Users", "Admin")">
+        <div class="usr-stat-label">Tổng tài khoản</div>
+        <div class="usr-stat-val">@totalAll</div>
+        <div class="usr-stat-sub">Đang khóa: @countLocked</div>
+    </a>
+    <a class="usr-stat-card @(currentRoleFilter == "Admin" ? "active" : "")"
+       href="@Url.Action("Users", "Admin", new { roleFilter = "Admin" })">
+        <div class="usr-stat-label">Cấp 1 &bull; Admin</div>
+        <div class="usr-stat-val" style="color:#991b1b;">@countAdmin</div>
+        <div class="usr-stat-sub">Toàn quyền hệ thống</div>
+    </a>
+    <a class="usr-stat-card @(currentRoleFilter == "Editor" ? "active" : "")"
+       href="@Url.Action("Users", "Admin", new { roleFilter = "Editor" })">
+        <div class="usr-stat-label">Cấp 2 &bull; Editor</div>
+        <div class="usr-stat-val" style="color:#1e40af;">@countEditor</div>
+        <div class="usr-stat-sub">Duyệt bài &amp; bình luận</div>
+    </a>
+    <a class="usr-stat-card @(currentRoleFilter == "Author" ? "active" : "")"
+       href="@Url.Action("Users", "Admin", new { roleFilter = "Author" })">
+        <div class="usr-stat-label">Cấp 3 &bull; Author</div>
+        <div class="usr-stat-val" style="color:#92400e;">@countAuthor</div>
+        <div class="usr-stat-sub">Viết bài &amp; gửi duyệt</div>
+    </a>
+    <a class="usr-stat-card @(currentRoleFilter == "Reader" ? "active" : "")"
+       href="@Url.Action("Users", "Admin", new { roleFilter = "Reader" })">
+        <div class="usr-stat-label">Cấp 4 &bull; Reader</div>
+        <div class="usr-stat-val" style="color:#475569;">@countReader</div>
+        <div class="usr-stat-sub">Đọc tin, lưu bài &amp; bình luận</div>
+    </a>
 </div>
+
+<div id="createUserPanel" class="usr-box usr-create-panel">
+    <h3 style="margin:0 0 14px;"><i class="fa-solid fa-user-plus" style="color:var(--red);"></i> Tạo tài khoản mới</h3>
+    @using (Html.BeginForm("CreateUser", "Admin", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <div class="usr-create-grid">
+            <div class="usr-field">
+                <label for="newUsername">Tên đăng nhập *</label>
+                <input type="text" id="newUsername" name="username" required minlength="3" maxlength="30" placeholder="Ví dụ: tacgia01" />
+            </div>
+            <div class="usr-field">
+                <label for="newFullName">Họ và tên *</label>
+                <input type="text" id="newFullName" name="fullName" required minlength="2" maxlength="100" placeholder="Nhập họ tên đầy đủ..." />
+            </div>
+            <div class="usr-field">
+                <label for="newEmail">Email *</label>
+                <input type="email" id="newEmail" name="email" required maxlength="256" placeholder="ten@email.com" />
+            </div>
+            <div class="usr-field">
+                <label for="newPassword">Mật khẩu *</label>
+                <input type="password" id="newPassword" name="password" required minlength="6" maxlength="64" placeholder="Tối thiểu 6 ký tự" />
+            </div>
+            <div class="usr-field">
+                <label for="newRole">Cấp bậc vai trò *</label>
+                <select id="newRole" name="role">
+                    <option value="Reader" selected>Độc giả (Reader)</option>
+                    <option value="Author">Tác giả (Author)</option>
+                    <option value="Editor">Biên tập viên (Editor)</option>
+                    <option value="Admin">Quản trị viên (Admin)</option>
+                </select>
+            </div>
+            <div class="usr-field">
+                <button type="submit" class="btn-toggle-create" style="width:100%;">
+                    <i class="fa-solid fa-check"></i> Lưu tài khoản
+                </button>
+            </div>
+        </div>
+        <div style="margin-top:10px; font-size:12.5px; color:var(--muted);">
+            Lưu ý: Khi tạo hoặc chuyển tài khoản sang cấp <strong>Tác giả (Author)</strong>, hệ thống sẽ tự động khởi tạo/liên kết hồ sơ trong mục <strong>Quản lý Tác giả</strong>.
+        </div>
+    }
+</div>
+
+<div class="usr-box" style="overflow-x:auto;">
+    <h3 style="margin-top:0;"><i class="fa-solid fa-users" style="color:var(--red);"></i> Danh sách tài khoản</h3>
+
+    <form method="get" action="@Url.RouteUrl("Admin", new { action = "Users" })" class="usr-search">
+        <input type="search" name="search" value="@currentSearch" placeholder="Tìm tên đăng nhập, họ tên, email, điện thoại..." />
+
+        <select name="roleFilter">
+            <option value="" @(currentRoleFilter == "" ? "selected" : "")>Tất cả cấp bậc (4 cấp)</option>
+            <option value="Admin" @(currentRoleFilter == "Admin" ? "selected" : "")>Quản trị viên (Admin)</option>
+            <option value="Editor" @(currentRoleFilter == "Editor" ? "selected" : "")>Biên tập viên (Editor)</option>
+            <option value="Author" @(currentRoleFilter == "Author" ? "selected" : "")>Tác giả (Author)</option>
+            <option value="Reader" @(currentRoleFilter == "Reader" ? "selected" : "")>Độc giả (Reader)</option>
+        </select>
+
+        <select name="activeFilter">
+            <option value="" @(currentActiveFilter == "" ? "selected" : "")>Mọi trạng thái</option>
+            <option value="active" @(currentActiveFilter == "active" ? "selected" : "")>Đang hoạt động</option>
+            <option value="locked" @(currentActiveFilter == "locked" ? "selected" : "")>Đã khóa</option>
+        </select>
+
+        <button type="submit" class="search-button">Lọc / Tìm kiếm</button>
+        @if (!string.IsNullOrWhiteSpace(currentSearch) || !string.IsNullOrWhiteSpace(currentRoleFilter) || !string.IsNullOrWhiteSpace(currentActiveFilter))
+        {
+            <a href="@Url.RouteUrl("Admin", new { action = "Users" })" class="filter-reset">Xóa lọc</a>
+        }
+    </form>
+
+    <table class="usr-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tài khoản</th>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Điện thoại</th>
+                <th>Giới tính / Ngày sinh</th>
+                <th>Cấp bậc phân quyền</th>
+                <th>Ngày tạo</th>
+                <th>Trạng thái</th>
+                <th style="text-align:right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var u in Model)
+                {
+                    bool isAdminRole = string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+                    bool isEditorRole = string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase);
+                    bool isAuthorRole = string.Equals(u.Role, "Author", StringComparison.OrdinalIgnoreCase);
+                    bool isReaderRole = !isAdminRole && !isEditorRole && !isAuthorRole;
+
+                    string pillClass = isAdminRole ? "role-pill-admin"
+                        : (isEditorRole ? "role-pill-editor"
+                        : (isAuthorRole ? "role-pill-author" : "role-pill-reader"));
+
+                    string roleText = isAdminRole ? "Quản trị viên"
+                        : (isEditorRole ? "Biên tập viên"
+                        : (isAuthorRole ? "Tác giả" : "Độc giả"));
+
+                    <tr>
+                        <td>#@u.UserID</td>
+                        <td style="font-weight:700;">@u.Username</td>
+                        <td>@(string.IsNullOrWhiteSpace(u.FullName) ? "---" : u.FullName)</td>
+                        <td>@(string.IsNullOrWhiteSpace(u.Email) ? "---" : u.Email)</td>
+                        <td>@(string.IsNullOrWhiteSpace(u.Phone) ? "---" : u.Phone)</td>
+                        <td>
+                            @(string.IsNullOrWhiteSpace(u.Gender) ? "---" : u.Gender)
+                            @if (u.BirthDate.HasValue)
+                            {
+                                <div style="font-size:12px; color:var(--muted);">@u.BirthDate.Value.ToString("dd/MM/yyyy")</div>
+                            }
+                        </td>
+                        <td>
+                            <div>
+                                <span class="role-pill @pillClass">@roleText</span>
+                            </div>
+                            @if (u.CanChangeRole)
+                            {
+                                using (Html.BeginForm("UpdateUserRole", "Admin", FormMethod.Post, new { @class = "role-form" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@u.UserID" />
+                                    <input type="hidden" name="search" value="@currentSearch" />
+                                    <input type="hidden" name="roleFilter" value="@currentRoleFilter" />
+                                    <input type="hidden" name="activeFilter" value="@currentActiveFilter" />
+                                    <select name="role" aria-label="Chọn cấp bậc cho @u.Username">
+                                        <option value="Admin" @(isAdminRole ? "selected" : "")>Quản trị viên (Admin)</option>
+                                        <option value="Editor" @(isEditorRole ? "selected" : "")>Biên tập viên (Editor)</option>
+                                        <option value="Author" @(isAuthorRole ? "selected" : "")>Tác giả (Author)</option>
+                                        <option value="Reader" @(isReaderRole ? "selected" : "")>Độc giả (Reader)</option>
+                                    </select>
+                                    <button type="submit">Lưu</button>
+                                }
+                            }
+                            else
+                            {
+                                <span style="font-size:12px; color:var(--muted);">Tài khoản bảo vệ</span>
+                            }
+                        </td>
+                        <td>@u.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span style="color:#16a34a; font-weight:700;">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span style="color:#dc2626; font-weight:700;">Đã khóa</span>
+                            }
+                        </td>
+                        <td style="text-align:right;">
+                            @if (u.CanToggleStatus)
+                            {
+                                using (Html.BeginForm("ToggleUserActive", "Admin", FormMethod.Post, new { style = "display:inline;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@u.UserID" />
+                                    <input type="hidden" name="search" value="@currentSearch" />
+                                    <input type="hidden" name="roleFilter" value="@currentRoleFilter" />
+                                    <input type="hidden" name="activeFilter" value="@currentActiveFilter" />
+                                    <button type="submit" class="btn-status-toggle">
+                                        @(u.IsActive ? "Khóa" : "Mở khóa")
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <span style="color:var(--muted); font-size:12px;">Mặc định</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="10" style="text-align:center; color:var(--muted); padding:26px;">
+                        Không tìm thấy tài khoản nào phù hợp với bộ lọc hiện tại.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            var btn = document.getElementById("toggleCreateUserBtn");
+            var panel = document.getElementById("createUserPanel");
+            if (!btn || !panel) return;
+            btn.addEventListener("click", function () {
+                panel.classList.toggle("is-open");
+            });
+        })();
+    </script>
+}

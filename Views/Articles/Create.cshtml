@@ -5,6 +5,9 @@
 @{
     ViewBag.Title = "Thêm bài viết";
     bool isAdminUser = ViewBag.IsAdminUser == true;
+    bool canReviewArticles = ViewBag.CanReviewArticles == true || isAdminUser;
+    bool isAuthorOnly = ViewBag.IsAuthorOnly == true;
+    string lockedAuthorName = ViewBag.LockedAuthorName as string;
 }
 
 <style>
@@ -345,20 +348,19 @@
 <div class="create-container">
 
     <div class="create-header">
-        <h2>@(isAdminUser ? "Thêm bài viết mới" : "Soạn bài viết mới")</h2>
+        <h2>@(canReviewArticles ? "Thêm bài viết mới" : "Soạn bài viết mới")</h2>
         <p>
             Điền thông tin bên dưới để
-            @(isAdminUser ? "tạo và xuất bản bài viết." : "lưu nháp hoặc gửi Admin phê duyệt.")
+            @(canReviewArticles ? "tạo và xuất bản bài viết lên hệ thống." : "lưu bản nháp hoặc gửi Biên tập viên / Admin phê duyệt.")
         </p>
     </div>
 
-    @if (!isAdminUser)
+    @if (!canReviewArticles)
     {
         <div class="workflow-notice">
-            <strong>Quy trình duyệt bài:</strong>
-            Phóng viên có thể <strong>Lưu bản nháp (Draft)</strong>
-            để chỉnh sửa tiếp hoặc bấm <strong>Gửi Admin duyệt (Pending)</strong>.
-            Bài viết sẽ tự động đăng lên trang chủ ngay khi được Admin chấp nhận.
+            <strong>Quy trình duyệt bài dành cho Tác giả:</strong>
+            Bạn có thể <strong>Lưu bản nháp (Draft)</strong> để viết tiếp hoặc bấm <strong>Gửi duyệt (Pending)</strong>.
+            Bài viết sẽ hiển thị lên trang chủ sau khi được Biên tập viên hoặc Quản trị viên phê duyệt.
         </div>
     }
 
@@ -375,13 +377,34 @@
 
         <!-- Danh mục -->
         <div class="form-group-custom">
-            <label class="form-label" for="CategoryId">Danh mục</label>
+            <label class="form-label" for="CategoryId">Danh mục <span style="color:#dc2626;">*</span></label>
             @Html.DropDownListFor(
                      m => m.CategoryId,
                      (SelectList)ViewBag.CategoryId,
                      "Chọn danh mục",
                      new { @class = "form-control-custom" })
             @Html.ValidationMessageFor(m => m.CategoryId, "", new { @class = "text-danger" })
+        </div>
+
+        <!-- Tác giả -->
+        <div class="form-group-custom">
+            <label class="form-label" for="AuthorId">Tác giả bài viết</label>
+            @if (isAuthorOnly)
+            {
+                <input type="text"
+                       class="form-control-custom"
+                       value="@(string.IsNullOrWhiteSpace(lockedAuthorName) ? Convert.ToString(Session["UserFullName"] ?? Session["User"]) : lockedAuthorName)"
+                       readonly="readonly"
+                       style="background:#f8fafc; color:#475569; font-weight:600;" />
+            }
+            else if (ViewBag.AuthorId != null)
+            {
+                @Html.DropDownListFor(
+                         m => m.AuthorId,
+                         (SelectList)ViewBag.AuthorId,
+                         "Chọn tác giả",
+                         new { @class = "form-control-custom" })
+            }
         </div>
 
         <!-- Tiêu đề -->
@@ -504,7 +527,7 @@
         <!-- Nút thao tác -->
         <div class="create-actions">
 
-            @if (isAdminUser)
+            @if (canReviewArticles)
             {
                 <button type="submit"
                         name="submitAction"
@@ -767,3 +790,4 @@
         }
     });
 </script>
+

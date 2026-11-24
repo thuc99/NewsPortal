@@ -1,5 +1,4 @@
-﻿
-@model NewsPortal.Models.Author
+﻿@model NewsPortal.Models.Author
 
 @{
     ViewBag.Title = "Thêm tác giả";
@@ -9,50 +8,50 @@
     .form-page {
         width: min(850px, calc(100% - 32px));
         max-width: 850px;
-        margin: 40px auto;
+        margin: 36px auto;
     }
 
     .form-card {
         background: #ffffff;
-        padding: 40px 45px;
+        padding: 36px 42px;
         border: 1px solid #e2e8f0;
         border-radius: 16px;
-        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
     }
 
     .form-page h2 {
-        font-size: 30px;
+        font-size: 28px;
         font-weight: 750;
         color: #1e293b;
-        margin: 0 0 10px;
+        margin: 0 0 8px;
     }
 
     .form-sub {
         color: #64748b;
-        font-size: 15px;
-        margin-bottom: 32px;
+        font-size: 14.5px;
+        margin-bottom: 28px;
     }
 
     .field {
-        margin-bottom: 25px;
+        margin-bottom: 22px;
     }
 
         .field label {
             display: block;
             font-weight: 650;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #334155;
-            font-size: 15px;
+            font-size: 14.5px;
         }
 
-        .field input {
+        .field input:not([type="file"]) {
             display: block;
             width: 100%;
-            padding: 14px 15px;
+            padding: 12px 14px;
             border: 1px solid #cbd5e1;
             border-radius: 9px;
             box-sizing: border-box;
-            font-size: 15px;
+            font-size: 14.5px;
             background: #ffffff;
             transition: all 0.2s ease;
         }
@@ -63,68 +62,38 @@
                 box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.10);
             }
 
-    /* Khu vực chọn ảnh */
-    .image-upload .choose-image-btn {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: fit-content !important;
-        padding: 10px 15px;
-        background: #b91c1c;
-        color: #ffffff !important;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 750;
-        cursor: pointer;
-        margin: 0;
-        transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    .image-upload {
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 22px 20px;
+        background: #fafcff;
     }
-
-        .image-upload .choose-image-btn:hover {
-            background: #991b1b;
-            color: #ffffff !important;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 14px rgba(185, 28, 28, 0.3);
-        }
-        .image-upload .choose-image-btn:active {
-            transform: translateY(-1px) scale(0.97);
-        }
-        .image-upload .choose-image-btn svg {
-            width: 17px;
-            height: 17px;
-            flex-shrink: 0;
-        }
-
 
         .image-upload input[type="file"] {
             display: none;
         }
 
-    /* Nút chọn ảnh */
     .choose-image-btn {
-        display: inline-flex;
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 10px 15px;
+        width: fit-content !important;
+        padding: 10px 16px;
         background: #b91c1c;
         color: #ffffff !important;
         border-radius: 8px;
         font-size: 14px;
-        font-weight: 750;
-        line-height: 1.4;
+        font-weight: 700;
         cursor: pointer;
-        transition: all 0.2s ease;
         margin: 0;
-        width: auto;
-        text-shadow: none;
+        transition: background 0.2s ease, transform 0.2s ease;
     }
+
         .choose-image-btn:hover {
             background: #991b1b;
             color: #ffffff !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(185, 28, 28, 0.2);
         }
 
         .choose-image-btn svg {
@@ -136,24 +105,24 @@
     .image-preview {
         display: none;
         margin-top: 16px;
-        width: 150px;
-        height: 150px;
+        width: 140px;
+        height: 140px;
         object-fit: cover;
-        border-radius: 12px;
-        border: 2px solid #e2e8f0;
+        border-radius: 50%;
+        border: 3px solid #e2e8f0;
     }
 
     .image-note {
         color: #64748b;
         font-size: 13px;
-        margin: 12px 0 0;
+        margin: 10px 0 0;
     }
 
     .form-actions {
         display: flex;
-        gap: 14px;
-        margin-top: 35px;
-        padding-top: 25px;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 22px;
         border-top: 1px solid #e2e8f0;
     }
 
@@ -161,12 +130,12 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 13px 25px;
+        padding: 12px 24px;
         border-radius: 9px;
         text-decoration: none;
         border: none;
         cursor: pointer;
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 700;
         transition: all 0.2s ease;
     }
@@ -174,14 +143,11 @@
     .btn-save {
         background: #b91c1c;
         color: #ffffff;
-        box-shadow: 0 4px 10px rgba(185, 28, 28, 0.18);
     }
 
         .btn-save:hover {
             background: #991b1b;
             color: #ffffff;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(185, 28, 28, 0.25);
         }
 
     .btn-back {
@@ -192,17 +158,19 @@
         .btn-back:hover {
             background: #cbd5e1;
             color: #1e293b;
-            transform: translateY(-2px);
         }
 
     .text-danger,
     .validation-summary-errors {
         color: #b91c1c;
         font-size: 13px;
+        margin-top: 5px;
+        display: block;
     }
 
         .validation-summary-errors ul {
             padding-left: 20px;
+            margin: 0 0 16px;
         }
 
     @@media (max-width: 650px) {
@@ -212,11 +180,7 @@
         }
 
         .form-card {
-            padding: 25px 20px;
-        }
-
-        .form-page h2 {
-            font-size: 25px;
+            padding: 24px 18px;
         }
 
         .form-actions {
@@ -231,11 +195,9 @@
 
 <div class="form-page">
     <div class="form-card">
-
-        <h2>Thêm tác giả</h2>
-
+        <h2>Thêm tác giả mới</h2>
         <p class="form-sub">
-            Nhập thông tin tác giả mới vào hệ thống NewsPortal.
+            Nhập thông tin tác giả mới vào hệ thống. Nếu email trùng với tài khoản có sẵn, hệ thống sẽ tự động liên kết.
         </p>
 
         <form action="@Url.RouteUrl("AdminAuthors", new { action = "Create" })"
@@ -244,47 +206,34 @@
 
             @Html.AntiForgeryToken()
 
-            @Html.ValidationSummary(true, "", new
-            {
-                @class = "validation-summary-errors"
-            })
+            @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
 
             <div class="field">
-                @Html.LabelFor(m => m.AuthorName, "Tên tác giả")
-
+                @Html.LabelFor(m => m.AuthorName, "Tên tác giả *")
                 @Html.TextBoxFor(m => m.AuthorName, new
                 {
-                    placeholder = "Nhập họ tên tác giả...",
+                    placeholder = "Nhập họ tên hoặc bút danh tác giả...",
+                    maxlength = "150",
                     required = "required"
                 })
-
-                @Html.ValidationMessageFor(m => m.AuthorName, "", new
-                {
-                    @class = "text-danger"
-                })
+                @Html.ValidationMessageFor(m => m.AuthorName, "", new { @class = "text-danger" })
             </div>
 
             <div class="field">
-                @Html.LabelFor(m => m.Email, "Địa chỉ email")
-
+                @Html.LabelFor(m => m.Email, "Địa chỉ email *")
                 @Html.TextBoxFor(m => m.Email, new
                 {
                     type = "email",
-                    placeholder = "example@email.com",
+                    placeholder = "tacgia@email.com",
+                    maxlength = "150",
                     required = "required"
                 })
-
-                @Html.ValidationMessageFor(m => m.Email, "", new
-                {
-                    @class = "text-danger"
-                })
+                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
             </div>
 
             <div class="field">
-                <label>Ảnh tác giả</label>
-
+                <label>Ảnh đại diện tác giả (tùy chọn)</label>
                 <div class="image-upload">
-
                     <label for="imageFile" class="choose-image-btn">
                         <svg viewBox="0 0 24 24"
                              fill="none"
@@ -296,7 +245,6 @@
                             <circle cx="8.5" cy="8.5" r="1.5"></circle>
                             <path d="m21 15-5-5L5 21"></path>
                         </svg>
-
                         Chọn ảnh từ máy tính
                     </label>
 
@@ -305,56 +253,46 @@
                            name="imageFile"
                            accept=".jpg,.jpeg,.png,.gif,.webp" />
 
-                    <p class="image-note">
-                        Hỗ trợ JPG, PNG, GIF, WEBP. Dung lượng tối đa 5 MB.
+                    <p class="image-note" id="selectedFileNote">
+                        Hỗ trợ JPG, JPEG, PNG, GIF, WEBP. Dung lượng tối đa 5 MB.
                     </p>
+
+                    @Html.ValidationMessage("Images", "", new { @class = "text-danger" })
 
                     <img id="imagePreview"
                          class="image-preview"
                          alt="Ảnh xem trước" />
-
                 </div>
             </div>
 
             <div class="form-actions">
-
-                <button type="submit" class="btn-save">
-                    Lưu tác giả
-                </button>
-
-                @Html.RouteLink(
-                         "Quay lại",
-                         "AdminAuthors",
-                         new { action = "Index" },
-                         new { @class = "btn-back" }
-                     )
-
+                <button type="submit" class="btn-save">Lưu tác giả</button>
+                @Html.RouteLink("Quay lại danh sách", "AdminAuthors", new { action = "Index" }, new { @class = "btn-back" })
             </div>
-
         </form>
     </div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-
         var imageInput = document.getElementById("imageFile");
         var preview = document.getElementById("imagePreview");
+        var fileNote = document.getElementById("selectedFileNote");
 
         if (!imageInput || !preview) return;
 
         imageInput.addEventListener("change", function () {
-
             var file = this.files && this.files[0];
 
             if (file) {
                 preview.src = URL.createObjectURL(file);
                 preview.style.display = "block";
+                if (fileNote) fileNote.textContent = "Đã chọn ảnh: " + file.name;
             } else {
                 preview.removeAttribute("src");
                 preview.style.display = "none";
+                if (fileNote) fileNote.textContent = "Hỗ trợ JPG, JPEG, PNG, GIF, WEBP. Dung lượng tối đa 5 MB.";
             }
-
         });
     });
 </script>

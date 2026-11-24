@@ -4,7 +4,11 @@
 @{
     ViewBag.Title = "Chỉnh sửa bài viết";
     bool isAdminUser = ViewBag.IsAdminUser == true;
+    bool canReviewArticles = ViewBag.CanReviewArticles == true || isAdminUser;
+    bool isAuthorOnly = ViewBag.IsAuthorOnly == true;
+    string lockedAuthorName = ViewBag.LockedAuthorName as string;
     string rejectionReason = ViewBag.RejectionReason as string ?? "";
+    var categorySelectList = ViewBag.CategoryId as SelectList ?? new SelectList(System.Linq.Enumerable.Empty<SelectListItem>());
 
     string currentImageSrc = null;
 
@@ -400,9 +404,9 @@
         <h2>Chỉnh sửa bài viết</h2>
 
         <p class="form-sub">
-            @(isAdminUser
-                ? "Cập nhật nội dung và trạng thái kiểm duyệt bài viết."
-                : "Chỉnh sửa nội dung để lưu nháp hoặc gửi Admin xét duyệt.")
+            @(canReviewArticles
+                ? "Cập nhật nội dung, tác giả và trạng thái kiểm duyệt bài viết."
+                : "Chỉnh sửa nội dung để lưu bản nháp hoặc gửi Biên tập viên / Admin xét duyệt.")
         </p>
 
         @if (Model.Status == "Rejected")
@@ -421,7 +425,7 @@
                 </div>
             </div>
         }
-        else if (!isAdminUser && Model.Status == "Pending")
+        else if (!canReviewArticles && Model.Status == "Pending")
         {
             <div class="pending-banner">
                 <strong>Bài viết đang chờ Admin duyệt (Pending).</strong>
@@ -429,7 +433,7 @@
                 hoặc lưu tạm về bản nháp.
             </div>
         }
-        else if (!isAdminUser && (Model.Status == "Published" || Model.Status == "Archived"))
+        else if (!canReviewArticles && (Model.Status == "Published" || Model.Status == "Archived"))
         {
             <div class="pending-banner">
                 <strong>Bạn có thể chỉnh sửa bài viết này.</strong>
@@ -446,6 +450,7 @@
         @Html.AntiForgeryToken()
         @Html.HiddenFor(m => m.Id)
         @Html.HiddenFor(m => m.Image)
+        @Html.Hidden("returnUrl", ViewBag.ReturnUrl as string)
 
         @Html.ValidationSummary(true, "", new
         {
@@ -494,9 +499,27 @@
             @Html.LabelFor(m => m.CategoryId, "Danh mục")
             @Html.DropDownListFor(
                 m => m.CategoryId,
-                (SelectList)ViewBag.CategoryId,
+                categorySelectList,
                 "Chọn danh mục")
             @Html.ValidationMessageFor(m => m.CategoryId, "", new { @class = "text-danger" })
+        </div>
+
+        <!-- Tác giả -->
+        <div class="field">
+            <label for="AuthorId">Tác giả bài viết</label>
+            @if (isAuthorOnly)
+            {
+                <input type="text"
+                       value="@(string.IsNullOrWhiteSpace(Model.AuthorName) ? lockedAuthorName : Model.AuthorName)"
+                       readonly="readonly" />
+            }
+            else if (ViewBag.AuthorId != null)
+            {
+                @Html.DropDownListFor(
+                    m => m.AuthorId,
+                    (SelectList)ViewBag.AuthorId,
+                    "Chọn tác giả")
+            }
         </div>
 
 
@@ -517,7 +540,7 @@
         </div>
 
         <!-- Trạng thái -->
-        @if (isAdminUser)
+        @if (canReviewArticles)
         {
             <div class="field">
                 @Html.LabelFor(m => m.Status, "Trạng thái bài viết")
@@ -621,7 +644,7 @@
         <!-- Nút thao tác -->
         <div class="form-actions">
 
-            @if (isAdminUser)
+            @if (canReviewArticles)
             {
                 <button type="submit" class="btn-save">
                     Lưu thay đổi
@@ -763,6 +786,15 @@
             }).catch(function (error = Object(null)) {
                 console.error("Không thể khởi tạo CKEditor 5:", error);
                 alert("Không thể tải trình soạn thảo CKEditor 5. Vui lòng kiểm tra kết nối Internet.");
+            });
+        }
+
+        // Hiện/ẩn ô Lý do từ chối khi chọn trạng thái Rejected
+        const statusSelect = document.getElementById("Status");
+        const rejectionField = document.getElementById("rejectionReasonField");
+        if (statusSelect instanceof HTMLSelectElement && rejectionField instanceof HTMLElement) {
+            statusSelect.addEventListener("change", function () {
+                rejectionField.style.display = (statusSelect.value === "Rejected") ? "" : "none";
             });
         }
 

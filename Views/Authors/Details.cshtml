@@ -64,12 +64,21 @@
             width: 56px;
             height: 56px;
             flex: 0 0 56px;
-            border-radius: 50%;
+            border-radius: 50% !important;
             background: #e2e8f0;
             color: #475569;
             font-weight: 700;
             font-size: 22px;
+            overflow: hidden;
         }
+
+            .dt-avatar img, .suggested-avatar img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                border-radius: 50% !important;
+                display: block !important;
+            }
 
         .dt-label {
             margin: 0 0 4px;
@@ -296,7 +305,14 @@
         <section class="author-profile">
             <div class="dt-head">
                 <span class="dt-avatar">
-                    @(string.IsNullOrWhiteSpace(Model.AuthorName) ? "?" : Model.AuthorName.Trim().Substring(0, 1).ToUpper())
+                    @if (!string.IsNullOrWhiteSpace(Model.Images))
+                    {
+                        <img src="@(Model.Images.StartsWith("~") ? Url.Content(Model.Images) : Model.Images)" alt="@Model.AuthorName" />
+                    }
+                    else
+                    {
+                        @(string.IsNullOrWhiteSpace(Model.AuthorName) ? "?" : Model.AuthorName.Trim().Substring(0, 1).ToUpper())
+                    }
                 </span>
                 <div>
                     <p class="dt-label">Tác giả</p>
@@ -378,3 +394,4 @@
         }
     </section>
 </div>
+

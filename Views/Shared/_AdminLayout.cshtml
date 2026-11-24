@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -194,28 +194,53 @@
     </style>
 </head>
 <body>
-    @{ bool isAdmin = Session["Admin"] != null; }
+    @{
+        string currentRole = Convert.ToString(Session["Role"]);
+        bool isAdmin = Session["Admin"] != null || string.Equals(currentRole, "Admin", StringComparison.OrdinalIgnoreCase);
+        bool isEditor = !isAdmin && string.Equals(currentRole, "Editor", StringComparison.OrdinalIgnoreCase);
+        bool isAuthor = !isAdmin && !isEditor && string.Equals(currentRole, "Author", StringComparison.OrdinalIgnoreCase);
+
+        string currentCtrl = Convert.ToString(ViewContext.RouteData.Values["controller"]);
+        string currentAct = Convert.ToString(ViewContext.RouteData.Values["action"]);
+
+        string roleBadgeText = isAdmin ? "Quản trị viên" : (isEditor ? "Biên tập viên" : (isAuthor ? "Tác giả" : "Thành viên"));
+    }
     <header class="admin-header">
         <div class="admin-header-inner">
             <a class="admin-brand" href="@(isAdmin ? Url.RouteUrl("Admin", new { action = "Index" }) : Url.RouteUrl("AdminArticles", new { action = "Index" }))">
-                <i class="fa-solid fa-shield-halved"></i> TinNhanh Admin
+                <i class="fa-solid fa-shield-halved"></i> @(isAuthor ? "Không gian Tác giả" : "TinNhanh Admin")
             </a>
             <nav class="admin-nav">
-                <a href="@Url.RouteUrl("AdminArticles", new { action = "Index" })">
-                    <i class="fa-solid fa-newspaper"></i> Bài viết
+                @if (isAdmin)
+                {
+                    <a class="@(currentCtrl == "Admin" && currentAct == "Index" ? "active" : "")"
+                       href="@Url.RouteUrl("Admin", new { action = "Index" })">
+                        <i class="fa-solid fa-gauge-high"></i> Tổng quan
+                    </a>
+                }
+                <a class="@(currentCtrl == "Articles" ? "active" : "")"
+                   href="@Url.RouteUrl("AdminArticles", new { action = "Index" })">
+                    <i class="fa-solid fa-newspaper"></i> @(isAuthor ? "Bài viết của tôi" : "Bài viết")
                 </a>
                 @if (isAdmin)
                 {
-                    <a href="@Url.RouteUrl("AdminAuthors", new { action = "Index" })">
+                    <a class="@(currentCtrl == "Authors" ? "active" : "")"
+                       href="@Url.RouteUrl("AdminAuthors", new { action = "Index" })">
                         <i class="fa-solid fa-pen-nib"></i> Tác giả
                     </a>
-                    <a href="@Url.RouteUrl("AdminCategories", new { action = "Index" })">
+                    <a class="@(currentCtrl == "Categories" ? "active" : "")"
+                       href="@Url.RouteUrl("AdminCategories", new { action = "Index" })">
                         <i class="fa-solid fa-folder-tree"></i> Danh mục
                     </a>
-                    <a href="@Url.RouteUrl("Admin", new { action = "Users" })">
+                    <a class="@(currentCtrl == "Admin" && currentAct == "Users" ? "active" : "")"
+                       href="@Url.RouteUrl("Admin", new { action = "Users" })">
                         <i class="fa-solid fa-users-gear"></i> Tài khoản
                     </a>
-                    <a href="@Url.RouteUrl("Admin", new { action = "Comments" })">
+                }
+                @if (isAdmin || isEditor)
+                {
+                    <a class="@(currentCtrl == "Admin" && currentAct == "Comments" ? "active" : "")"
+                       href="@Url.RouteUrl("Admin", new { action = "Comments" })">
                         <i class="fa-solid fa-comments"></i> Bình luận
                     </a>
                 }
@@ -224,8 +249,8 @@
                 <a class="admin-home-btn" href="@Url.Action("Index", "Home")">
                     <i class="fa-solid fa-house"></i> Quay về trang chủ
                 </a>
-                <span>@(Session["Admin"] ?? Session["UserFullName"] ?? Session["User"])</span>
-                <span class="admin-role-tag">@(isAdmin ? "Tổng biên tập" : "Biên tập")</span>
+                <span>@(Session["UserFullName"] ?? Session["Admin"] ?? Session["User"])</span>
+                <span class="admin-role-tag">@roleBadgeText</span>
                 <a href="@Url.Action("Logout", "Account")">Đăng xuất</a>
             </div>
         </div>
@@ -242,3 +267,4 @@
     @RenderSection("scripts", required: false)
 </body>
 </html>
+

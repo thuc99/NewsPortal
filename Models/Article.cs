@@ -13,19 +13,29 @@ namespace NewsPortal.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập tiêu đề bài viết")]
-        [StringLength(150, ErrorMessage = "Tiêu đề bài viết không được vượt quá 150 ký tự")]
+        [StringLength(250, ErrorMessage = "Tiêu đề bài viết không được vượt quá 250 ký tự")]
         [Display(Name = "Tiêu đề")]
         public string Title { get; set; }
+
         [Required(ErrorMessage = "Vui lòng chọn danh mục")]
         [Display(Name = "Danh mục")]
         public int? CategoryId { get; set; }
+
+        [NotMapped]
+        [Display(Name = "Tác giả")]
+        public int? AuthorId { get; set; }
+
+        [NotMapped]
+        public string AuthorName { get; set; }
+
+        [NotMapped]
+        public string CategoryName { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập nội dung bài viết")]
         [StringLength(20000, MinimumLength = 50, ErrorMessage = "Nội dung từ 50 đến 20000 ký tự")]
         [Display(Name = "Nội dung")]
         [DataType(DataType.MultilineText)]
         [AllowHtml]
-
         public string Content { get; set; }
 
         [Display(Name = "Hình ảnh")]
@@ -54,6 +64,4 @@ namespace NewsPortal.Models
             }
         }
     }
-
-
 }

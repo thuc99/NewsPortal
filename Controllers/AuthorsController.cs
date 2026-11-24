@@ -23,14 +23,15 @@ namespace NewsPortal.Controllers
             if (!IsAdminManagementRequest() || Session["Admin"] != null)
                 return null;
 
-            if (string.Equals(Convert.ToString(Session["Role"]), "Editor",
-                StringComparison.OrdinalIgnoreCase))
+            string role = Convert.ToString(Session["Role"]);
+            if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase))
             {
                 return RedirectToRoute("AdminArticles", new { action = "Index" });
             }
 
             return Session["User"] != null
-                ? (ActionResult)RedirectToAction("Index", "Authors")
+                ? (ActionResult)RedirectToRoute("PublicAuthor", new { action = "Index" })
                 : RedirectToAction("Login", "Account");
         }
 
@@ -38,16 +39,47 @@ namespace NewsPortal.Controllers
         {
             return IsAdminManagementRequest()
                 ? (ActionResult)RedirectToRoute("AdminAuthors", new { action = "Index" })
-                : RedirectToAction("Index");
+                : RedirectToRoute("PublicAuthor", new { action = "Index" });
         }
 
-        private bool IsAccountAuthor(Author author)
+        // Đồng bộ tất cả tài khoản có Role = 'Author' sang bảng dbo.Authors (an toàn với UX_Authors_UserId)
+        private void SyncAuthorAccounts()
         {
-            return author != null && author.UserId.HasValue && db.Users.Any(u =>
-                u.UserId == author.UserId.Value && u.Role == "Author");
+            const string sql = @"
+IF OBJECT_ID(N'dbo.Authors', N'U') IS NOT NULL AND OBJECT_ID(N'dbo.Users', N'U') IS NOT NULL
+BEGIN
+    UPDATE au
+    SET au.UserId = u.UserId
+    FROM dbo.Authors au
+    INNER JOIN dbo.Users u
+        ON au.UserId IS NULL
+       AND u.Role = N'Author'
+       AND u.Email IS NOT NULL
+       AND au.Email IS NOT NULL
+       AND LOWER(LTRIM(RTRIM(au.Email))) = LOWER(LTRIM(RTRIM(u.Email)))
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.Authors ex WHERE ex.UserId = u.UserId);
+
+    INSERT INTO dbo.Authors (AuthorName, Email, Images, UserId)
+    SELECT
+        LEFT(ISNULL(NULLIF(LTRIM(RTRIM(u.FullName)), N''), u.Username), 150),
+        LEFT(ISNULL(NULLIF(LTRIM(RTRIM(u.Email)), N''), u.Username + N'@newsportal.local'), 150),
+        CASE WHEN u.AvatarUrl IS NOT NULL AND LEN(u.AvatarUrl) <= 500 THEN u.AvatarUrl ELSE NULL END,
+        u.UserId
+    FROM dbo.Users u
+    WHERE u.Role = N'Author'
+      AND NOT EXISTS (SELECT 1 FROM dbo.Authors au WHERE au.UserId = u.UserId);
+END";
+            try
+            {
+                db.Database.ExecuteSqlCommand(sql);
+            }
+            catch
+            {
+                // Bỏ qua nếu CSDL đang khởi tạo
+            }
         }
 
-        // Chuẩn hóa đường dẫn ảnh
+        // Chuẩn hóa đường dẫn ảnh tác giả (hỗ trợ cả ~/Content/Avatars/..., /Content/Images/Authors/..., URL ngoài và tên file)
         private string NormalizeImagePath(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -70,27 +102,66 @@ namespace NewsPortal.Controllers
             return "/Content/Images/Authors/" + path.TrimStart('/');
         }
 
-        // Đọc đường dẫn ảnh từ SQL Server
-        private string GetAuthorImage(int authorId)
+        // Đọc đường dẫn ảnh tác giả (ưu tiên ảnh riêng trong dbo.Authors, dự phòng sang AvatarUrl của tài khoản liên kết)
+        private string GetAuthorImage(Author author)
         {
-            var rawPath = db.Database.SqlQuery<string>(
+            if (author == null) return null;
+
+            string rawPath = db.Database.SqlQuery<string>(
                 "SELECT Images FROM dbo.Authors WHERE AuthorID = @p0",
-                authorId
+                author.AuthorID
             ).FirstOrDefault();
 
-            return NormalizeImagePath(rawPath);
+            string normalized = NormalizeImagePath(rawPath);
+            if (!string.IsNullOrEmpty(normalized))
+                return normalized;
+
+            if (author.UserId.HasValue)
+            {
+                string userAvatar = db.Users
+                    .Where(u => u.UserId == author.UserId.Value)
+                    .Select(u => u.AvatarUrl)
+                    .FirstOrDefault();
+
+                return NormalizeImagePath(userAvatar);
+            }
+
+            return null;
         }
 
-        // Nạp ảnh vào danh sách tác giả
-        private void LoadAuthorImages(IEnumerable<Author> authors)
+        // Nạp ảnh hàng loạt cho danh sách tác giả
+        private void LoadAuthorImages(IList<Author> authors)
         {
+            if (authors == null || authors.Count == 0) return;
+
+            var linkedUserIds = authors
+                .Where(a => a.UserId.HasValue)
+                .Select(a => a.UserId.Value)
+                .Distinct()
+                .ToList();
+
+            var userAvatars = linkedUserIds.Count > 0
+                ? db.Users
+                    .Where(u => linkedUserIds.Contains(u.UserId))
+                    .ToDictionary(u => u.UserId, u => u.AvatarUrl)
+                : new Dictionary<int, string>();
+
             foreach (var author in authors)
             {
-                author.Images = GetAuthorImage(author.AuthorID);
+                string normalized = NormalizeImagePath(author.Images);
+                if (string.IsNullOrEmpty(normalized) && author.UserId.HasValue)
+                {
+                    string uAvatar;
+                    if (userAvatars.TryGetValue(author.UserId.Value, out uAvatar))
+                    {
+                        normalized = NormalizeImagePath(uAvatar);
+                    }
+                }
+                author.Images = normalized;
             }
         }
 
-        // Kiểm tra file ảnh
+        // Kiểm tra file ảnh tải lên
         private bool ValidateImage(HttpPostedFileBase imageFile, out string error)
         {
             error = null;
@@ -104,7 +175,7 @@ namespace NewsPortal.Controllers
                 return false;
             }
 
-            string extension = Path.GetExtension(imageFile.FileName)
+            string extension = (Path.GetExtension(imageFile.FileName) ?? string.Empty)
                 .ToLowerInvariant();
 
             string[] allowedExtensions =
@@ -114,14 +185,14 @@ namespace NewsPortal.Controllers
 
             if (!allowedExtensions.Contains(extension))
             {
-                error = "Chỉ chấp nhận ảnh JPG, JPEG, PNG, GIF hoặc WEBP.";
+                error = "Chỉ chấp nhận định dạng ảnh JPG, JPEG, PNG, GIF hoặc WEBP.";
                 return false;
             }
 
             return true;
         }
 
-        // Lưu file ảnh vào thư mục
+        // Lưu file ảnh vào thư mục ~/Content/Images/Authors/
         private string SaveAuthorImage(HttpPostedFileBase imageFile)
         {
             if (imageFile == null || imageFile.ContentLength == 0)
@@ -136,7 +207,6 @@ namespace NewsPortal.Controllers
                 Directory.CreateDirectory(folder);
 
             string fileName = Guid.NewGuid().ToString("N") + extension;
-
             string fullPath = Path.Combine(folder, fileName);
 
             imageFile.SaveAs(fullPath);
@@ -144,7 +214,7 @@ namespace NewsPortal.Controllers
             return "/Content/Images/Authors/" + fileName;
         }
 
-        // Xóa file ảnh cũ trên ổ đĩa an toàn
+        // Xóa file ảnh cũ thuộc thư mục ~/Content/Images/Authors/ (không xóa nhầm ảnh Avatar tài khoản)
         private void TryDeleteAuthorImage(string imagePath)
         {
             if (string.IsNullOrWhiteSpace(imagePath))
@@ -162,6 +232,9 @@ namespace NewsPortal.Controllers
                     ? imagePath
                     : (imagePath.StartsWith("/") ? "~" + imagePath : "~/Content/Images/Authors/" + imagePath);
 
+                if (virtualPath.IndexOf("/Content/Images/Authors/", StringComparison.OrdinalIgnoreCase) < 0)
+                    return;
+
                 string fullPath = Server.MapPath(virtualPath);
 
                 if (!string.IsNullOrEmpty(fullPath) && System.IO.File.Exists(fullPath))
@@ -171,82 +244,49 @@ namespace NewsPortal.Controllers
             }
             catch
             {
-                // Bỏ qua nếu file không tồn tại hoặc không thuộc thư mục ứng dụng
+                // Bỏ qua nếu file không tồn tại hoặc đang được sử dụng
             }
         }
 
         // =========================
-        // DANH SÁCH TÁC GIẢ
+        // DANH SÁCH TÁC GIẢ & HỒ SƠ TÁC GIẢ
         // =========================
         public ActionResult Index(string search, int? id, string returnUrl = null)
         {
             var denied = CheckAdminManagementAccess();
             if (denied != null) return denied;
 
+            SyncAuthorAccounts();
+
             bool isAdminManagement = IsAdminManagementRequest();
 
             ViewBag.IsAdminManagement = isAdminManagement;
             ViewBag.ReturnUrl = returnUrl;
-
-            var eligibleAuthors = db.Authors.Where(a =>
-                a.UserId.HasValue && db.Users.Any(u =>
-                    u.UserId == a.UserId.Value &&
-                    u.Role == "Author" &&
-                    (isAdminManagement || u.IsActive)));
-            var query = eligibleAuthors;
-
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                string keyword = search.Trim();
-
-                query = query.Where(a =>
-                    a.AuthorName.Contains(keyword) ||
-                    a.Email.Contains(keyword));
-            }
-
             ViewBag.Search = search;
 
-            int? selectedAuthorId = id;
+            // Admin xem toàn bộ tác giả; trang công khai ẩn các tác giả có tài khoản đang bị khóa
+            var baseAuthorsQuery = isAdminManagement
+                ? db.Authors.AsQueryable()
+                : db.Authors.Where(a => !a.UserId.HasValue ||
+                    db.Users.Any(u => u.UserId == a.UserId.Value && u.IsActive));
 
-            if (!selectedAuthorId.HasValue &&
-                !isAdminManagement &&
-                string.IsNullOrWhiteSpace(search))
+            if (id.HasValue)
             {
-                var eligibleAuthorIds = eligibleAuthors.Select(a => a.AuthorID);
-                var mostPublishedArticles = db.Articles
-                    .Where(a => a.Status == "Published" &&
-                        eligibleAuthorIds.Contains(a.AuthorID))
-                    .GroupBy(a => a.AuthorID)
-                    .Select(group => new
-                    {
-                        AuthorID = group.Key,
-                        ArticleCount = group.Count()
-                    })
-                    .OrderByDescending(group => group.ArticleCount)
-                    .ThenBy(group => group.AuthorID)
-                    .FirstOrDefault();
-
-                selectedAuthorId = mostPublishedArticles != null
-                    ? (int?)mostPublishedArticles.AuthorID
-                    : eligibleAuthors
-                        .OrderBy(a => a.AuthorName)
-                        .Select(a => (int?)a.AuthorID)
-                        .FirstOrDefault();
-            }
-
-            if (selectedAuthorId.HasValue)
-            {
-                var selectedAuthor = eligibleAuthors.FirstOrDefault(a =>
-                    a.AuthorID == selectedAuthorId.Value);
+                var selectedAuthor = baseAuthorsQuery.FirstOrDefault(a => a.AuthorID == id.Value);
 
                 if (selectedAuthor == null)
-                    return HttpNotFound();
+                {
+                    TempData["Error"] = "Không tìm thấy thông tin tác giả.";
+                    return RedirectToAuthorsIndex();
+                }
 
-                selectedAuthor.Images = GetAuthorImage(selectedAuthor.AuthorID);
+                selectedAuthor.Images = GetAuthorImage(selectedAuthor);
 
-                var articlesQuery = db.Articles.Where(a =>
-                    a.AuthorID == selectedAuthorId.Value &&
-                    a.Status == "Published");
+                var articlesQuery = db.Articles.Where(a => a.AuthorID == id.Value);
+                if (!isAdminManagement)
+                {
+                    articlesQuery = articlesQuery.Where(a => a.Status == "Published");
+                }
 
                 var authorArticles = articlesQuery
                     .OrderByDescending(a => a.CreatedDate)
@@ -257,23 +297,56 @@ namespace NewsPortal.Controllers
                 ViewBag.Articles = authorArticles;
                 ViewBag.ArticleCount = authorArticles.Count;
 
-                var suggestedAuthors = eligibleAuthors
-                    .Where(a => a.AuthorID != selectedAuthorId.Value)
+                var suggestedAuthors = baseAuthorsQuery
+                    .Where(a => a.AuthorID != id.Value)
                     .OrderBy(a => a.AuthorName)
                     .Take(6)
                     .ToList();
 
                 LoadAuthorImages(suggestedAuthors);
-
                 ViewBag.SuggestedAuthors = suggestedAuthors;
 
                 ViewBag.CategoryNames = db.Categories
                     .ToDictionary(c => c.CategoryID, c => c.CategoryName);
+
+                return View(new List<Author> { selectedAuthor });
             }
 
-            var authors = query.OrderBy(a => a.AuthorName).ToList();
+            var filteredQuery = baseAuthorsQuery;
 
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string keyword = search.Trim();
+                filteredQuery = filteredQuery.Where(a =>
+                    a.AuthorName.Contains(keyword) ||
+                    (a.Email != null && a.Email.Contains(keyword)));
+            }
+
+            var authors = filteredQuery.OrderBy(a => a.AuthorName).ToList();
             LoadAuthorImages(authors);
+
+            // Đếm số bài viết cho từng tác giả để hiển thị trực quan trên bảng/thẻ
+            var articleCounts = (isAdminManagement
+                    ? db.Articles
+                    : db.Articles.Where(a => a.Status == "Published"))
+                .GroupBy(a => a.AuthorID)
+                .Select(g => new { AuthorID = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.AuthorID, x => x.Count);
+
+            var linkedUserIds = authors
+                .Where(a => a.UserId.HasValue)
+                .Select(a => a.UserId.Value)
+                .Distinct()
+                .ToList();
+
+            var linkedUsernames = linkedUserIds.Count > 0
+                ? db.Users
+                    .Where(u => linkedUserIds.Contains(u.UserId))
+                    .ToDictionary(u => u.UserId, u => u.Username + " (" + u.Role + ")")
+                : new Dictionary<int, string>();
+
+            ViewBag.ArticleCounts = articleCounts;
+            ViewBag.LinkedUsernames = linkedUsernames;
 
             return View(authors);
         }
@@ -286,13 +359,11 @@ namespace NewsPortal.Controllers
         {
             if (!IsAdminManagementRequest())
             {
-                return RedirectToRoute("AdminAuthors",
-                    new { action = "Create" });
+                return RedirectToRoute("AdminAuthors", new { action = "Create" });
             }
 
             ViewBag.IsAdminManagement = true;
-
-            return View();
+            return View(new Author());
         }
 
         // =========================
@@ -303,25 +374,26 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Author author, HttpPostedFileBase imageFile)
         {
-            ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            ViewBag.IsAdminManagement = true;
+
             if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
             {
                 imageFile = Request.Files[0];
             }
 
-            if (author.AuthorName != null)
-                author.AuthorName = author.AuthorName.Trim();
+            if (author == null)
+                author = new Author();
 
-            if (author.Email != null)
-                author.Email = author.Email.Trim();
+            author.AuthorName = (author.AuthorName ?? string.Empty).Trim();
+            author.Email = (author.Email ?? string.Empty).Trim();
 
-            if (db.Authors.Any(a => a.Email == author.Email))
+            if (!string.IsNullOrEmpty(author.Email) &&
+                db.Authors.Any(a => a.Email != null && a.Email.ToLower() == author.Email.ToLower()))
             {
-                ModelState.AddModelError("Email", "Email đã được sử dụng");
+                ModelState.AddModelError("Email", "Địa chỉ email này đã được sử dụng cho tác giả khác.");
             }
 
             string imageError;
-
             if (!ValidateImage(imageFile, out imageError))
             {
                 ModelState.AddModelError("Images", imageError);
@@ -331,20 +403,20 @@ namespace NewsPortal.Controllers
             {
                 string imagePath = SaveAuthorImage(imageFile);
 
+                // Tự động liên kết nếu email khớp với một tài khoản Users chưa có hồ sơ tác giả
+                var matchedUser = db.Users.FirstOrDefault(u =>
+                    u.Email != null && u.Email.ToLower() == author.Email.ToLower());
+
+                if (matchedUser != null && !db.Authors.Any(a => a.UserId == matchedUser.UserId))
+                {
+                    author.UserId = matchedUser.UserId;
+                }
+
+                author.Images = imagePath;
                 db.Authors.Add(author);
                 db.SaveChanges();
 
-                if (!string.IsNullOrEmpty(imagePath))
-                {
-                    db.Database.ExecuteSqlCommand(
-                        "UPDATE dbo.Authors SET Images = @p0 WHERE AuthorID = @p1",
-                        imagePath,
-                        author.AuthorID
-                    );
-                }
-
-                TempData["Success"] = "Thêm tác giả thành công";
-
+                TempData["Success"] = "Đã thêm tác giả '" + author.AuthorName + "' thành công.";
                 return RedirectToAuthorsIndex();
             }
 
@@ -355,22 +427,45 @@ namespace NewsPortal.Controllers
         // SỬA TÁC GIẢ - GET
         // =========================
         [AdminAuthorize]
-        public ActionResult Edit(int id)
+        public ActionResult Edit(int? id)
         {
+            if (!id.HasValue || id.Value <= 0)
+            {
+                TempData["Error"] = "Mã tác giả không hợp lệ.";
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
+            }
+
             if (!IsAdminManagementRequest())
             {
-                return RedirectToRoute("AdminAuthors",
-                    new { action = "Edit", id = id });
+                return RedirectToRoute("AdminAuthors", new { action = "Edit", id = id.Value });
             }
 
             ViewBag.IsAdminManagement = true;
 
-            var author = db.Authors.Find(id);
+            var author = db.Authors.Find(id.Value);
+            if (author == null)
+            {
+                TempData["Error"] = "Không tìm thấy tác giả cần chỉnh sửa.";
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
+            }
 
-            if (!IsAccountAuthor(author))
-                return HttpNotFound();
+            string directImage = db.Database.SqlQuery<string>(
+                "SELECT Images FROM dbo.Authors WHERE AuthorID = @p0",
+                author.AuthorID
+            ).FirstOrDefault();
 
-            author.Images = GetAuthorImage(author.AuthorID);
+            ViewBag.HasCustomAuthorImage = !string.IsNullOrWhiteSpace(directImage);
+            author.Images = GetAuthorImage(author);
+
+            if (author.UserId.HasValue)
+            {
+                var linkedUser = db.Users.FirstOrDefault(u => u.UserId == author.UserId.Value);
+                if (linkedUser != null)
+                {
+                    ViewBag.LinkedUsername = linkedUser.Username;
+                    ViewBag.LinkedRole = linkedUser.Role;
+                }
+            }
 
             return View(author);
         }
@@ -383,32 +478,48 @@ namespace NewsPortal.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(Author author, HttpPostedFileBase imageFile, bool removeImage = false)
         {
-            ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            ViewBag.IsAdminManagement = true;
+
             if ((imageFile == null || imageFile.ContentLength == 0) && Request.Files != null && Request.Files.Count > 0)
             {
                 imageFile = Request.Files[0];
             }
 
-            var existingAuthor = db.Authors.Find(author.AuthorID);
-
-            if (!IsAccountAuthor(existingAuthor))
-                return HttpNotFound();
-
-            if (author.AuthorName != null)
-                author.AuthorName = author.AuthorName.Trim();
-
-            if (author.Email != null)
-                author.Email = author.Email.Trim();
-
-            if (db.Authors.Any(a =>
-                a.Email == author.Email &&
-                a.AuthorID != author.AuthorID))
+            if (author == null || author.AuthorID <= 0)
             {
-                ModelState.AddModelError("Email", "Email đã được sử dụng");
+                TempData["Error"] = "Dữ liệu tác giả không hợp lệ.";
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
+            }
+
+            var existingAuthor = db.Authors.Find(author.AuthorID);
+            if (existingAuthor == null)
+            {
+                TempData["Error"] = "Không tìm thấy tác giả cần cập nhật.";
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
+            }
+
+            author.AuthorName = (author.AuthorName ?? string.Empty).Trim();
+            author.Email = (author.Email ?? string.Empty).Trim();
+
+            if (!string.IsNullOrEmpty(author.Email) &&
+                db.Authors.Any(a =>
+                    a.AuthorID != author.AuthorID &&
+                    a.Email != null &&
+                    a.Email.ToLower() == author.Email.ToLower()))
+            {
+                ModelState.AddModelError("Email", "Địa chỉ email này đã được sử dụng cho tác giả khác.");
+            }
+
+            if (existingAuthor.UserId.HasValue && !string.IsNullOrEmpty(author.Email))
+            {
+                int linkedUid = existingAuthor.UserId.Value;
+                if (db.Users.Any(u => u.UserId != linkedUid && u.Email != null && u.Email.ToLower() == author.Email.ToLower()))
+                {
+                    ModelState.AddModelError("Email", "Email này đang thuộc về một tài khoản người dùng khác.");
+                }
             }
 
             string imageError;
-
             if (!ValidateImage(imageFile, out imageError))
             {
                 ModelState.AddModelError("Images", imageError);
@@ -416,14 +527,31 @@ namespace NewsPortal.Controllers
 
             if (ModelState.IsValid)
             {
+                string oldCustomImage = db.Database.SqlQuery<string>(
+                    "SELECT Images FROM dbo.Authors WHERE AuthorID = @p0",
+                    existingAuthor.AuthorID
+                ).FirstOrDefault();
+
                 existingAuthor.AuthorName = author.AuthorName;
                 existingAuthor.Email = author.Email;
+
+                // Đồng bộ họ tên & email sang tài khoản Users liên kết (nếu có)
+                if (existingAuthor.UserId.HasValue)
+                {
+                    var linkedUser = db.Users.FirstOrDefault(u => u.UserId == existingAuthor.UserId.Value);
+                    if (linkedUser != null)
+                    {
+                        linkedUser.FullName = author.AuthorName.Length > 100
+                            ? author.AuthorName.Substring(0, 100)
+                            : author.AuthorName;
+                        linkedUser.Email = author.Email;
+                    }
+                }
 
                 db.SaveChanges();
 
                 if (imageFile != null && imageFile.ContentLength > 0)
                 {
-                    string oldImage = GetAuthorImage(existingAuthor.AuthorID);
                     string newImage = SaveAuthorImage(imageFile);
 
                     db.Database.ExecuteSqlCommand(
@@ -432,26 +560,32 @@ namespace NewsPortal.Controllers
                         existingAuthor.AuthorID
                     );
 
-                    TryDeleteAuthorImage(oldImage);
+                    TryDeleteAuthorImage(oldCustomImage);
                 }
                 else if (removeImage)
                 {
-                    string oldImage = GetAuthorImage(existingAuthor.AuthorID);
-
                     db.Database.ExecuteSqlCommand(
                         "UPDATE dbo.Authors SET Images = NULL WHERE AuthorID = @p0",
                         existingAuthor.AuthorID
                     );
 
-                    TryDeleteAuthorImage(oldImage);
+                    TryDeleteAuthorImage(oldCustomImage);
                 }
 
-                TempData["Success"] = "Cập nhật thành công";
-
+                TempData["Success"] = "Đã cập nhật thông tin tác giả '" + existingAuthor.AuthorName + "'.";
                 return RedirectToAuthorsIndex();
             }
 
-            author.Images = GetAuthorImage(author.AuthorID);
+            author.Images = GetAuthorImage(existingAuthor);
+            if (existingAuthor.UserId.HasValue)
+            {
+                var linkedUser = db.Users.FirstOrDefault(u => u.UserId == existingAuthor.UserId.Value);
+                if (linkedUser != null)
+                {
+                    ViewBag.LinkedUsername = linkedUser.Username;
+                    ViewBag.LinkedRole = linkedUser.Role;
+                }
+            }
 
             return View(author);
         }
@@ -462,46 +596,71 @@ namespace NewsPortal.Controllers
         [AdminAuthorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteImage(int id)
+        public ActionResult DeleteImage(int? id)
         {
-            var author = db.Authors.Find(id);
-            if (!IsAccountAuthor(author))
-                return HttpNotFound();
+            if (!id.HasValue || id.Value <= 0)
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
 
-            string oldImage = GetAuthorImage(id);
+            var author = db.Authors.Find(id.Value);
+            if (author == null)
+            {
+                TempData["Error"] = "Không tìm thấy tác giả.";
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
+            }
+
+            string oldImage = db.Database.SqlQuery<string>(
+                "SELECT Images FROM dbo.Authors WHERE AuthorID = @p0",
+                id.Value
+            ).FirstOrDefault();
 
             db.Database.ExecuteSqlCommand(
                 "UPDATE dbo.Authors SET Images = NULL WHERE AuthorID = @p0",
-                id
+                id.Value
             );
 
             TryDeleteAuthorImage(oldImage);
 
-            TempData["Success"] = "Đã xóa ảnh đại diện tác giả";
-
-            return RedirectToRoute("AdminAuthors", new { action = "Edit", id = id });
+            TempData["Success"] = "Đã xóa ảnh đại diện của tác giả.";
+            return RedirectToRoute("AdminAuthors", new { action = "Edit", id = id.Value });
         }
 
         // =========================
         // XÓA TÁC GIẢ - GET
         // =========================
         [AdminAuthorize]
-        public ActionResult Delete(int id)
+        public ActionResult Delete(int? id)
         {
+            if (!id.HasValue || id.Value <= 0)
+            {
+                TempData["Error"] = "Mã tác giả không hợp lệ.";
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
+            }
+
             if (!IsAdminManagementRequest())
             {
-                return RedirectToRoute("AdminAuthors",
-                    new { action = "Delete", id = id });
+                return RedirectToRoute("AdminAuthors", new { action = "Delete", id = id.Value });
             }
 
             ViewBag.IsAdminManagement = true;
 
-            var author = db.Authors.Find(id);
+            var author = db.Authors.Find(id.Value);
+            if (author == null)
+            {
+                TempData["Error"] = "Không tìm thấy tác giả cần xóa.";
+                return RedirectToRoute("AdminAuthors", new { action = "Index" });
+            }
 
-            if (!IsAccountAuthor(author))
-                return HttpNotFound();
+            author.Images = GetAuthorImage(author);
+            ViewBag.ArticleCount = db.Articles.Count(a => a.AuthorID == author.AuthorID);
 
-            author.Images = GetAuthorImage(author.AuthorID);
+            if (author.UserId.HasValue)
+            {
+                var linkedUser = db.Users.FirstOrDefault(u => u.UserId == author.UserId.Value);
+                if (linkedUser != null)
+                {
+                    ViewBag.LinkedUsername = linkedUser.Username;
+                }
+            }
 
             return View(author);
         }
@@ -513,32 +672,53 @@ namespace NewsPortal.Controllers
         [HttpPost]
         [ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public ActionResult DeleteConfirmed(int? id)
         {
-            ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            ViewBag.IsAdminManagement = true;
 
-            var author = db.Authors.Find(id);
-
-            if (!IsAccountAuthor(author))
-                return HttpNotFound();
-
-            if (db.Articles.Any(a => a.AuthorID == id))
+            if (!id.HasValue || id.Value <= 0)
             {
-                TempData["Error"] =
-                    "Không thể xóa: tác giả này vẫn còn bài viết";
-
+                TempData["Error"] = "Mã tác giả không hợp lệ.";
                 return RedirectToAuthorsIndex();
             }
 
-            string imagePath = GetAuthorImage(id);
+            var author = db.Authors.Find(id.Value);
+            if (author == null)
+            {
+                TempData["Error"] = "Tác giả không tồn tại hoặc đã được xóa trước đó.";
+                return RedirectToAuthorsIndex();
+            }
+
+            int articleCount = db.Articles.Count(a => a.AuthorID == id.Value);
+            if (articleCount > 0)
+            {
+                TempData["Error"] = "Không thể xóa tác giả '" + author.AuthorName + "' vì vẫn còn " + articleCount + " bài viết thuộc tác giả này.";
+                return RedirectToAuthorsIndex();
+            }
+
+            string oldCustomImage = db.Database.SqlQuery<string>(
+                "SELECT Images FROM dbo.Authors WHERE AuthorID = @p0",
+                id.Value
+            ).FirstOrDefault();
+
+            int? linkedUserId = author.UserId;
+            string deletedName = author.AuthorName;
 
             db.Authors.Remove(author);
             db.SaveChanges();
 
-            TryDeleteAuthorImage(imagePath);
+            // Nếu tác giả gắn với tài khoản đang có Role = 'Author', chuyển tài khoản về 'Reader' để không tự sinh lại
+            if (linkedUserId.HasValue)
+            {
+                db.Database.ExecuteSqlCommand(
+                    "UPDATE dbo.Users SET Role = N'Reader' WHERE UserId = @p0 AND Role = N'Author'",
+                    linkedUserId.Value
+                );
+            }
 
-            TempData["Success"] = "Đã xóa tác giả";
+            TryDeleteAuthorImage(oldCustomImage);
 
+            TempData["Success"] = "Đã xóa tác giả '" + deletedName + "' thành công.";
             return RedirectToAuthorsIndex();
         }
 
@@ -548,21 +728,17 @@ namespace NewsPortal.Controllers
         public ActionResult Details(int? id)
         {
             var denied = CheckAdminManagementAccess();
-
             if (denied != null)
                 return denied;
 
-            if (id == null)
+            if (!id.HasValue || id.Value <= 0)
             {
-                return new HttpStatusCodeResult(
-                    System.Net.HttpStatusCode.BadRequest);
+                return RedirectToAuthorsIndex();
             }
 
             return IsAdminManagementRequest()
-                ? RedirectToRoute("AdminAuthors",
-                    new { action = "Index", id = id })
-                : RedirectToRoute("PublicAuthor",
-                    new { action = "Index", id = id });
+                ? (ActionResult)RedirectToRoute("AdminAuthors", new { action = "Index", id = id.Value })
+                : RedirectToRoute("PublicAuthor", new { action = "Index", id = id.Value });
         }
 
         protected override void Dispose(bool disposing)

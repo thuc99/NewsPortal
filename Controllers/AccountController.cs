@@ -90,29 +90,135 @@ namespace NewsPortal.Controllers
             }
         }
 
+        private static bool _usersRoleConstraintChecked = false;
+        private static readonly object _usersRoleLock = new object();
+
+        private static void EnsureUsersRoleConstraint(SqlConnection conn)
+        {
+            if (_usersRoleConstraintChecked) return;
+
+            lock (_usersRoleLock)
+            {
+                if (_usersRoleConstraintChecked) return;
+
+                const string sql = @"
+IF OBJECT_ID(N'dbo.Users', N'U') IS NOT NULL
+BEGIN
+    DECLARE @dropSql NVARCHAR(MAX) = N'';
+    SELECT @dropSql = @dropSql + N'ALTER TABLE dbo.Users DROP CONSTRAINT [' + REPLACE(cc.name COLLATE DATABASE_DEFAULT, N']', N']]') + N'];'
+    FROM sys.check_constraints cc
+    LEFT JOIN sys.columns col
+        ON col.object_id = cc.parent_object_id
+       AND col.column_id = cc.parent_column_id
+    WHERE cc.parent_object_id = OBJECT_ID(N'dbo.Users')
+      AND (col.name COLLATE DATABASE_DEFAULT = N'Role'
+           OR cc.definition COLLATE DATABASE_DEFAULT LIKE N'%Role%'
+           OR cc.name COLLATE DATABASE_DEFAULT LIKE N'%Role%');
+
+    IF LEN(@dropSql) > 0
+        EXEC sp_executesql @dropSql;
+
+    UPDATE dbo.Users
+    SET Role = N'Reader'
+    WHERE Role IS NULL
+       OR LTRIM(RTRIM(Role)) = N''
+       OR Role = N'User'
+       OR Role NOT IN (N'Admin', N'Editor', N'Author', N'Reader');
+
+    ALTER TABLE dbo.Users WITH CHECK
+    ADD CONSTRAINT [CK_Users_Role_Workflow]
+    CHECK ([Role] IN (N'Admin', N'Editor', N'Author', N'Reader', N'User'));
+END";
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+
+                _usersRoleConstraintChecked = true;
+            }
+        }
+
+        private static string NormalizeRoleName(string role)
+        {
+            role = (role ?? string.Empty).Trim();
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+                return "Admin";
+            if (string.Equals(role, "Editor", StringComparison.OrdinalIgnoreCase))
+                return "Editor";
+            if (string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase))
+                return "Author";
+            return "Reader";
+        }
+
+        private static void EnsureAuthorProfileForUser(SqlConnection conn, int userId, string username, string fullName, string email, string avatarUrl)
+        {
+            if (userId <= 0) return;
+
+            const string syncSql = @"
+IF OBJECT_ID(N'dbo.Authors', N'U') IS NOT NULL
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM dbo.Authors WHERE UserId = @uid)
+    BEGIN
+        DECLARE @matchedAuthorId INT = NULL;
+        IF @email IS NOT NULL AND LTRIM(RTRIM(@email)) <> N''
+        BEGIN
+            SELECT TOP 1 @matchedAuthorId = AuthorID
+            FROM dbo.Authors
+            WHERE UserId IS NULL
+              AND Email IS NOT NULL
+              AND LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@email)));
+        END
+
+        IF @matchedAuthorId IS NOT NULL
+        BEGIN
+            UPDATE dbo.Authors SET UserId = @uid WHERE AuthorID = @matchedAuthorId;
+        END
+        ELSE
+        BEGIN
+            INSERT INTO dbo.Authors (AuthorName, Email, Images, UserId)
+            VALUES (
+                LEFT(ISNULL(NULLIF(LTRIM(RTRIM(@fullName)), N''), @username), 150),
+                LEFT(ISNULL(NULLIF(LTRIM(RTRIM(@email)), N''), @username + N'@newsportal.local'), 150),
+                CASE WHEN @avatar IS NOT NULL AND LEN(@avatar) <= 500 THEN @avatar ELSE NULL END,
+                @uid
+            );
+        END
+    END
+END";
+            using (var cmd = new SqlCommand(syncSql, conn))
+            {
+                cmd.Parameters.AddWithValue("@uid", userId);
+                cmd.Parameters.AddWithValue("@username", username ?? string.Empty);
+                cmd.Parameters.AddWithValue("@fullName", (object)(fullName ?? string.Empty));
+                cmd.Parameters.AddWithValue("@email", (object)(email ?? string.Empty));
+                cmd.Parameters.AddWithValue("@avatar", string.IsNullOrWhiteSpace(avatarUrl) ? (object)DBNull.Value : avatarUrl);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         // Xóa thông tin đăng nhập cũ
         private void ClearLoginSession()
         {
             Session.Remove("Admin");
             Session.Remove("User");
             Session.Remove("UserFullName");
+            Session.Remove("UserAvatar");
             Session.Remove("Role");
         }
 
         // GET: /Account/Login
         [HttpGet]
-        public ActionResult Login()
+        public ActionResult Login(string returnUrl = null)
         {
-            if (Session["Admin"] != null)
-                return RedirectToAction("Index", "Home");
-
-            if (string.Equals(
-                Convert.ToString(Session["Role"]),
-                "Editor",
-                StringComparison.OrdinalIgnoreCase))
+            if (Session["Admin"] != null || Session["User"] != null)
             {
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return Redirect(returnUrl);
+
                 return RedirectToAction("Index", "Home");
             }
+
+            ViewBag.ReturnUrl = returnUrl;
 
             if (TempData["Error"] != null)
                 ViewBag.Error = TempData["Error"];
@@ -134,8 +240,10 @@ namespace NewsPortal.Controllers
         // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Login(string username, string password)
+        public ActionResult Login(string username, string password, string returnUrl = null)
         {
+            ViewBag.ReturnUrl = returnUrl;
+
             // Kiểm tra thời gian khóa đăng nhập
             var lockUntil = Session["LockUntil"] as DateTime?;
 
@@ -173,18 +281,25 @@ namespace NewsPortal.Controllers
             bool databaseAccountFound = false;
             bool databaseAccountIsActive = false;
 
+            int databaseUserId = 0;
             string databaseUsername = null;
             string databaseFullName = null;
+            string databaseEmail = null;
+            string databaseAvatar = null;
             string databaseRole = null;
 
             using (var conn = CreateUsersConnection())
             {
                 conn.Open();
+                EnsureUsersRoleConstraint(conn);
 
                 const string sql = @"
                     SELECT TOP 1
+                        UserId,
                         Username,
                         FullName,
+                        Email,
+                        AvatarUrl,
                         PasswordHash,
                         Role,
                         IsActive
@@ -202,34 +317,41 @@ namespace NewsPortal.Controllers
                         if (reader.Read())
                         {
                             databaseAccountFound = true;
+                            databaseUserId = Convert.ToInt32(reader["UserId"]);
+                            databaseAccountIsActive = Convert.ToBoolean(reader["IsActive"]);
+                            databaseRole = Convert.ToString(reader["Role"]);
 
-                            databaseAccountIsActive =
-                                Convert.ToBoolean(reader["IsActive"]);
+                            string storedHash = Convert.ToString(reader["PasswordHash"]);
 
-                            databaseRole =
-                                Convert.ToString(reader["Role"]);
-
-                            string storedHash =
-                                Convert.ToString(reader["PasswordHash"]);
-
-                            if (databaseAccountIsActive &&
-                                string.Equals(
+                            if (string.Equals(
                                     storedHash,
                                     ComputeSha256(password.Trim()),
-                                    StringComparison.OrdinalIgnoreCase))
+                                    StringComparison.OrdinalIgnoreCase) ||
+                                storedHash == password.Trim())
                             {
-                                databaseUsername =
-                                    Convert.ToString(reader["Username"]);
+                                if (!databaseAccountIsActive)
+                                {
+                                    ViewBag.Error = "Tài khoản này hiện đang bị khóa. Vui lòng liên hệ Quản trị viên.";
+                                    return View();
+                                }
 
-                                databaseFullName =
-                                    Convert.ToString(reader["FullName"]);
+                                databaseUsername = Convert.ToString(reader["Username"]);
+                                databaseFullName = reader["FullName"] == DBNull.Value ? "" : Convert.ToString(reader["FullName"]);
+                                databaseEmail = reader["Email"] == DBNull.Value ? "" : Convert.ToString(reader["Email"]);
+                                databaseAvatar = reader["AvatarUrl"] == DBNull.Value ? null : Convert.ToString(reader["AvatarUrl"]);
                             }
                         }
                     }
                 }
+
+                if (databaseUsername != null &&
+                    string.Equals(NormalizeRoleName(databaseRole), "Author", StringComparison.OrdinalIgnoreCase))
+                {
+                    EnsureAuthorProfileForUser(conn, databaseUserId, databaseUsername, databaseFullName, databaseEmail, databaseAvatar);
+                }
             }
 
-            // Đăng nhập bằng tài khoản trong database
+            // Đăng nhập bằng tài khoản trong database (hỗ trợ đầy đủ 4 cấp: Admin, Editor, Author, Reader)
             if (databaseUsername != null)
             {
                 Session.Remove("LockUntil");
@@ -237,36 +359,33 @@ namespace NewsPortal.Controllers
 
                 ClearLoginSession();
 
-                if (string.Equals(
-                    databaseRole,
-                    "Admin",
-                    StringComparison.OrdinalIgnoreCase))
+                string normalizedRole = NormalizeRoleName(databaseRole);
+                Session["Role"] = normalizedRole;
+                Session["UserFullName"] = string.IsNullOrWhiteSpace(databaseFullName) ? databaseUsername : databaseFullName;
+
+                if (!string.IsNullOrWhiteSpace(databaseAvatar))
                 {
-                    Session["Role"] = "Admin";
+                    Session["UserAvatar"] = databaseAvatar;
+                }
+
+                if (normalizedRole == "Admin")
+                {
                     Session["Admin"] = databaseUsername;
-
-                    return RedirectToAction("Index", "Home");
                 }
-
-                Session["User"] = databaseUsername;
-                Session["UserFullName"] = databaseFullName;
-
-                if (string.Equals(
-                    databaseRole,
-                    "Editor",
-                    StringComparison.OrdinalIgnoreCase))
+                else
                 {
-                    Session["Role"] = "Editor";
-
-                    return RedirectToAction("Index", "Home");
+                    Session["User"] = databaseUsername;
                 }
 
-                Session["Role"] = string.Equals(databaseRole, "Author", StringComparison.OrdinalIgnoreCase) ? "Author" : "Reader";
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
 
-                return RedirectToRoute("Default", new { controller = "Articles", action = "Index" });
+                return RedirectToAction("Index", "Home");
             }
 
-            // Đăng nhập Admin cũ
+            // Đăng nhập Admin mặc định dự phòng (khi chưa tạo tài khoản admin trong bảng Users)
             bool canUseLegacyRootLogin =
                 username.Equals(
                     "admin",
@@ -286,7 +405,13 @@ namespace NewsPortal.Controllers
                 Session.Remove("LockUntil");
                 Session["Role"] = "Admin";
                 Session["Admin"] = "admin";
+                Session["UserFullName"] = "Quản trị viên";
                 Session["FailCount"] = 0;
+
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
 
                 return RedirectToAction("Index", "Home");
             }
@@ -397,6 +522,7 @@ namespace NewsPortal.Controllers
                 using (var conn = CreateUsersConnection())
                 {
                     conn.Open();
+                    EnsureUsersRoleConstraint(conn);
 
                     // Kiểm tra tài khoản hoặc email đã tồn tại
                     const string checkSql = @"
@@ -891,7 +1017,7 @@ namespace NewsPortal.Controllers
             Session.Remove("LockUntil");
             Session.Remove("FailCount");
 
-            return RedirectToAction("Index", "Articles");
+            return RedirectToAction("Index", "Home");
         }
     }
 }

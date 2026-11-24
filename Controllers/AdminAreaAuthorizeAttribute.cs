@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Web;
 using System.Web.Mvc;
 
@@ -13,7 +13,8 @@ namespace NewsPortal.Controllers
 
             string role = Convert.ToString(httpContext.Session["Role"]);
 
-            bool isAdmin = httpContext.Session["Admin"] != null;
+            bool isAdmin = httpContext.Session["Admin"] != null ||
+                string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
 
             bool isEditor = string.Equals(
                 role,
@@ -31,8 +32,15 @@ namespace NewsPortal.Controllers
 
             if (session != null && session["User"] != null)
             {
+                string role = Convert.ToString(session["Role"]);
+                if (string.Equals(role, "Author", StringComparison.OrdinalIgnoreCase))
+                {
+                    filterContext.Result = new RedirectResult("~/Admin/Article");
+                    return;
+                }
+
                 session["AccessDeniedMessage"] =
-                    "B\u1EA1n kh\u00F4ng c\u00F3 quy\u1EC1n truy c\u1EADp khu v\u1EF1c qu\u1EA3n tr\u1ECB.";
+                    "Bạn không có quyền truy cập khu vực quản trị.";
 
                 filterContext.Result =
                     new RedirectResult("~/Home/Index");
@@ -43,7 +51,7 @@ namespace NewsPortal.Controllers
             if (session != null)
             {
                 session["LoginMessage"] =
-                    "Vui l\u00F2ng \u0111\u0103ng nh\u1EADp \u0111\u1EC3 truy c\u1EADp khu v\u1EF1c qu\u1EA3n tr\u1ECB.";
+                    "Vui lòng đăng nhập để truy cập khu vực quản trị.";
             }
 
             filterContext.Result =
