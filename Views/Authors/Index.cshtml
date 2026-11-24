@@ -656,15 +656,14 @@
 
 @if (hasSelectedAuthor)
 {
-    string listBackUrl = isAdminManagement
-        ? Url.Content("~/Admin/Author/Index")
-        : Url.RouteUrl("PublicAuthor", new { action = "Index" });
-
-    <div style="max-width: 1160px; margin: 20px auto -12px;">
-        <a href="@listBackUrl" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px !important; text-decoration: none; font-weight: 600; font-size: 13.5px;">
-            &larr; @(isAdminManagement ? "Quay lại Quản lý Tác giả" : "Xem tất cả tác giả")
-        </a>
-    </div>
+    if (isAdminManagement)
+    {
+        <div style="max-width: 1160px; margin: 20px auto -12px;">
+            <a href="@Url.Content("~/Admin/Author/Index")" style="display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 18px; background: #e2e8f0; color: #334155; border: 0; border-radius: 8px !important; text-decoration: none; font-weight: 700; font-size: 14px; line-height: 1.3;">
+                &larr; Quay lại Quản lý Tác giả
+            </a>
+        </div>
+    }
 
     <div class="author-profile-layout">
         <aside class="author-profile-sidebar">
@@ -763,7 +762,7 @@
                         @foreach (var article in monthGroup)
                         {
                             var articleUrl = isAdminManagement
-                                ? Url.RouteUrl("AdminArticles", new { action = "Edit", id = article.ArticleID })
+                                ? Url.RouteUrl("AdminArticles", new { action = "View", id = article.ArticleID })
                                 : Url.Action("View", "Articles", new { id = article.ArticleID });
                             string artImg = null;
                             if (!string.IsNullOrWhiteSpace(article.ImageUrl))

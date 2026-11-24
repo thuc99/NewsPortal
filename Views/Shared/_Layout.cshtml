@@ -1246,8 +1246,8 @@
                 </button>
                 <div class="nav-dropdown-menu" id="content-nav-menu">
                     <a href="@Url.Action("Index", "Articles")" class="nav-dropdown-link @(isArticlesPage ? "active" : "")">Tin tức</a>
-                    <a href="@Url.Action("Index", "Categories")" class="nav-dropdown-link @(isCategoriesPage ? "active" : "")">Danh mục</a>
-                    <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index" })" class="nav-dropdown-link @(isAuthorsPage ? "active" : "")">Tác giả</a>
+                    <a href="@Url.RouteUrl("Default", new { controller = "Categories", action = "Index" })" class="nav-dropdown-link @(isCategoriesPage ? "active" : "")">Danh mục</a>
+                    <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index", id = (int?)null })" class="nav-dropdown-link @(isAuthorsPage ? "active" : "")">Tác giả</a>
                     <a href="@Url.Action("Favorites", "Articles")" class="nav-dropdown-link @(isFavoritesPage ? "active" : "")">Bài viết đã lưu</a>
                 </div>
             </div>
@@ -1351,8 +1351,8 @@
                     <div class="footer-links">
                         <a href="@Url.Action("Index", "Home")">Trang chủ</a>
                         <a href="@Url.Action("Index", "Articles")">Tin tức</a>
-                        <a href="@Url.Action("Index", "Categories")">Danh mục</a>
-                        <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index" })">Tác giả</a>
+                        <a href="@Url.RouteUrl("Default", new { controller = "Categories", action = "Index" })">Danh mục</a>
+                        <a href="@Url.RouteUrl("PublicAuthor", new { action = "Index", id = (int?)null })">Tác giả</a>
                     </div>
                 </div>
 

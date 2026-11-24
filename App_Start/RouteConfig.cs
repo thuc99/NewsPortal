@@ -42,6 +42,17 @@ namespace NewsPortal
                 }
             );
 
+            routes.MapRoute(
+                name: "AdminCategoryRoot",
+                url: "Admin/Category",
+                defaults: new
+                {
+                    controller = "Categories",
+                    action = "Index"
+                },
+                namespaces: new[] { "NewsPortal.Controllers" }
+            );
+
             // Quản lý bài viết
             routes.MapRoute(
                 name: "AdminArticles",
