@@ -827,10 +827,16 @@
         }
 
         .np-share-mobile-status {
-            position: absolute;
-            top: 50%;
-            left: calc(100% + 8px);
-            z-index: 6;
+            position: fixed;
+            top: 0;
+            right: auto;
+            bottom: auto;
+            left: 0;
+            z-index: 30;
+            width: max-content;
+            max-width: calc(100vw - 24px);
+            margin: 0;
+            pointer-events: none;
             transform: translateY(-50%);
         }
 
@@ -938,44 +944,50 @@
                     }
                 }
 
-                <button class="np-share-toggle-mobile"
-                        id="npShareMobileToggle"
-                        type="button"
-                        aria-label="Chia sẻ bài viết"
-                        aria-expanded="false"
-                        aria-controls="npShareMobilePanel"
-                        title="Chia sẻ bài viết">
-                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
-                </button>
-
-                <div class="np-share-mobile-panel" id="npShareMobilePanel">
-                    <a class="np-share__btn np-share__facebook np-share-mobile-action"
-                       href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
-                       target="_blank" rel="noopener noreferrer"
-                       aria-label="Chia sẻ lên Facebook" title="Facebook">
-                        <i class="fa-brands fa-facebook-f"></i>
-                    </a>
-                    <a class="np-share__btn np-share__zalo np-share-mobile-action"
-                       href="https://zalo.me/share?url=@encodedUrl"
-                       target="_blank" rel="noopener noreferrer"
-                       aria-label="Chia sẻ qua Zalo" title="Zalo">
-                        <span>Zalo</span>
-                    </a>
-                    <button class="np-share__btn np-share__copy np-share-mobile-action"
+                @if (ViewBag.IsAdminManagement != true)
+                {
+                    <button class="np-share-toggle-mobile"
+                            id="npShareMobileToggle"
                             type="button"
-                            aria-label="Sao chép liên kết"
-                            title="Sao chép liên kết"
-                            onclick="copyArticleLink()">
-                        <i class="fa-solid fa-link"></i>
+                            aria-label="Chia sẻ bài viết"
+                            aria-expanded="false"
+                            aria-controls="npShareMobilePanel"
+                            title="Chia sẻ bài viết">
+                        <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                     </button>
-                </div>
 
-                <span class="np-share__status np-share-mobile-status" id="npShareMobileStatus" role="status" aria-live="polite"></span>
+                    <div class="np-share-mobile-panel" id="npShareMobilePanel">
+                        <a class="np-share__btn np-share__facebook np-share-mobile-action"
+                           href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
+                           target="_blank" rel="noopener noreferrer"
+                           aria-label="Chia sẻ lên Facebook" title="Facebook">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a class="np-share__btn np-share__zalo np-share-mobile-action"
+                           href="https://zalo.me/share?url=@encodedUrl"
+                           target="_blank" rel="noopener noreferrer"
+                           aria-label="Chia sẻ qua Zalo" title="Zalo">
+                            <span>Zalo</span>
+                        </a>
+                        <div class="np-share-mobile-copy-row">
+                            <button class="np-share__btn np-share__copy np-share-mobile-action"
+                                    type="button"
+                                    aria-label="Sao chép liên kết"
+                                    title="Sao chép liên kết"
+                                    onclick="copyArticleLink()">
+                                <i class="fa-solid fa-link"></i>
+                            </button>
+                            <span class="np-share__status np-share-mobile-status" id="npShareMobileStatus" role="status" aria-live="polite"></span>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
 
     <div class="np-article-layout">
+        @if (ViewBag.IsAdminManagement != true)
+        {
         <aside class="np-share" aria-label="Chia sẻ bài viết">
             <button class="np-share__toggle" type="button" aria-expanded="true" aria-controls="npShareActions">
                 <span class="np-share__label">CHIA SẺ</span>
@@ -1013,6 +1025,7 @@
 
             <span class="np-share__status" id="copyMessage" role="status" aria-live="polite"></span>
         </aside>
+        }
         <div class="np-article-content">
 
     <div class="detail-content">
@@ -1266,35 +1279,47 @@
     function copyArticleLink() {
         var articleUrl = @Html.Raw(Json.Encode(articleUrl));
 
+        function setMobileMessage(text) {
+            var mobileMessage = document.getElementById("npShareMobileStatus");
+            if (mobileMessage) mobileMessage.textContent = text;
+        }
+
         function showCopyMessage() {
             var message = document.getElementById("copyMessage");
-            var mobileMessage = document.getElementById("npShareMobileStatus");
 
             if (message) message.textContent = "Đã sao chép liên kết";
-            if (mobileMessage) mobileMessage.textContent = "Đã sao chép liên kết";
+            setMobileMessage("Đã sao chép liên kết");
 
             setTimeout(function () {
                 if (message) message.textContent = "";
-                if (mobileMessage) mobileMessage.textContent = "";
+                setMobileMessage("");
             }, 2500);
         }
 
         function showCopyError() {
             var message = document.getElementById("copyMessage");
-            var mobileMessage = document.getElementById("npShareMobileStatus");
             if (message) message.textContent = "Không thể sao chép liên kết";
-            if (mobileMessage) mobileMessage.textContent = "Không thể sao chép liên kết";
+            setMobileMessage("Không thể sao chép liên kết");
         }
 
         function fallbackCopyLink() {
             var input = document.createElement("textarea");
 
             input.value = articleUrl;
+            input.setAttribute("readonly", "");
             input.style.position = "fixed";
-            input.style.left = "-9999px";
+            input.style.top = "0";
+            input.style.left = "0";
+            input.style.width = "1px";
+            input.style.height = "1px";
+            input.style.padding = "0";
+            input.style.border = "0";
+            input.style.opacity = "0";
 
             document.body.appendChild(input);
+            input.focus();
             input.select();
+            input.setSelectionRange(0, input.value.length);
 
             try {
                 var copied = document.execCommand("copy");
@@ -1306,9 +1331,9 @@
                 }
             } catch (e) {
                 showCopyError();
+            } finally {
+                document.body.removeChild(input);
             }
-
-            document.body.removeChild(input);
         }
 
         if (navigator.clipboard && window.isSecureContext) {
