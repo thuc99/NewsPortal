@@ -1386,9 +1386,6 @@ END";
 
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                TempData["Error"] = "Không thể lưu bài viết: " + string.Join(" | ", errors);
-
                 if (article != null)
                 {
                     if (string.IsNullOrWhiteSpace(article.Image))

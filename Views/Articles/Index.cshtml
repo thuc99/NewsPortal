@@ -33,13 +33,6 @@
     int countArchived = ViewBag.CountArchived == null ? 0 : (int)ViewBag.CountArchived;
 }
 
-@if (TempData["Success"] != null)
-{<div class="alert alert-success">@TempData["Success"]</div>}
-@if (TempData["Error"] != null)
-{<div class="alert alert-danger">@TempData["Error"]</div>}
-@if (ViewBag.WarningMessage != null)
-{<div class="alert alert-warning">@ViewBag.WarningMessage</div>}
-
 <style>
     .alert {
         width: min(1150px, calc(100% - 32px));
@@ -77,8 +70,46 @@
     }
 
     .admin-articles-page {
-        width: min(1208px, calc(100% - 32px));
-        max-width: 1208px;
+        width: 100%;
+        max-width: none;
+        margin: 0 auto;
+    }
+
+    .admin-articles-page .alert {
+        width: 100%;
+        max-width: none;
+        margin: 0 0 16px;
+        box-sizing: border-box;
+    }
+
+    .admin-page-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+        .admin-page-heading > div > a {
+            color: #b91c32;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .admin-page-heading h2 {
+            margin: 6px 0 0;
+            color: #172033;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+    .admin-list-panel.is-admin {
+        padding: 22px;
+        border: 1px solid #e9e9ed;
+        border-radius: 12px;
+        background: #fff;
     }
 
     .management-header {
@@ -111,19 +142,27 @@
     }
 
     .btn-add {
-        display: inline-block;
-        padding: 11px 17px;
-        border: none;
-        border-radius: 8px;
-        background: #b91c1c;
-        color: white !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 40px;
+        padding: 0 18px;
+        border: 1px solid #b91c32;
+        border-radius: 8px !important;
+        background: #b91c32;
+        color: #fff !important;
         text-decoration: none !important;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 14px;
         cursor: pointer;
+        transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
     }
 
         .btn-add:hover {
-            background: #991b1b;
+            background: #991b2b;
+            box-shadow: 0 3px 8px rgba(185, 28, 50, .2);
+            transform: translateY(-1px);
         }
 
     .btn-admin-dash {
@@ -224,15 +263,25 @@
         }
 
         .advanced-filter form {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: minmax(230px, 2fr) minmax(145px, 1.05fr) minmax(145px, 1.3fr) repeat(2, minmax(170px, 1fr)) auto;
+            align-items: center;
             gap: 9px;
+        }
+
+        .advanced-filter form > input,
+        .advanced-filter form > select,
+        .advanced-filter form > div:not(.filter-actions) {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
         }
 
         .advanced-filter input,
         .advanced-filter select {
             min-height: 38px;
-            min-width: 145px;
+            min-width: 0;
+            width: 100%;
             padding: 8px 10px;
             border: 1px solid #cbd5e1;
             border-radius: 7px;
@@ -242,29 +291,79 @@
         }
 
             .advanced-filter input[type="search"] {
-                flex: 1;
-                min-width: 230px;
+                min-width: 0;
             }
 
     .filter-submit,
     .filter-reset {
         display: inline-flex;
         align-items: center;
-        min-height: 38px;
-        padding: 8px 14px;
+        justify-content: center;
+        min-height: 40px;
+        padding: 8px 18px;
         border: 0;
         border-radius: 7px;
+        box-sizing: border-box;
         font-weight: 700;
         text-decoration: none;
         cursor: pointer;
     }
 
     .filter-submit {
+        min-width: 84px;
         background: #b91c1c;
         color: white;
     }
 
+    .filter-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 9px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .admin-articles-page .advanced-filter input,
+    .admin-articles-page .advanced-filter select,
+    .admin-articles-page .filter-submit,
+    .admin-articles-page .filter-reset {
+        min-height: 40px;
+    }
+
+    .admin-articles-page .filter-actions .filter-reset {
+        flex: 0 0 auto;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        padding-right: 12px !important;
+        padding-left: 12px !important;
+    }
+
+    .admin-articles-page .filter-actions .filter-submit {
+        width: auto !important;
+        min-width: 84px !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        padding: 8px 18px !important;
+        font-size: 14px !important;
+    }
+
+    .admin-articles-page .advanced-filter form.admin-advanced-filter {
+        grid-template-columns: minmax(190px, 1.8fr) repeat(3, minmax(120px, 1fr)) repeat(2, minmax(150px, 1fr)) auto;
+    }
+
+    .admin-articles-page .advanced-filter.is-hidden {
+        display: none;
+    }
+
     .filter-reset {
+        min-width: 0;
+        padding-right: 12px;
+        padding-left: 12px;
         background: #e2e8f0;
         color: #334155 !important;
     }
@@ -280,6 +379,10 @@
         border: 0;
         border-radius: 10px;
         background: #fff;
+    }
+
+    .admin-list-panel.is-admin .management-card {
+        border-radius: 0;
     }
 
     .management-table {
@@ -545,6 +648,10 @@
             margin-top: 22px;
         }
 
+        .admin-list-panel.is-admin {
+            padding: 14px;
+        }
+
         .management-header h2 {
             font-size: 25px;
         }
@@ -567,6 +674,20 @@
             min-width: 0;
         }
 
+        .filter-actions {
+            width: 100%;
+        }
+
+        .filter-actions .filter-submit,
+        .filter-actions .filter-reset {
+            width: 50%;
+            min-width: 0;
+        }
+
+        .admin-articles-page .filter-actions .filter-reset {
+            width: auto !important;
+        }
+
             .advanced-filter input[type="search"] {
                 min-width: 0;
             }
@@ -575,30 +696,56 @@
 
 <div class="management-page @(isAdminManagement ? "admin-articles-page" : "public-articles-page")">
 
-    <div class="management-header">
-        <div>
-            <h2>@(canManageArticles ? (canReviewArticles ? "Quản lý & Kiểm duyệt bài viết" : "Bài viết của Tác giả") : "Tin tức mới nhất")</h2>
+    @if (TempData["Success"] != null)
+    {<div class="alert alert-success">@TempData["Success"]</div>}
+    @if (TempData["Error"] != null)
+    {<div class="alert alert-danger">@TempData["Error"]</div>}
+    @if (ViewBag.WarningMessage != null)
+    {<div class="alert alert-warning">@ViewBag.WarningMessage</div>}
 
-            <p class="management-subtitle">
-                @(canManageArticles
-                    ? (canReviewArticles
-                        ? "Kiểm duyệt bài chờ duyệt (Pending), xuất bản lên trang chủ, từ chối kèm lý do hoặc lưu trữ bài viết."
-                        : "Quản lý các bài viết của bạn: lưu bản nháp (Draft), gửi duyệt (Pending) hoặc chỉnh sửa bài bị trả lại.")
-                    : "Cập nhật những tin tức mới nhất trên NewsPortal.")
-            </p>
-        </div>
-
-        @if (canManageArticles)
-        {
-            <div class="header-actions">
+    @if (isAdminManagement)
+    {
+        <div class="admin-page-heading">
+            <div>
                 @if (isAdminUser)
                 {
-                    <a class="btn-admin-dash" href="@Url.Action("Index", "Admin")">Bảng điều khiển Admin</a>
+                    <a href="@Url.Action("Index", "Admin")">&larr; Quay lại Bảng điều khiển Admin</a>
                 }
-                <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create", returnUrl = Request.RawUrl + "#article-results" })">+ Thêm bài viết</a>
+                <h2>Quản lý &amp; Kiểm duyệt bài viết</h2>
             </div>
-        }
-    </div>
+            @if (canManageArticles)
+            {
+                <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create", returnUrl = Request.RawUrl + "#article-results" })">+ Thêm bài viết</a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="management-header">
+            <div>
+                <h2>@(canManageArticles ? (canReviewArticles ? "Quản lý & Kiểm duyệt bài viết" : "Bài viết của Tác giả") : "Tin tức mới nhất")</h2>
+
+                <p class="management-subtitle">
+                    @(canManageArticles
+                        ? (canReviewArticles
+                            ? "Kiểm duyệt bài chờ duyệt (Pending), xuất bản lên trang chủ, từ chối kèm lý do hoặc lưu trữ bài viết."
+                            : "Quản lý các bài viết của bạn: lưu bản nháp (Draft), gửi duyệt (Pending) hoặc chỉnh sửa bài bị trả lại.")
+                        : "Cập nhật những tin tức mới nhất trên NewsPortal.")
+                </p>
+            </div>
+
+            @if (canManageArticles)
+            {
+                <div class="header-actions">
+                    @if (isAdminUser)
+                    {
+                        <a class="btn-admin-dash" href="@Url.Action("Index", "Admin")">Bảng điều khiển Admin</a>
+                    }
+                    <a class="btn-add" href="@Url.RouteUrl("AdminArticles", new { action = "Create", returnUrl = Request.RawUrl + "#article-results" })">+ Thêm bài viết</a>
+                </div>
+            }
+        </div>
+    }
 
     @if (canManageArticles)
     {
@@ -635,13 +782,11 @@
             Tìm thấy <strong>@totalArticles</strong> bài viết
         </p>
 
-        <button type="button" id="filterToggle" class="filter-toggle">
-            Bộ lọc nâng cao
-        </button>
+        <button type="button" id="filterToggle" class="filter-toggle">Bộ lọc nâng cao</button>
     </div>
 
     <div id="advancedFilter" class="advanced-filter is-hidden">
-        <form method="get" action="@articleIndexUrl">
+        <form method="get" action="@articleIndexUrl" class="@(canManageArticles ? "admin-advanced-filter" : "")">
             <input type="search"
                    name="searchString"
                    value="@(ViewBag.SearchString ?? "")"
@@ -687,7 +832,7 @@
             }
 
             <div style="position: relative; display: inline-block;">
-                <span style="position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 5px; font-size: 11px; font-weight: 600; color: #b91c1c; line-height: 1; z-index: 1;">
+                <span style="position: absolute; top: -12px; left: 10px; font-size: 11px; font-weight: 600; color: #b91c1c; line-height: 1;">
                     Từ ngày
                 </span>
                 <input type="date"
@@ -696,7 +841,7 @@
             </div>
 
             <div style="position: relative; display: inline-block;">
-                <span style="position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 5px; font-size: 11px; font-weight: 600; color: #b91c1c; line-height: 1; z-index: 1;">
+                <span style="position: absolute; top: -12px; left: 10px; font-size: 11px; font-weight: 600; color: #b91c1c; line-height: 1;">
                     Đến ngày
                 </span>
                 <input type="date"
@@ -704,14 +849,14 @@
                        value="@(ViewBag.ToDate == null ? "" : ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd"))" />
             </div>
 
-            <button type="submit" class="filter-submit">
-                Lọc
-            </button>
-
-            <a class="filter-reset" href="@articleIndexUrl">Xóa lọc</a>
+            <div class="filter-actions">
+                <button type="submit" class="filter-submit">Lọc</button>
+                <a class="filter-reset" href="@articleIndexUrl">Xóa</a>
+            </div>
         </form>
     </div>
 
+    <div class="admin-list-panel @(isAdminManagement ? "is-admin" : "")">
     <div class="management-card" id="article-results">
         <table class="management-table">
             <thead>
@@ -997,6 +1142,8 @@
             }
         </nav>
     }
+
+    </div>
 
 </div>
 

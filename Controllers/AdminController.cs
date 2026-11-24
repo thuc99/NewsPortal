@@ -266,7 +266,7 @@ END";
         }
 
         // GET: /Admin
-        public ActionResult Index(string search = "", string status = "")
+        public ActionResult Index(string search = "", string status = "", int page = 1)
         {
             if (Session["Admin"] == null)
                 return RedirectToRoute("AdminArticles", new { action = "Index" });
@@ -274,7 +274,8 @@ END";
             var model = new AdminDashboardViewModel
             {
                 SearchQuery = search ?? "",
-                StatusFilter = status ?? ""
+                StatusFilter = status ?? "",
+                ArticlesPageSize = 10
             };
 
             int pendingArticles = 0;
@@ -324,8 +325,26 @@ END";
                     }
                 }
 
+                const string articleCountSql = @"
+                    SELECT COUNT(*)
+                    FROM dbo.Articles a
+                    WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
+                      AND (@status = N'' OR a.Status = @status);";
+
+                using (var countCmd = new SqlCommand(articleCountSql, conn))
+                {
+                    countCmd.Parameters.AddWithValue("@search", model.SearchQuery.Trim());
+                    countCmd.Parameters.AddWithValue("@status", model.StatusFilter.Trim());
+                    model.FilteredArticleCount = Convert.ToInt32(countCmd.ExecuteScalar());
+                }
+
+                model.TotalArticlePages = Math.Max(1,
+                    (int)Math.Ceiling(model.FilteredArticleCount / (double)model.ArticlesPageSize));
+                model.CurrentArticlePage = Math.Min(Math.Max(page, 1), model.TotalArticlePages);
+                int articleOffset = (model.CurrentArticlePage - 1) * model.ArticlesPageSize;
+
                 string listSql = @"
-                    SELECT TOP 50 
+                    SELECT
                         a.ArticleID,
                         a.Title,
                         ISNULL(c.CategoryName, N'Chưa phân loại') AS CategoryName,
@@ -340,12 +359,16 @@ END";
                     WHERE (@search = N'' OR a.Title LIKE N'%' + @search + N'%')
                       AND (@status = N'' OR a.Status = @status)
                     ORDER BY CASE WHEN a.Status = N'Pending' THEN 0 ELSE 1 END,
-                             a.CreatedDate DESC;";
+                             a.CreatedDate DESC,
+                             a.ArticleID DESC
+                    OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;";
 
                 using (var cmd = new SqlCommand(listSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@search", model.SearchQuery.Trim());
                     cmd.Parameters.AddWithValue("@status", model.StatusFilter.Trim());
+                    cmd.Parameters.AddWithValue("@offset", articleOffset);
+                    cmd.Parameters.AddWithValue("@pageSize", model.ArticlesPageSize);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -583,14 +606,18 @@ END";
 
         // GET: /Admin/Users
         [AdminAuthorize]
-        public ActionResult Users(string search = "", string roleFilter = "", string activeFilter = "")
+        public ActionResult Users(string search = "", string roleFilter = "", string activeFilter = "", int page = 1)
         {
             search = (search ?? string.Empty).Trim();
             roleFilter = (roleFilter ?? string.Empty).Trim();
             activeFilter = (activeFilter ?? string.Empty).Trim();
+            const int pageSize = 8;
 
             var users = new List<AdminUserRow>();
             int activeAdminCount = 0;
+            int currentPage = 1;
+            int totalPages = 1;
+            int filteredUserCount = 0;
             int totalAll = 0, countAdmin = 0, countEditor = 0, countAuthor = 0, countReader = 0, countLocked = 0;
 
             using (var conn = CreateConnection())
@@ -624,6 +651,34 @@ END";
                     }
                 }
 
+                const string matchingUsersCountSql = @"
+                    SELECT COUNT(*)
+                    FROM dbo.Users
+                    WHERE (@search = N''
+                        OR Username LIKE N'%' + @search + N'%'
+                        OR FullName LIKE N'%' + @search + N'%'
+                        OR Email LIKE N'%' + @search + N'%'
+                        OR Phone LIKE N'%' + @search + N'%'
+                        OR Role LIKE N'%' + @search + N'%')
+                      AND (@roleFilter = N''
+                        OR (@roleFilter = N'Reader' AND Role IN (N'Reader', N'User'))
+                        OR Role = @roleFilter)
+                      AND (@activeFilter = N''
+                        OR (@activeFilter = N'active' AND IsActive = 1)
+                        OR (@activeFilter = N'locked' AND IsActive = 0));";
+
+                using (var countCmd = new SqlCommand(matchingUsersCountSql, conn))
+                {
+                    countCmd.Parameters.AddWithValue("@search", search);
+                    countCmd.Parameters.AddWithValue("@roleFilter", roleFilter);
+                    countCmd.Parameters.AddWithValue("@activeFilter", activeFilter);
+                    filteredUserCount = Convert.ToInt32(countCmd.ExecuteScalar());
+                }
+
+                totalPages = Math.Max(1, (int)Math.Ceiling(filteredUserCount / (double)pageSize));
+                currentPage = Math.Min(Math.Max(page, 1), totalPages);
+                int offset = (currentPage - 1) * pageSize;
+
                 string sql = @"
                     SELECT UserId, Username, FullName, Email, BirthDate, Gender, Phone, Address, Role, IsActive, CreatedAt AS CreatedDate
                     FROM dbo.Users
@@ -639,20 +694,16 @@ END";
                       AND (@activeFilter = N''
                         OR (@activeFilter = N'active' AND IsActive = 1)
                         OR (@activeFilter = N'locked' AND IsActive = 0))
-                    ORDER BY
-                        CASE Role
-                            WHEN N'Admin' THEN 1
-                            WHEN N'Editor' THEN 2
-                            WHEN N'Author' THEN 3
-                            ELSE 4
-                        END,
-                        UserId ASC;";
+                    ORDER BY UserId ASC
+                    OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@search", search);
                     cmd.Parameters.AddWithValue("@roleFilter", roleFilter);
                     cmd.Parameters.AddWithValue("@activeFilter", activeFilter);
+                    cmd.Parameters.AddWithValue("@offset", offset);
+                    cmd.Parameters.AddWithValue("@pageSize", pageSize);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -698,6 +749,9 @@ END";
             ViewBag.Search = search;
             ViewBag.RoleFilter = roleFilter;
             ViewBag.ActiveFilter = activeFilter;
+            ViewBag.CurrentPage = currentPage;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.FilteredCount = filteredUserCount;
             ViewBag.TotalAllUsers = totalAll;
             ViewBag.CountAdmin = countAdmin;
             ViewBag.CountEditor = countEditor;
@@ -971,12 +1025,16 @@ END";
         }
 
         // GET: /Admin/Comments (Cho phép cả Admin và Editor kiểm duyệt bình luận)
-        public ActionResult Comments(string search, string status)
+        public ActionResult Comments(string search, string status, int page = 1)
         {
             search = (search ?? string.Empty).Trim();
             status = (status ?? string.Empty).Trim();
+            const int pageSize = 8;
 
             var comments = new List<AdminCommentRow>();
+            int currentPage = 1;
+            int totalPages = 1;
+            int filteredCommentCount = 0;
             int totalCount = 0, pendingCount = 0, approvedCount = 0, hiddenCount = 0;
 
             using (var conn = CreateConnection())
@@ -1003,6 +1061,29 @@ END";
                     }
                 }
 
+                const string matchingCommentsCountSql = @"
+                    SELECT COUNT(*)
+                    FROM dbo.Comments c
+                    LEFT JOIN dbo.Articles a ON c.ArticleID = a.ArticleID
+                    LEFT JOIN dbo.Users u ON c.UserId = u.UserId
+                    WHERE (@status = N'' OR c.Status = @status)
+                      AND (@search = N''
+                           OR c.CommenterName LIKE N'%' + @search + N'%'
+                           OR c.Content LIKE N'%' + @search + N'%'
+                           OR a.Title LIKE N'%' + @search + N'%'
+                           OR u.Username LIKE N'%' + @search + N'%');";
+
+                using (var matchingCountCmd = new SqlCommand(matchingCommentsCountSql, conn))
+                {
+                    matchingCountCmd.Parameters.AddWithValue("@status", status);
+                    matchingCountCmd.Parameters.AddWithValue("@search", search);
+                    filteredCommentCount = Convert.ToInt32(matchingCountCmd.ExecuteScalar());
+                }
+
+                totalPages = Math.Max(1, (int)Math.Ceiling(filteredCommentCount / (double)pageSize));
+                currentPage = Math.Min(Math.Max(page, 1), totalPages);
+                int offset = (currentPage - 1) * pageSize;
+
                 string sql = @"
                     SELECT
                         c.CommentID,
@@ -1027,12 +1108,16 @@ END";
                         CASE WHEN c.Status = N'Pending' THEN 0
                              WHEN c.Status = N'Approved' THEN 1
                              ELSE 2 END,
-                        c.CreatedDate DESC;";
+                         c.CreatedDate DESC,
+                         c.CommentID DESC
+                    OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@status", status);
                     cmd.Parameters.AddWithValue("@search", search);
+                    cmd.Parameters.AddWithValue("@offset", offset);
+                    cmd.Parameters.AddWithValue("@pageSize", pageSize);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -1060,6 +1145,9 @@ END";
 
             ViewBag.Search = search;
             ViewBag.StatusFilter = status;
+            ViewBag.CurrentPage = currentPage;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.FilteredCount = filteredCommentCount;
             ViewBag.TotalCount = totalCount;
             ViewBag.PendingCount = pendingCount;
             ViewBag.ApprovedCount = approvedCount;

@@ -3,10 +3,43 @@
     ViewBag.Title = "Kiểm duyệt Bình luận - Admin";
     string currentSearch = ViewBag.Search as string ?? "";
     string currentStatus = ViewBag.StatusFilter as string ?? "";
+    int currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
 }
 
 @section styles {
     <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 22px 0 0;
+        }
+
+        .pagination-direction {
+            min-width: 64px;
+            text-align: center;
+        }
+
+        .pagination-direction.disabled {
+            padding: 7px 11px;
+            background: #f8fafc;
+            color: #a0a5ae;
+        }
+
+        .pagination a {
+            padding: 7px 11px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #334155;
+            text-decoration: none;
+        }
+
+        .pagination a.active {
+            background: var(--red);
+            color: #fff;
+        }
+
         .usr-head {
             display: flex;
             justify-content: space-between;
@@ -258,7 +291,7 @@
         <button type="submit" class="search-button">Tìm kiếm</button>
         @if (!string.IsNullOrWhiteSpace(currentSearch) || !string.IsNullOrWhiteSpace(currentStatus))
         {
-            <a href="@Url.Action("Comments", "Admin")" class="filter-reset">Xóa lọc</a>
+            <a href="@Url.Action("Comments", "Admin")" class="filter-reset">Xóa</a>
         }
     </form>
 
@@ -358,4 +391,29 @@
             }
         </tbody>
     </table>
+    @if (totalPages > 1)
+    {
+        <nav class="pagination" aria-label="Phân trang bình luận">
+            @if (currentPage > 1)
+            {
+                <a class="pagination-direction" href="@Url.Action("Comments", "Admin", new { search = currentSearch, status = currentStatus, page = currentPage - 1 })">Trước</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Trước</span>
+            }
+            @for (int pageNumber = 1; pageNumber <= totalPages; pageNumber++)
+            {
+                <a class="@(pageNumber == currentPage ? "active" : "")" href="@Url.Action("Comments", "Admin", new { search = currentSearch, status = currentStatus, page = pageNumber })">@pageNumber</a>
+            }
+            @if (currentPage < totalPages)
+            {
+                <a class="pagination-direction" href="@Url.Action("Comments", "Admin", new { search = currentSearch, status = currentStatus, page = currentPage + 1 })">Sau</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Sau</span>
+            }
+        </nav>
+    }
 </div>

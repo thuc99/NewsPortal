@@ -80,6 +80,10 @@ namespace NewsPortal.Models
 
         public string SearchQuery { get; set; }
         public string StatusFilter { get; set; }
+        public int CurrentArticlePage { get; set; }
+        public int ArticlesPageSize { get; set; }
+        public int FilteredArticleCount { get; set; }
+        public int TotalArticlePages { get; set; }
 
         public List<AdminArticleRow> Articles { get; set; }
 

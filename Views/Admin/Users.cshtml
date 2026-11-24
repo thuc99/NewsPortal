@@ -4,69 +4,71 @@
     string currentSearch = ViewBag.Search as string ?? "";
     string currentRoleFilter = ViewBag.RoleFilter as string ?? "";
     string currentActiveFilter = ViewBag.ActiveFilter as string ?? "";
+    int currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
+    bool isAdminUser = Session["Admin"] != null || string.Equals(System.Convert.ToString(Session["Role"]), "Admin", System.StringComparison.OrdinalIgnoreCase);
 
-    int totalAll = ViewBag.TotalAllUsers == null ? 0 : (int)ViewBag.TotalAllUsers;
-    int countAdmin = ViewBag.CountAdmin == null ? 0 : (int)ViewBag.CountAdmin;
-    int countEditor = ViewBag.CountEditor == null ? 0 : (int)ViewBag.CountEditor;
-    int countAuthor = ViewBag.CountAuthor == null ? 0 : (int)ViewBag.CountAuthor;
-    int countReader = ViewBag.CountReader == null ? 0 : (int)ViewBag.CountReader;
-    int countLocked = ViewBag.CountLocked == null ? 0 : (int)ViewBag.CountLocked;
 }
 
 @section styles {
     <style>
-        .usr-head {
+        .pagination {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-            gap: 12px;
+            justify-content: center;
+            gap: 6px;
+            margin: 22px 0 0;
         }
 
-        .usr-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 12px;
-            margin-bottom: 18px;
+        .pagination-direction {
+            min-width: 64px;
+            text-align: center;
         }
 
-        .usr-stat-card {
-            display: block;
-            padding: 14px 16px;
-            border-radius: 10px;
-            background: #fff;
-            border: 1px solid var(--line);
+        .pagination-direction.disabled {
+            padding: 7px 11px;
+            background: #f8fafc;
+            color: #a0a5ae;
+        }
+
+        .pagination a {
+            padding: 7px 11px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #334155;
             text-decoration: none;
-            transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
         }
 
-            .usr-stat-card:hover,
-            .usr-stat-card.active {
-                border-color: var(--red);
-                box-shadow: 0 4px 12px rgba(185, 28, 50, .1);
-                transform: translateY(-1px);
+        .pagination a.active {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .admin-page-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+            .admin-page-heading > div > a {
+                color: var(--red);
+                font-size: 13px;
+                font-weight: 700;
             }
 
-        .usr-stat-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: .4px;
-        }
+            .admin-page-heading h2 {
+                margin: 6px 0 0;
+                color: var(--admin-ink);
+                font-size: 24px;
+                font-weight: 700;
+                line-height: 1.2;
+            }
 
-        .usr-stat-val {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--ink);
-            margin-top: 4px;
-        }
-
-        .usr-stat-sub {
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 2px;
+        .usr-admin-panel {
+            padding: 20px;
+            overflow: hidden;
         }
 
         .usr-box {
@@ -79,7 +81,10 @@
 
         .usr-create-panel {
             display: none;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            padding: 16px 0 18px;
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
         }
 
             .usr-create-panel.is-open {
@@ -156,6 +161,10 @@
                 text-decoration: none;
             }
 
+            .usr-search .search-button {
+                min-width: 95px;
+            }
+
             .usr-search .search-button,
             .btn-toggle-create {
                 border: 0;
@@ -196,35 +205,6 @@
                 border-bottom: 1px solid var(--line);
                 vertical-align: middle;
             }
-
-        .role-pill {
-            display: inline-block;
-            padding: 3px 9px;
-            border-radius: 999px;
-            font-size: 11.5px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .role-pill-admin {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .role-pill-editor {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .role-pill-author {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .role-pill-reader {
-            background: #f1f5f9;
-            color: #475569;
-        }
 
         .role-form {
             display: flex;
@@ -294,22 +274,42 @@
             margin-bottom: 16px;
             font-weight: 600;
         }
+
+        .usr-table-wrap {
+            overflow-x: auto;
+        }
+
+        .usr-table-wrap h3 {
+            margin: 0 0 16px;
+        }
+
+        @@media (max-width: 560px) {
+            .usr-admin-panel {
+                padding: 14px;
+            }
+
+            .usr-search input[type="search"] {
+                flex-basis: 100%;
+                min-width: 0;
+            }
+        }
     </style>
 }
 
-@Html.Partial("_SectionNav")
-
-<div class="usr-head">
-    <div>
-        <h2 style="margin:0 0 4px;">Quản lý Tài khoản &amp; Phân quyền 4 cấp</h2>
-        <div style="color:var(--muted); font-size:13.5px;">
-            Phân quyền 4 cấp: <strong>Quản trị viên (Admin)</strong> &bull; <strong>Biên tập viên (Editor)</strong> &bull; <strong>Tác giả (Author)</strong> &bull; <strong>Độc giả (Reader)</strong>
+<div class="admin-page-heading">
+            <div>
+                @if (isAdminUser)
+                {
+                    <a href="@Url.Action("Index", "Admin")">&larr; Quay lại Bảng điều khiển Admin</a>
+                }
+                <h2>Quản lý Tài khoản</h2>
+            </div>
+            <button type="button" id="toggleCreateUserBtn" class="btn-toggle-create">
+                <i class="fa-solid fa-user-plus"></i> Tạo tài khoản mới
+            </button>
         </div>
-    </div>
-    <button type="button" id="toggleCreateUserBtn" class="btn-toggle-create">
-        <i class="fa-solid fa-user-plus"></i> Tạo tài khoản mới
-    </button>
-</div>
+
+<div class="usr-box usr-admin-panel">
 
 @if (TempData["AdminMessage"] != null)
 {
@@ -320,40 +320,7 @@
     <div class="msg-err"><i class="fa-solid fa-triangle-exclamation"></i> @TempData["AdminError"]</div>
 }
 
-<div class="usr-stats">
-    <a class="usr-stat-card @(string.IsNullOrEmpty(currentRoleFilter) && string.IsNullOrEmpty(currentActiveFilter) ? "active" : "")"
-       href="@Url.Action("Users", "Admin")">
-        <div class="usr-stat-label">Tổng tài khoản</div>
-        <div class="usr-stat-val">@totalAll</div>
-        <div class="usr-stat-sub">Đang khóa: @countLocked</div>
-    </a>
-    <a class="usr-stat-card @(currentRoleFilter == "Admin" ? "active" : "")"
-       href="@Url.Action("Users", "Admin", new { roleFilter = "Admin" })">
-        <div class="usr-stat-label">Cấp 1 &bull; Admin</div>
-        <div class="usr-stat-val" style="color:#991b1b;">@countAdmin</div>
-        <div class="usr-stat-sub">Toàn quyền hệ thống</div>
-    </a>
-    <a class="usr-stat-card @(currentRoleFilter == "Editor" ? "active" : "")"
-       href="@Url.Action("Users", "Admin", new { roleFilter = "Editor" })">
-        <div class="usr-stat-label">Cấp 2 &bull; Editor</div>
-        <div class="usr-stat-val" style="color:#1e40af;">@countEditor</div>
-        <div class="usr-stat-sub">Duyệt bài &amp; bình luận</div>
-    </a>
-    <a class="usr-stat-card @(currentRoleFilter == "Author" ? "active" : "")"
-       href="@Url.Action("Users", "Admin", new { roleFilter = "Author" })">
-        <div class="usr-stat-label">Cấp 3 &bull; Author</div>
-        <div class="usr-stat-val" style="color:#92400e;">@countAuthor</div>
-        <div class="usr-stat-sub">Viết bài &amp; gửi duyệt</div>
-    </a>
-    <a class="usr-stat-card @(currentRoleFilter == "Reader" ? "active" : "")"
-       href="@Url.Action("Users", "Admin", new { roleFilter = "Reader" })">
-        <div class="usr-stat-label">Cấp 4 &bull; Reader</div>
-        <div class="usr-stat-val" style="color:#475569;">@countReader</div>
-        <div class="usr-stat-sub">Đọc tin, lưu bài &amp; bình luận</div>
-    </a>
-</div>
-
-<div id="createUserPanel" class="usr-box usr-create-panel">
+<div id="createUserPanel" class="usr-create-panel">
     <h3 style="margin:0 0 14px;"><i class="fa-solid fa-user-plus" style="color:var(--red);"></i> Tạo tài khoản mới</h3>
     @using (Html.BeginForm("CreateUser", "Admin", FormMethod.Post))
     {
@@ -378,10 +345,10 @@
             <div class="usr-field">
                 <label for="newRole">Cấp bậc vai trò *</label>
                 <select id="newRole" name="role">
-                    <option value="Reader" selected>Độc giả (Reader)</option>
-                    <option value="Author">Tác giả (Author)</option>
-                    <option value="Editor">Biên tập viên (Editor)</option>
-                    <option value="Admin">Quản trị viên (Admin)</option>
+                    <option value="Reader" selected>Độc giả</option>
+                    <option value="Author">Tác giả</option>
+                    <option value="Editor">Biên tập viên</option>
+                    <option value="Admin">Quản trị viên</option>
                 </select>
             </div>
             <div class="usr-field">
@@ -391,23 +358,23 @@
             </div>
         </div>
         <div style="margin-top:10px; font-size:12.5px; color:var(--muted);">
-            Lưu ý: Khi tạo hoặc chuyển tài khoản sang cấp <strong>Tác giả (Author)</strong>, hệ thống sẽ tự động khởi tạo/liên kết hồ sơ trong mục <strong>Quản lý Tác giả</strong>.
+            Lưu ý: Khi tạo hoặc chuyển tài khoản sang cấp <strong>Tác giả</strong>, hệ thống sẽ tự động khởi tạo/liên kết hồ sơ trong mục <strong>Quản lý Tác giả</strong>.
         </div>
     }
 </div>
 
-<div class="usr-box" style="overflow-x:auto;">
-    <h3 style="margin-top:0;"><i class="fa-solid fa-users" style="color:var(--red);"></i> Danh sách tài khoản</h3>
+<div class="usr-table-wrap">
+    <h3><i class="fa-solid fa-users" style="color:var(--red);"></i> Danh sách tài khoản</h3>
 
     <form method="get" action="@Url.RouteUrl("Admin", new { action = "Users" })" class="usr-search">
         <input type="search" name="search" value="@currentSearch" placeholder="Tìm tên đăng nhập, họ tên, email, điện thoại..." />
 
         <select name="roleFilter">
             <option value="" @(currentRoleFilter == "" ? "selected" : "")>Tất cả cấp bậc (4 cấp)</option>
-            <option value="Admin" @(currentRoleFilter == "Admin" ? "selected" : "")>Quản trị viên (Admin)</option>
-            <option value="Editor" @(currentRoleFilter == "Editor" ? "selected" : "")>Biên tập viên (Editor)</option>
-            <option value="Author" @(currentRoleFilter == "Author" ? "selected" : "")>Tác giả (Author)</option>
-            <option value="Reader" @(currentRoleFilter == "Reader" ? "selected" : "")>Độc giả (Reader)</option>
+            <option value="Admin" @(currentRoleFilter == "Admin" ? "selected" : "")>Quản trị viên</option>
+            <option value="Editor" @(currentRoleFilter == "Editor" ? "selected" : "")>Biên tập viên</option>
+            <option value="Author" @(currentRoleFilter == "Author" ? "selected" : "")>Tác giả</option>
+            <option value="Reader" @(currentRoleFilter == "Reader" ? "selected" : "")>Độc giả</option>
         </select>
 
         <select name="activeFilter">
@@ -416,10 +383,10 @@
             <option value="locked" @(currentActiveFilter == "locked" ? "selected" : "")>Đã khóa</option>
         </select>
 
-        <button type="submit" class="search-button">Lọc / Tìm kiếm</button>
+        <button type="submit" class="search-button">Tìm kiếm</button>
         @if (!string.IsNullOrWhiteSpace(currentSearch) || !string.IsNullOrWhiteSpace(currentRoleFilter) || !string.IsNullOrWhiteSpace(currentActiveFilter))
         {
-            <a href="@Url.RouteUrl("Admin", new { action = "Users" })" class="filter-reset">Xóa lọc</a>
+            <a href="@Url.RouteUrl("Admin", new { action = "Users" })" class="filter-reset">Xóa</a>
         }
     </form>
 
@@ -432,7 +399,7 @@
                 <th>Email</th>
                 <th>Điện thoại</th>
                 <th>Giới tính / Ngày sinh</th>
-                <th>Cấp bậc phân quyền</th>
+                <th>Cấp bậc</th>
                 <th>Ngày tạo</th>
                 <th>Trạng thái</th>
                 <th style="text-align:right;">Thao tác</th>
@@ -447,10 +414,6 @@
                     bool isEditorRole = string.Equals(u.Role, "Editor", StringComparison.OrdinalIgnoreCase);
                     bool isAuthorRole = string.Equals(u.Role, "Author", StringComparison.OrdinalIgnoreCase);
                     bool isReaderRole = !isAdminRole && !isEditorRole && !isAuthorRole;
-
-                    string pillClass = isAdminRole ? "role-pill-admin"
-                        : (isEditorRole ? "role-pill-editor"
-                        : (isAuthorRole ? "role-pill-author" : "role-pill-reader"));
 
                     string roleText = isAdminRole ? "Quản trị viên"
                         : (isEditorRole ? "Biên tập viên"
@@ -470,9 +433,6 @@
                             }
                         </td>
                         <td>
-                            <div>
-                                <span class="role-pill @pillClass">@roleText</span>
-                            </div>
                             @if (u.CanChangeRole)
                             {
                                 using (Html.BeginForm("UpdateUserRole", "Admin", FormMethod.Post, new { @class = "role-form" }))
@@ -483,17 +443,18 @@
                                     <input type="hidden" name="roleFilter" value="@currentRoleFilter" />
                                     <input type="hidden" name="activeFilter" value="@currentActiveFilter" />
                                     <select name="role" aria-label="Chọn cấp bậc cho @u.Username">
-                                        <option value="Admin" @(isAdminRole ? "selected" : "")>Quản trị viên (Admin)</option>
-                                        <option value="Editor" @(isEditorRole ? "selected" : "")>Biên tập viên (Editor)</option>
-                                        <option value="Author" @(isAuthorRole ? "selected" : "")>Tác giả (Author)</option>
-                                        <option value="Reader" @(isReaderRole ? "selected" : "")>Độc giả (Reader)</option>
+                                        <option value="Admin" @(isAdminRole ? "selected" : "")>Quản trị viên</option>
+                                        <option value="Editor" @(isEditorRole ? "selected" : "")>Biên tập viên</option>
+                                        <option value="Author" @(isAuthorRole ? "selected" : "")>Tác giả</option>
+                                        <option value="Reader" @(isReaderRole ? "selected" : "")>Độc giả</option>
                                     </select>
                                     <button type="submit">Lưu</button>
                                 }
                             }
                             else
                             {
-                                <span style="font-size:12px; color:var(--muted);">Tài khoản bảo vệ</span>
+                                @roleText
+                                <div style="font-size:12px; color:var(--muted);">Tài khoản bảo vệ</div>
                             }
                         </td>
                         <td>@u.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
@@ -540,6 +501,32 @@
             }
         </tbody>
     </table>
+    @if (totalPages > 1)
+    {
+        <nav class="pagination" aria-label="Phân trang tài khoản">
+            @if (currentPage > 1)
+            {
+                <a class="pagination-direction" href="@Url.RouteUrl("Admin", new { action = "Users", search = currentSearch, roleFilter = currentRoleFilter, activeFilter = currentActiveFilter, page = currentPage - 1 })">Trước</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Trước</span>
+            }
+            @for (int pageNumber = 1; pageNumber <= totalPages; pageNumber++)
+            {
+                <a class="@(pageNumber == currentPage ? "active" : "")" href="@Url.RouteUrl("Admin", new { action = "Users", search = currentSearch, roleFilter = currentRoleFilter, activeFilter = currentActiveFilter, page = pageNumber })">@pageNumber</a>
+            }
+            @if (currentPage < totalPages)
+            {
+                <a class="pagination-direction" href="@Url.RouteUrl("Admin", new { action = "Users", search = currentSearch, roleFilter = currentRoleFilter, activeFilter = currentActiveFilter, page = currentPage + 1 })">Sau</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Sau</span>
+            }
+        </nav>
+    }
+</div>
 </div>
 
 @section scripts {

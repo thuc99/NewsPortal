@@ -38,12 +38,13 @@ namespace NewsPortal.Controllers
         }
 
         // Danh sách danh mục - mọi người đều được xem
-        public ActionResult Index(string search)
+        public ActionResult Index(string search, int page = 1)
         {
             var denied = CheckAdminManagementAccess();
             if (denied != null) return denied;
 
             ViewBag.IsAdminManagement = IsAdminManagementRequest();
+            bool isAdminManagement = ViewBag.IsAdminManagement;
             var query = db.Categories.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -56,8 +57,19 @@ namespace NewsPortal.Controllers
             }
 
             ViewBag.Search = search;
+            int totalCategories = query.Count();
+            const int pageSize = 8;
+            int totalPages = Math.Max(1, (int)Math.Ceiling(totalCategories / (double)pageSize));
+            int currentPage = isAdminManagement ? Math.Min(Math.Max(page, 1), totalPages) : 1;
 
-            return View(query.OrderBy(c => c.CategoryName).ToList());
+            var orderedCategories = query.OrderBy(c => c.CategoryName).ThenBy(c => c.CategoryID);
+            var categories = isAdminManagement
+                ? orderedCategories.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList()
+                : orderedCategories.ToList();
+
+            ViewBag.CurrentPage = currentPage;
+            ViewBag.TotalPages = isAdminManagement ? totalPages : 1;
+            return View(categories);
         }
 
         [ChildActionOnly]

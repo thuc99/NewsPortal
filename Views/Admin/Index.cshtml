@@ -142,6 +142,42 @@
             padding: 20px;
         }
 
+        .adm-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 22px 0;
+        }
+
+        .adm-page-link {
+            display: inline-block;
+            padding: 7px 11px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #334155;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .adm-page-direction {
+            min-width: 64px;
+            text-align: center;
+        }
+
+        .adm-page-direction.disabled {
+            display: inline-block;
+            padding: 7px 11px;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #a0a5ae;
+        }
+
+            .adm-page-link:hover,
+            .adm-page-link.active {
+                background: var(--red);
+                color: #fff;
+            }
+
         .adm-toolbar {
             display: flex;
             justify-content: space-between;
@@ -149,6 +185,42 @@
             gap: 12px;
             flex-wrap: wrap;
             margin-bottom: 14px;
+        }
+
+        .adm-moderation-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .adm-panel .adm-filter .adm-filter-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 84px;
+            min-height: 40px;
+            padding: 8px 18px;
+            border: 0;
+            border-radius: 7px;
+            background: #b91c1c;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .adm-panel .adm-filter .adm-filter-reset {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 132px;
+            min-height: 40px;
+            padding: 8px 18px;
+            border-radius: 7px;
+            background: #e2e8f0;
+            color: #334155;
+            font-weight: 700;
+            text-decoration: none;
         }
 
         .adm-filter {
@@ -494,6 +566,11 @@
             .rating-overview {
                 grid-template-columns: 1fr;
             }
+
+            .adm-pagination {
+                align-items: flex-start;
+                flex-direction: column;
+            }
         }
     </style>
 }
@@ -735,9 +812,11 @@
     </div>
 </div>
 
-<div class="adm-panel">
+<div class="adm-panel" id="article-moderation">
     <div class="adm-toolbar">
-        <h3 style="margin:0;"><i class="fa-solid fa-list-check" style="color:var(--red);"></i> Kiểm duyệt &amp; Xuất bản bài viết</h3>
+        <div class="adm-moderation-heading">
+            <h3 style="margin:0;"><i class="fa-solid fa-list-check" style="color:var(--red);"></i> Kiểm duyệt &amp; Xuất bản bài viết</h3>
+        </div>
 
         <form method="get" action="@Url.Action("Index", "Admin")" class="adm-filter">
             <input type="text" name="search" value="@Model.SearchQuery" placeholder="Tìm theo tiêu đề..." />
@@ -748,14 +827,15 @@
                 <option value="Rejected" @(Model.StatusFilter == "Rejected" ? "selected" : "")>Rejected - Bị từ chối (@rejectedCount)</option>
                 <option value="Archived" @(Model.StatusFilter == "Archived" ? "selected" : "")>Archived - Đã lưu trữ (@archivedCount)</option>
             </select>
-            <button type="submit" class="search-button">Lọc</button>
+            <button type="submit" class="adm-filter-submit">Lọc</button>
             @if (!string.IsNullOrEmpty(Model.SearchQuery) || !string.IsNullOrEmpty(Model.StatusFilter))
             {
-                <a href="@Url.Action("Index", "Admin")" class="search-reset">Xóa lọc</a>
+                <a href="@Url.Action("Index", "Admin")" class="adm-filter-reset">Xóa lọc</a>
             }
         </form>
     </div>
 
+    <div class="adm-moderation-content" id="article-moderation-content">
     <div class="adm-wf-pills">
         <a class="adm-wf-pill @(Model.StatusFilter == "" ? "active" : "")" href="@Url.Action("Index", "Admin")">Tất cả (@Model.TotalArticles)</a>
         <a class="adm-wf-pill @(Model.StatusFilter == "Pending" ? "active" : "")" href="@Url.Action("Index", "Admin", new { status = "Pending" })">Chờ duyệt (@pendingCount)</a>
@@ -907,7 +987,7 @@
                                         <button type="submit" class="btn-mini btn-archive">Lưu trữ</button>
                                     }
                                 }
-                                <a class="btn-mini" href="@Url.RouteUrl("AdminArticles", new { action = "Edit", id = item.ArticleID })">Sửa</a>
+                                <a class="btn-mini btn-edit" href="@Url.RouteUrl("AdminArticles", new { action = "Edit", id = item.ArticleID })">Sửa</a>
                                 <a class="btn-mini" style="color:var(--red);" href="@Url.RouteUrl("AdminArticles", new { action = "Delete", id = item.ArticleID })">Xóa</a>
                             </td>
                         </tr>
@@ -915,6 +995,35 @@
                 }
             </tbody>
         </table>
+    </div>
+
+    @if (Model.TotalArticlePages > 1)
+    {
+        <nav class="adm-pagination" aria-label="Phân trang bài viết kiểm duyệt">
+            @if (Model.CurrentArticlePage > 1)
+            {
+                <a class="adm-page-link adm-page-direction" href="@(Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = Model.CurrentArticlePage - 1 }) + "#article-moderation")">Trước</a>
+            }
+            else
+            {
+                <span class="adm-page-direction disabled">Trước</span>
+            }
+            @for (int pageNumber = 1; pageNumber <= Model.TotalArticlePages; pageNumber++)
+            {
+                <a class="adm-page-link @(pageNumber == Model.CurrentArticlePage ? "active" : "")"
+                   href="@(Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = pageNumber }) + "#article-moderation")"
+                   aria-current="@(pageNumber == Model.CurrentArticlePage ? "page" : null)">@pageNumber</a>
+            }
+            @if (Model.CurrentArticlePage < Model.TotalArticlePages)
+            {
+                <a class="adm-page-link adm-page-direction" href="@(Url.Action("Index", "Admin", new { search = Model.SearchQuery, status = Model.StatusFilter, page = Model.CurrentArticlePage + 1 }) + "#article-moderation")">Sau</a>
+            }
+            else
+            {
+                <span class="adm-page-direction disabled">Sau</span>
+            }
+        </nav>
+    }
     </div>
 </div>
 
@@ -994,5 +1103,6 @@
                     closeRejectModal();
                 }
             });
+
         });
 </script>

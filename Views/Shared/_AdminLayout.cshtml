@@ -76,6 +76,16 @@
             white-space: nowrap;
         }
 
+        .admin-main .filter-reset {
+            font-size: 14px !important;
+        }
+
+        .admin-main .filter-submit {
+            min-width: 90px !important;
+            padding-right: 12px !important;
+            padding-left: 12px !important;
+        }
+
             .admin-brand i {
                 color: #fb7185;
             }
@@ -103,16 +113,11 @@
         .admin-user {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
             color: #dce2ed;
             font-size: 13px;
             white-space: nowrap;
         }
-
-            .admin-user a {
-                color: #fff;
-                font-weight: 700;
-            }
 
         .admin-home-btn {
             display: inline-flex;
@@ -120,25 +125,333 @@
             gap: 6px;
             padding: 8px 13px;
             border-radius: 7px;
-            background: var(--admin-red);
+            background: #273449;
             color: #fff !important;
             font-size: 13px;
             font-weight: 700;
-            transition: background .2s;
+            transition: background .15s;
         }
 
             .admin-home-btn:hover {
-                background: var(--red-dark);
+                background: #334155;
                 color: #fff !important;
             }
 
         .admin-role-tag {
-            padding: 3px 8px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.14);
-            color: #f8fafc;
+            display: block;
+            margin-top: 3px;
+            color: #aab4c5;
             font-size: 11.5px;
+            font-weight: 400;
+        }
+
+        .admin-account {
+            position: relative;
+        }
+
+        .admin-account-toggle {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 6px 8px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #f8fafc;
+            cursor: pointer;
+            font: inherit;
+            text-align: left;
+        }
+
+            .admin-account-toggle:hover,
+            .admin-account-toggle[aria-expanded="true"] {
+                background: rgba(255,255,255,.08);
+            }
+
+        .admin-account-icon {
+            color: #dce2ed;
+            font-size: 22px;
+        }
+
+        .admin-account-identity {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .admin-account-name {
+            max-width: 190px;
+            overflow: hidden;
+            color: #f8fafc;
+            font-weight: 750;
+            text-overflow: ellipsis;
+        }
+
+        .admin-account-chevron {
+            margin-left: 4px;
+            color: #dce2ed;
+            transition: transform .15s;
+        }
+
+        .admin-account-toggle[aria-expanded="true"] .admin-account-chevron {
+            transform: rotate(180deg);
+        }
+
+        .admin-account-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 1100;
+            min-width: 190px;
+            padding: 6px;
+            border: 1px solid #e2e7ef;
+            border-radius: 9px;
+            background: #fff;
+            box-shadow: 0 12px 28px rgba(15,23,42,.2);
+        }
+
+            .admin-account-menu[hidden] {
+                display: none;
+            }
+
+            .admin-account-menu a {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 12px;
+                border-radius: 6px;
+                color: #172033;
+                font-weight: 650;
+            }
+
+                .admin-account-menu a:hover {
+                    background: #fef2f2;
+                    color: var(--admin-red);
+                }
+
+            .admin-account-menu i {
+                width: 18px;
+                color: var(--admin-red);
+        }
+
+        .admin-main .btn-mini,
+        .admin-main .btn-act,
+        .admin-main .btn-status-toggle,
+        .admin-main .btn-save,
+        .admin-main .btn-create,
+        .admin-main .btn-pending,
+        .admin-main .btn-draft,
+        .admin-main .btn-back,
+        .admin-main .btn-delete,
+        .admin-main .btn-edit,
+        .admin-main .btn-edit-article,
+        .admin-main .btn-detail,
+        .admin-main .btn-submit-wf,
+        .admin-main .btn-reject-wf,
+        .admin-main .btn-archive-wf,
+        .admin-main .btn-articles,
+        .admin-main .author-email-link,
+        .admin-main .btn-approve,
+        .admin-main .btn-reject,
+        .admin-main .btn-archive,
+        .admin-main .btn-hide,
+        .admin-main .btn-del,
+        .admin-main .action-btn,
+        .admin-main .action-link,
+        .admin-main .dt-edit,
+        .admin-main .dt-back,
+        .admin-main .dt-more,
+        .admin-main .adm-btn,
+        .admin-main .btn-admin-dash,
+        .admin-main .filter-reset,
+        .admin-main .role-form button,
+        .admin-main .choose-image-btn {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 28px;
+            height: auto !important;
+            padding: 5px 10px !important;
+            border-radius: 6px !important;
+            font-size: 12px !important;
             font-weight: 700;
+            line-height: 1.3;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background-color .15s, border-color .15s, color .15s;
+        }
+
+        .admin-main .btn-add,
+        .admin-main .btn-toggle-create {
+            min-height: 40px !important;
+            height: 40px !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+        }
+
+        .admin-main .adm-btn {
+            min-height: 44px !important;
+            height: 44px !important;
+            gap: 9px;
+            padding: 11px 20px !important;
+            border-radius: 9px !important;
+            font-size: 15px !important;
+        }
+
+        .admin-main .search-button,
+        .admin-main .admin-search button,
+        .admin-main .filter-submit {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px !important;
+            min-height: 40px !important;
+            height: 40px !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .admin-main .btn-approve {
+            border: 1px solid #16a34a;
+            background: #fff;
+            color: #16a34a !important;
+        }
+
+        .admin-main .btn-edit {
+            border: 1px solid #93c5fd;
+            background: #dbeafe;
+            color: #1d4ed8 !important;
+        }
+
+            .admin-main .btn-edit:hover {
+                border-color: #60a5fa;
+                background: #bfdbfe;
+                color: #1e40af !important;
+            }
+
+        .admin-main .action-edit {
+            border: 1px solid #3b82f6;
+            background: #fff;
+            color: #1d4ed8 !important;
+        }
+
+            .admin-main .action-edit:hover {
+                border-color: #2563eb;
+                background: #2563eb;
+                color: #fff !important;
+                transform: none;
+            }
+
+        .admin-main .action-delete {
+            border: 1px solid #dc2626;
+            background: #fff;
+            color: #dc2626 !important;
+        }
+
+            .admin-main .action-delete:hover {
+                border-color: #dc2626;
+                background: #dc2626;
+                color: #fff !important;
+                transform: none;
+            }
+
+            .admin-main .btn-approve:hover {
+                background: #16a34a;
+                color: #fff !important;
+            }
+
+        .admin-main .btn-hide,
+        .admin-main .btn-reject,
+        .admin-main .btn-reject-wf {
+            border: 1px solid #d97706;
+            background: #fff;
+            color: #b45309 !important;
+        }
+
+            .admin-main .btn-hide:hover,
+            .admin-main .btn-reject:hover,
+            .admin-main .btn-reject-wf:hover {
+                background: #d97706;
+                color: #fff !important;
+            }
+
+        .admin-main .btn-del,
+        .admin-main .btn-delete {
+            border: 1px solid #dc2626;
+            background: #fff;
+            color: #dc2626 !important;
+        }
+
+            .admin-main .btn-del:hover,
+            .admin-main .btn-delete:hover {
+                background: #dc2626;
+                color: #fff !important;
+            }
+
+        .admin-main .btn-archive,
+        .admin-main .btn-archive-wf,
+        .admin-main .btn-draft {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #475569 !important;
+        }
+
+            .admin-main .btn-archive:hover,
+            .admin-main .btn-archive-wf:hover,
+            .admin-main .btn-draft:hover {
+                background: #f1f5f9;
+                border-color: #94a3b8;
+                color: #334155 !important;
+            }
+
+        .admin-main .form-actions,
+        .admin-main .delete-actions {
+            justify-content: flex-end;
+        }
+
+        .admin-main .form-actions .btn-save,
+        .admin-main .form-actions .btn-back,
+        .admin-main .delete-actions .btn-delete,
+        .admin-main .delete-actions .btn-back {
+            min-width: 0 !important;
+            min-height: 40px !important;
+            height: auto !important;
+            padding: 8px 18px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            line-height: 1.3;
+            white-space: normal;
+        }
+
+        .admin-main .form-actions .btn-save,
+        .admin-main .delete-actions .btn-delete {
+            background: #b91c1c !important;
+            color: #fff !important;
+        }
+
+        .admin-main .form-actions .btn-back,
+        .admin-main .delete-actions .btn-back {
+            background: #e2e8f0 !important;
+            color: #334155 !important;
+        }
+
+        .admin-main .form-actions .btn-save:hover,
+        .admin-main .delete-actions .btn-delete:hover {
+            background: #991b1b !important;
+            color: #fff !important;
+        }
+
+        .admin-main .form-actions .btn-back:hover,
+        .admin-main .delete-actions .btn-back:hover {
+            background: #cbd5e1 !important;
+            color: #1e293b !important;
         }
 
         .admin-main {
@@ -247,11 +560,23 @@
             </nav>
             <div class="admin-user">
                 <a class="admin-home-btn" href="@Url.Action("Index", "Home")">
-                    <i class="fa-solid fa-house"></i> Quay về trang chủ
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem trang
                 </a>
-                <span>@(Session["UserFullName"] ?? Session["Admin"] ?? Session["User"])</span>
-                <span class="admin-role-tag">@roleBadgeText</span>
-                <a href="@Url.Action("Logout", "Account")">Đăng xuất</a>
+                <div class="admin-account" id="admin-account">
+                    <button type="button" class="admin-account-toggle" id="admin-account-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="admin-account-menu">
+                        <i class="fa-regular fa-circle-user admin-account-icon" aria-hidden="true"></i>
+                        <span class="admin-account-identity">
+                            <span class="admin-account-name">@(Session["UserFullName"] ?? Session["Admin"] ?? Session["User"])</span>
+                            <span class="admin-role-tag">@roleBadgeText</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-down admin-account-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="admin-account-menu" id="admin-account-menu" role="menu" hidden>
+                        <a href="@Url.Action("Logout", "Account")" role="menuitem">
+                            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Đăng xuất
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -264,6 +589,37 @@
         Khu vực quản trị TinNhanh
     </footer>
 
+    <script>
+        (function () {
+            var account = document.getElementById("admin-account");
+            var toggle = document.getElementById("admin-account-toggle");
+            var menu = document.getElementById("admin-account-menu");
+
+            if (!account || !toggle || !menu) return;
+
+            function closeMenu() {
+                menu.hidden = true;
+                toggle.setAttribute("aria-expanded", "false");
+            }
+
+            toggle.addEventListener("click", function () {
+                var isOpen = toggle.getAttribute("aria-expanded") === "true";
+                menu.hidden = isOpen;
+                toggle.setAttribute("aria-expanded", isOpen ? "false" : "true");
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!account.contains(event.target)) closeMenu();
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    closeMenu();
+                    toggle.focus();
+                }
+            });
+        })();
+    </script>
     @RenderSection("scripts", required: false)
 </body>
 </html>

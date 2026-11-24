@@ -4,6 +4,10 @@
 @{
     ViewBag.Title = "Danh mục";
     bool isAdminManagement = ViewBag.IsAdminManagement == true;
+    bool isAdminUser = Session["Admin"] != null || string.Equals(System.Convert.ToString(Session["Role"]), "Admin", System.StringComparison.OrdinalIgnoreCase);
+    int currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
+    string searchQuery = ViewBag.Search as string ?? "";
 }
 
 <style>
@@ -13,6 +17,73 @@
         margin: 35px auto;
         padding: 0;
         color: #1e293b;
+    }
+
+    .admin-category-page {
+        width: 100%;
+        max-width: none;
+        margin: 0 auto;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin: 22px 0;
+    }
+
+    .pagination-direction {
+        min-width: 64px;
+        text-align: center;
+    }
+
+    .pagination-direction.disabled {
+        padding: 7px 11px;
+        background: #f8fafc;
+        color: #a0a5ae;
+    }
+
+    .pagination a {
+        padding: 7px 11px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #334155;
+        text-decoration: none;
+    }
+
+    .pagination a.active {
+        background: #b91c1c;
+        color: #fff;
+    }
+
+    .admin-page-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+        .admin-page-heading > div > a {
+            color: #b91c32;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .admin-page-heading h2 {
+            margin: 6px 0 0;
+            color: #172033;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+    .admin-list-panel.is-admin {
+        padding: 22px;
+        border: 1px solid #e9e9ed;
+        border-radius: 12px;
+        background: #fff;
     }
 
     .management-header {
@@ -43,6 +114,10 @@
         border-radius: 0;
         overflow-x: auto;
         box-shadow: none;
+    }
+
+    .admin-category-page .management-card {
+        background: transparent;
     }
 
     .management-table {
@@ -160,6 +235,27 @@
         color: #b91c32;
     }
 
+    .admin-category-page .admin-search button {
+        min-width: 95px;
+        border-color: #b91c32;
+        background: #b91c32;
+        color: #fff;
+    }
+
+    .admin-category-page .admin-search button:hover {
+        border-color: #991b2b;
+        background: #991b2b;
+        color: #fff;
+    }
+
+    .admin-category-page .management-table th {
+        padding: 11px 10px;
+    }
+
+    .admin-category-page .management-table td {
+        padding: 12px 10px;
+    }
+
     .action-link {
         display: inline-flex;
         align-items: center;
@@ -214,6 +310,10 @@
             margin-top: 22px;
         }
 
+        .admin-category-page .admin-list-panel {
+            padding: 14px;
+        }
+
         .management-table th,
         .management-table td {
             padding: 11px 9px;
@@ -244,23 +344,31 @@
     }
 </style>
 
-<div class="management-page">
-
-    <div class="management-header">
-        <div>
-            <h2> Danh Mục</h2>
-            <p class="management-subtitle">
-                Chuyên mục tin tức trên NewsPortal.
-            </p>
-        </div>
-
-        @if (isAdminManagement)
-        {
+<div class="management-page @(isAdminManagement ? "admin-category-page" : "")">
+    @if (isAdminManagement)
+    {
+        <div class="admin-page-heading">
             <div>
-                @Html.RouteLink("+ Thêm danh mục", "AdminCategories", new { action = "Create" }, new { @class = "btn-add" })
+                @if (isAdminUser)
+                {
+                    <a href="@Url.Action("Index", "Admin")">&larr; Quay lại Bảng điều khiển Admin</a>
+                }
+                <h2>Quản lý Danh mục</h2>
             </div>
-        }
-    </div>
+            @Html.RouteLink("+ Thêm danh mục", "AdminCategories", new { action = "Create" }, new { @class = "btn-add" })
+        </div>
+    }
+    else
+    {
+        <div class="management-header">
+            <div>
+                <h2>Danh mục</h2>
+                <p class="management-subtitle">Chuyên mục tin tức trên NewsPortal.</p>
+            </div>
+        </div>
+    }
+
+    <div class="admin-list-panel @(isAdminManagement ? "is-admin" : "")">
 
     @if (TempData["Success"] != null)
     {
@@ -343,6 +451,32 @@
                 }
             </tbody>
         </table>
+    </div>
+    @if (isAdminManagement && totalPages > 1)
+    {
+        <nav class="pagination" aria-label="Phân trang danh mục">
+            @if (currentPage > 1)
+            {
+                <a class="pagination-direction" href="@(Url.RouteUrl("AdminCategories", new { action = "Index", search = searchQuery, page = currentPage - 1 }))">Trước</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Trước</span>
+            }
+            @for (int pageNumber = 1; pageNumber <= totalPages; pageNumber++)
+            {
+                <a class="@(pageNumber == currentPage ? "active" : "")" href="@Url.RouteUrl("AdminCategories", new { action = "Index", search = searchQuery, page = pageNumber })">@pageNumber</a>
+            }
+            @if (currentPage < totalPages)
+            {
+                <a class="pagination-direction" href="@(Url.RouteUrl("AdminCategories", new { action = "Index", search = searchQuery, page = currentPage + 1 }))">Sau</a>
+            }
+            else
+            {
+                <span class="pagination-direction disabled">Sau</span>
+            }
+        </nav>
+    }
     </div>
 
 </div>

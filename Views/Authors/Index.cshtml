@@ -13,6 +13,10 @@
     var articleCounts = ViewBag.ArticleCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
     var linkedUsernames = ViewBag.LinkedUsernames as Dictionary<int, string> ?? new Dictionary<int, string>();
     int articleCount = ViewBag.ArticleCount == null ? articles.Count : (int)ViewBag.ArticleCount;
+    int currentPage = ViewBag.CurrentPage == null ? 1 : (int)ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages == null ? 1 : (int)ViewBag.TotalPages;
+    string searchQuery = ViewBag.Search as string ?? "";
+    bool isAdminUser = Session["Admin"] != null || string.Equals(System.Convert.ToString(Session["Role"]), "Admin", System.StringComparison.OrdinalIgnoreCase);
     ViewBag.Title = hasSelectedAuthor ? selectedAuthor.AuthorName : (isAdminManagement ? "Quản lý tác giả" : "Đội ngũ tác giả");
 }
 
@@ -44,6 +48,42 @@
         color: #1e293b;
     }
 
+    .admin-author-page {
+        width: 100%;
+        max-width: none;
+        margin: 0 auto;
+    }
+
+    .admin-page-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+        .admin-page-heading > div > a {
+            color: #b91c32;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .admin-page-heading h2 {
+            margin: 6px 0 0;
+            color: #172033;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+    .admin-list-panel.is-admin {
+        padding: 22px;
+        border: 1px solid #e9e9ed;
+        border-radius: 12px;
+        background: #fff;
+    }
+
     .management-header {
         display: flex;
         justify-content: space-between;
@@ -71,6 +111,42 @@
         border: 1px solid #e2e8f0;
         border-radius: 10px !important;
         overflow-x: auto;
+    }
+
+    .admin-author-page .management-card {
+        border: 0;
+        border-radius: 0 !important;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin: 22px 0;
+    }
+
+    .pagination-direction {
+        min-width: 64px;
+        text-align: center;
+    }
+
+    .pagination-direction.disabled {
+        padding: 7px 11px;
+        background: #f8fafc;
+        color: #a0a5ae;
+    }
+
+    .pagination a {
+        padding: 7px 11px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #334155;
+        text-decoration: none;
+    }
+
+    .pagination a.active {
+        background: #b91c1c;
+        color: #fff;
     }
 
     .management-table {
@@ -184,6 +260,10 @@
         max-width: 620px;
     }
 
+    .admin-author-page .admin-search {
+        max-width: 620px;
+    }
+
         .admin-search input {
             flex: 1 1 320px;
             width: 320px;
@@ -222,6 +302,7 @@
             background: #b91c32;
             border-color: #b91c32;
             color: #fff;
+            min-width: 95px;
         }
 
             .admin-search button:hover {
@@ -533,6 +614,10 @@
             margin-top: 22px;
         }
 
+        .admin-author-page .admin-list-panel {
+            padding: 14px;
+        }
+
         .management-table th,
         .management-table td {
             padding: 11px 9px;
@@ -569,15 +654,10 @@
     }
 </style>
 
-@if (isAdminManagement && !hasSelectedAuthor)
-{
-    @Html.Partial("~/Views/Admin/_SectionNav.cshtml")
-}
-
 @if (hasSelectedAuthor)
 {
     string listBackUrl = isAdminManagement
-        ? Url.RouteUrl("AdminAuthors", new { action = "Index" })
+        ? Url.Content("~/Admin/Author/Index")
         : Url.RouteUrl("PublicAuthor", new { action = "Index" });
 
     <div style="max-width: 1160px; margin: 20px auto -12px;">
@@ -731,23 +811,30 @@ else
         ? Url.RouteUrl("AdminAuthors", new { action = "Index" })
         : Url.RouteUrl("PublicAuthor", new { action = "Index" });
 
-    <div class="management-page">
-        <div class="management-header">
-            <div>
-                <h2>@(isAdminManagement ? "Quản lý tác giả" : "Đội ngũ tác giả")</h2>
-                <p class="management-subtitle">
-                    @(isAdminManagement
-                        ? "Quản lý danh sách tác giả, ảnh đại diện và liên kết tài khoản Tác giả trên hệ thống."
-                        : "Khám phá các tác giả và cây bút đóng góp bài viết trên TinNhanh.")
-                </p>
+    <div class="management-page @(isAdminManagement ? "admin-author-page" : "")">
+        @if (isAdminManagement)
+        {
+            <div class="admin-page-heading">
+                <div>
+                    @if (isAdminUser)
+                    {
+                        <a href="@Url.Action("Index", "Admin")">&larr; Quay lại Bảng điều khiển Admin</a>
+                    }
+                    <h2>Quản lý Tác giả</h2>
+                </div>
             </div>
-            @if (isAdminManagement)
-            {
-                <a href="@Url.RouteUrl("AdminAuthors", new { action = "Create" })" class="btn-add">
-                    + Thêm tác giả
-                </a>
-            }
-        </div>
+        }
+        else
+        {
+            <div class="management-header">
+                <div>
+                    <h2>Đội ngũ tác giả</h2>
+                    <p class="management-subtitle">Khám phá các tác giả và cây bút đóng góp bài viết trên TinNhanh.</p>
+                </div>
+            </div>
+        }
+
+        <div class="admin-list-panel @(isAdminManagement ? "is-admin" : "")">
 
         @if (TempData["Success"] != null)
         {
@@ -768,7 +855,7 @@ else
             <button type="submit">Tìm kiếm</button>
             @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
             {
-                <a href="@searchFormAction">Xóa lọc</a>
+                <a href="@searchFormAction">Xóa</a>
             }
         </form>
 
@@ -781,8 +868,7 @@ else
                         <th style="text-align:center;">Số bài viết</th>
                         @if (isAdminManagement)
                         {
-                            <th>Tài khoản liên kết</th>
-                            <th style="text-align:right; width: 230px;">Thao tác</th>
+                            <th style="text-align:right; width: 160px;">Hồ sơ</th>
                         }
                         else
                         {
@@ -835,20 +921,8 @@ else
 
                                 @if (isAdminManagement)
                                 {
-                                    <td>
-                                        @if (item.UserId.HasValue && linkedUsernames.ContainsKey(item.UserId.Value))
-                                        {
-                                            <span class="author-account-badge">@linkedUsernames[item.UserId.Value]</span>
-                                        }
-                                        else
-                                        {
-                                            <span style="color:#94a3b8; font-size:12.5px;">Độc lập</span>
-                                        }
-                                    </td>
-                                    <td style="text-align:right; white-space:nowrap;">
-                                        <a href="@profileUrl" class="action-link action-view">Xem bài</a>
-                                        @Html.RouteLink("Sửa", "AdminAuthors", new { action = "Edit", id = item.AuthorID }, new { @class = "action-link action-edit" })
-                                        @Html.RouteLink("Xóa", "AdminAuthors", new { action = "Delete", id = item.AuthorID }, new { @class = "action-link action-delete" })
+                                    <td style="text-align:right;">
+                                        <a href="@profileUrl" class="action-link action-edit">Xem bài viết &rarr;</a>
                                     </td>
                                 }
                                 else
@@ -863,7 +937,7 @@ else
                     else
                     {
                         <tr>
-                            <td colspan="@(isAdminManagement ? 5 : 4)" class="empty-message">
+            <td colspan="4" class="empty-message">
                                 @(string.IsNullOrWhiteSpace(ViewBag.Search as string)
                                     ? "Hiện chưa có tác giả nào trong hệ thống."
                                     : "Không tìm thấy tác giả nào khớp với từ khóa '" + ViewBag.Search + "'.")
@@ -873,5 +947,32 @@ else
                 </tbody>
             </table>
         </div>
+
+        @if (isAdminManagement && totalPages > 1)
+        {
+            <nav class="pagination" aria-label="Phân trang tác giả">
+                @if (currentPage > 1)
+                {
+                    <a class="pagination-direction" href="@(Url.RouteUrl("AdminAuthors", new { action = "Index", search = searchQuery, page = currentPage - 1 }))">Trước</a>
+                }
+                else
+                {
+                    <span class="pagination-direction disabled">Trước</span>
+                }
+                @for (int pageNumber = 1; pageNumber <= totalPages; pageNumber++)
+                {
+                    <a class="@(pageNumber == currentPage ? "active" : "")" href="@Url.RouteUrl("AdminAuthors", new { action = "Index", search = searchQuery, page = pageNumber })">@pageNumber</a>
+                }
+                @if (currentPage < totalPages)
+                {
+                    <a class="pagination-direction" href="@(Url.RouteUrl("AdminAuthors", new { action = "Index", search = searchQuery, page = currentPage + 1 }))">Sau</a>
+                }
+                else
+                {
+                    <span class="pagination-direction disabled">Sau</span>
+                }
+            </nav>
+        }
+    </div>
     </div>
 }

@@ -251,7 +251,7 @@ END";
         // =========================
         // DANH SÁCH TÁC GIẢ & HỒ SƠ TÁC GIẢ
         // =========================
-        public ActionResult Index(string search, int? id, string returnUrl = null)
+        public ActionResult Index(string search, int? id, string returnUrl = null, int page = 1)
         {
             var denied = CheckAdminManagementAccess();
             if (denied != null) return denied;
@@ -322,8 +322,19 @@ END";
                     (a.Email != null && a.Email.Contains(keyword)));
             }
 
-            var authors = filteredQuery.OrderBy(a => a.AuthorName).ToList();
+            int totalAuthors = filteredQuery.Count();
+            const int pageSize = 8;
+            int totalPages = Math.Max(1, (int)Math.Ceiling(totalAuthors / (double)pageSize));
+            int currentPage = isAdminManagement ? Math.Min(Math.Max(page, 1), totalPages) : 1;
+
+            var orderedAuthors = filteredQuery.OrderBy(a => a.AuthorName).ThenBy(a => a.AuthorID);
+            var authors = isAdminManagement
+                ? orderedAuthors.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList()
+                : orderedAuthors.ToList();
             LoadAuthorImages(authors);
+
+            ViewBag.CurrentPage = currentPage;
+            ViewBag.TotalPages = isAdminManagement ? totalPages : 1;
 
             // Đếm số bài viết cho từng tác giả để hiển thị trực quan trên bảng/thẻ
             var articleCounts = (isAdminManagement

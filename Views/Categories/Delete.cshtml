@@ -14,16 +14,18 @@
     }
 
     .delete-card {
-        background: white;
-        border: 0;
-        border-radius: 0;
-        padding: 0 0 30px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 30px 34px;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, .06);
     }
 
         .delete-card h2 {
             color: #b91c1c;
             font-size: 26px;
             font-weight: 750;
+            margin: 0 0 8px;
         }
 
     .delete-warning {
@@ -38,21 +40,34 @@
     .delete-info {
         padding: 12px 0;
         border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+        line-height: 1.5;
     }
 
     .delete-actions {
         display: flex;
-        gap: 10px;
+        flex-wrap: wrap;
+        gap: 14px;
         margin-top: 25px;
     }
 
     .btn-delete, .btn-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 160px;
+        min-height: 50px;
+        box-sizing: border-box;
         border: 0;
-        padding: 10px 17px;
+        padding: 12px 24px !important;
         border-radius: 8px;
         text-decoration: none;
         cursor: pointer;
-        font-weight: 600;
+        font-size: 15px !important;
+        font-weight: 700;
+        line-height: 1.3;
+        white-space: normal;
+        transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
     }
 
     .btn-delete {
@@ -65,10 +80,21 @@
         color: #334155;
     }
 
+        .btn-delete:hover {
+            background: #991b1b;
+            box-shadow: 0 3px 8px rgba(185, 28, 28, .2);
+            transform: translateY(-1px);
+        }
+
+        .btn-back:hover {
+            background: #cbd5e1;
+        }
+
     @@media (max-width: 650px) {
         .delete-page { width: calc(100% - 24px); margin-top: 22px; }
         .delete-actions { flex-wrap: wrap; }
-        .btn-delete, .btn-back { flex: 1 1 160px; text-align: center; }
+        .btn-delete, .btn-back { flex: 1 1 180px; text-align: center; }
+        .delete-card { padding: 22px 18px; }
     }
 </style>
 

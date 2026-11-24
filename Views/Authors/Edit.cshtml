@@ -211,15 +211,19 @@
     }
 
     .btn-save, .btn-back {
-        display: inline-block;
-        padding: 11px 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 20px;
         border-radius: 8px;
         text-decoration: none;
         border: 0;
         cursor: pointer;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 14px;
         text-align: center;
+        transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
     }
 
     .btn-save {
