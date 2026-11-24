@@ -461,11 +461,39 @@
         }
 
         .admin-footer {
-            padding: 18px;
+            flex: 0 0 auto;
+            border-top: 3px solid var(--admin-red);
             background: var(--admin-navy);
             color: #aab4c5;
-            text-align: center;
+        }
+
+        .admin-footer-inner {
+            width: min(1320px, calc(100% - 36px));
+            min-height: 68px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .admin-footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .admin-footer-brand i {
+            color: #fb7185;
+            font-size: 20px;
+        }
+
+        .admin-footer-copy {
+            color: #aab4c5;
             font-size: 12px;
+            text-align: right;
         }
 
         @@media (max-width: 900px) {
@@ -503,6 +531,15 @@
                 width: calc(100% - 24px);
                 margin: 20px auto;
             }
+
+            .admin-footer-inner {
+                width: calc(100% - 32px);
+                min-height: 68px;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 12px 0;
+            }
         }
     </style>
 </head>
@@ -521,7 +558,7 @@
     <header class="admin-header">
         <div class="admin-header-inner">
             <a class="admin-brand" href="@(isAdmin ? Url.RouteUrl("Admin", new { action = "Index" }) : Url.RouteUrl("AdminArticles", new { action = "Index" }))">
-                <i class="fa-solid fa-shield-halved"></i> @(isAuthor ? "Không gian Tác giả" : "TinNhanh Admin")
+                <i class="fa-solid fa-shield-halved"></i> TinNhanh Admin
             </a>
             <nav class="admin-nav">
                 @if (isAdmin)
@@ -586,7 +623,15 @@
     </main>
 
     <footer class="admin-footer">
-        Khu vực quản trị TinNhanh
+        <div class="admin-footer-inner">
+            <div>
+                <div class="admin-footer-brand">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    <span>TinNhanh Admin</span>
+                </div>
+            </div>
+            <div class="admin-footer-copy">Phiên bản 1.0 · © @DateTime.Now.Year TinNhanh</div>
+        </div>
     </footer>
 
     <script>

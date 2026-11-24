@@ -119,7 +119,7 @@
     </style>
 }
 
-<a class="dt-back" href="@(isAdminManagement ? Url.RouteUrl("AdminCategories", new { action = "Index" }) : Url.Action("Index", "Categories"))">« Tất cả danh mục</a>
+<a class="dt-back" href="@(isAdminManagement ? Url.RouteUrl("AdminCategories", new { action = "Index" }) : Url.RouteUrl("Default", new { controller = "Categories", action = "Index" }))">« Tất cả danh mục</a>
 
 <h1 class="dt-title">
     @Model.CategoryName

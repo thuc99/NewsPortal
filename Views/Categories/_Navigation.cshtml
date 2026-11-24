@@ -7,7 +7,7 @@
 @foreach (var category in Model)
 {
     <a class="nav-link category-nav-link @(activeCategoryId == category.CategoryID.ToString() ? "active" : "")"
-       href="@Url.Action("Details", "Categories", new { id = category.CategoryID })">
+       href="@Url.RouteUrl("Default", new { controller = "Categories", action = "Details", id = category.CategoryID })">
         @category.CategoryName
     </a>
 }

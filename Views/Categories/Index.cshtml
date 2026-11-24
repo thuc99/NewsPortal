@@ -423,7 +423,7 @@
                                         : item.CategoryName.Trim().Substring(0, 1).ToUpper())
                                 </span>
 
-                                <strong><a href="@(isAdminManagement ? Url.RouteUrl("AdminCategories", new { action = "Details", id = item.CategoryID }) : Url.Action("Details", "Categories", new { id = item.CategoryID }))" class="name-link">@item.CategoryName</a></strong>
+                                <strong><a href="@(isAdminManagement ? Url.RouteUrl("AdminCategories", new { action = "Details", id = item.CategoryID }) : Url.RouteUrl("Default", new { controller = "Categories", action = "Details", id = item.CategoryID }))" class="name-link">@item.CategoryName</a></strong>
                             </td>
 
                             <td>

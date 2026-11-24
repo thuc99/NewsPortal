@@ -938,30 +938,76 @@
                     }
                 }
 
-                <button class="np-share-toggle-mobile"
-                        id="npShareMobileToggle"
-                        type="button"
-                        aria-label="Chia sẻ bài viết"
-                        aria-expanded="false"
-                        aria-controls="npShareMobilePanel"
-                        title="Chia sẻ bài viết">
+                @if (ViewBag.IsAdminManagement != true)
+                {
+                    <button class="np-share-toggle-mobile"
+                            id="npShareMobileToggle"
+                            type="button"
+                            aria-label="Chia sẻ bài viết"
+                            aria-expanded="false"
+                            aria-controls="npShareMobilePanel"
+                            title="Chia sẻ bài viết">
+                        <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="np-share-mobile-panel" id="npShareMobilePanel">
+                        <a class="np-share__btn np-share__facebook np-share-mobile-action"
+                           href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
+                           target="_blank" rel="noopener noreferrer"
+                           aria-label="Chia sẻ lên Facebook" title="Facebook">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a class="np-share__btn np-share__zalo np-share-mobile-action"
+                           href="https://zalo.me/share?url=@encodedUrl"
+                           target="_blank" rel="noopener noreferrer"
+                           aria-label="Chia sẻ qua Zalo" title="Zalo">
+                            <span>Zalo</span>
+                        </a>
+                        <button class="np-share__btn np-share__copy np-share-mobile-action"
+                                type="button"
+                                aria-label="Sao chép liên kết"
+                                title="Sao chép liên kết"
+                                onclick="copyArticleLink()">
+                            <i class="fa-solid fa-link"></i>
+                        </button>
+                    </div>
+
+                    <span class="np-share__status np-share-mobile-status" id="npShareMobileStatus" role="status" aria-live="polite"></span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="np-article-layout">
+        @if (ViewBag.IsAdminManagement != true)
+        {
+            <aside class="np-share" aria-label="Chia sẻ bài viết">
+                <button class="np-share__toggle" type="button" aria-expanded="true" aria-controls="npShareActions">
+                    <span class="np-share__label">CHIA SẺ</span>
                     <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                 </button>
 
-                <div class="np-share-mobile-panel" id="npShareMobilePanel">
-                    <a class="np-share__btn np-share__facebook np-share-mobile-action"
+                <div class="np-share__actions" id="npShareActions">
+                    <a class="np-share__btn np-share__facebook"
                        href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
-                       target="_blank" rel="noopener noreferrer"
-                       aria-label="Chia sẻ lên Facebook" title="Facebook">
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="Chia sẻ lên Facebook"
+                       title="Facebook">
                         <i class="fa-brands fa-facebook-f"></i>
                     </a>
-                    <a class="np-share__btn np-share__zalo np-share-mobile-action"
+
+                    <a class="np-share__btn np-share__zalo"
                        href="https://zalo.me/share?url=@encodedUrl"
-                       target="_blank" rel="noopener noreferrer"
-                       aria-label="Chia sẻ qua Zalo" title="Zalo">
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="Chia sẻ qua Zalo"
+                       title="Zalo">
                         <span>Zalo</span>
                     </a>
-                    <button class="np-share__btn np-share__copy np-share-mobile-action"
+
+                    <button class="np-share__btn np-share__copy"
+                            id="npShareCopy"
                             type="button"
                             aria-label="Sao chép liên kết"
                             title="Sao chép liên kết"
@@ -970,49 +1016,9 @@
                     </button>
                 </div>
 
-                <span class="np-share__status np-share-mobile-status" id="npShareMobileStatus" role="status" aria-live="polite"></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="np-article-layout">
-        <aside class="np-share" aria-label="Chia sẻ bài viết">
-            <button class="np-share__toggle" type="button" aria-expanded="true" aria-controls="npShareActions">
-                <span class="np-share__label">CHIA SẺ</span>
-                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
-            </button>
-
-            <div class="np-share__actions" id="npShareActions">
-                <a class="np-share__btn np-share__facebook"
-                   href="https://www.facebook.com/sharer/sharer.php?u=@encodedUrl"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   aria-label="Chia sẻ lên Facebook"
-                   title="Facebook">
-                    <i class="fa-brands fa-facebook-f"></i>
-                </a>
-
-                <a class="np-share__btn np-share__zalo"
-                   href="https://zalo.me/share?url=@encodedUrl"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   aria-label="Chia sẻ qua Zalo"
-                   title="Zalo">
-                    <span>Zalo</span>
-                </a>
-
-                <button class="np-share__btn np-share__copy"
-                        id="npShareCopy"
-                        type="button"
-                        aria-label="Sao chép liên kết"
-                        title="Sao chép liên kết"
-                        onclick="copyArticleLink()">
-                    <i class="fa-solid fa-link"></i>
-                </button>
-            </div>
-
-            <span class="np-share__status" id="copyMessage" role="status" aria-live="polite"></span>
-        </aside>
+                <span class="np-share__status" id="copyMessage" role="status" aria-live="polite"></span>
+            </aside>
+        }
         <div class="np-article-content">
 
     <div class="detail-content">

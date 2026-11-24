@@ -12,16 +12,37 @@
     var messages = widget.querySelector('.news-chat__messages');
     var status = widget.querySelector('.news-chat__status');
     var historyKey = 'tinNhanhChatHistory';
+    var historyExpiryKey = 'tinNhanhChatHistoryExpiry';
+    var historyTtl = 5 * 60 * 1000;
     var chatHistory = loadHistory();
+
+    function clearHistory() {
+        try {
+            window.localStorage.removeItem(historyKey);
+            window.localStorage.removeItem(historyExpiryKey);
+            window.sessionStorage.removeItem(historyKey);
+        } catch (error) {
+            return;
+        }
+    }
 
     function loadHistory() {
         try {
+            var expiresAt = Number(window.localStorage.getItem(historyExpiryKey));
+            if (expiresAt && Date.now() >= expiresAt) {
+                clearHistory();
+                return [];
+            }
+
             var stored = window.localStorage.getItem(historyKey);
             if (!stored) {
                 stored = window.sessionStorage.getItem(historyKey) || '[]';
                 window.localStorage.setItem(historyKey, stored);
             }
             var history = JSON.parse(stored);
+            if (Array.isArray(history) && history.length > 0 && !expiresAt) {
+                window.localStorage.setItem(historyExpiryKey, String(Date.now() + historyTtl));
+            }
             return Array.isArray(history) ? history.slice(-60) : [];
         } catch (error) {
             return [];
@@ -31,10 +52,38 @@
     function saveHistory() {
         try {
             window.localStorage.setItem(historyKey, JSON.stringify(chatHistory.slice(-60)));
+            window.localStorage.setItem(historyExpiryKey, String(Date.now() + historyTtl));
         } catch (error) {
             return;
         }
     }
+
+    function scheduleHistoryCleanup() {
+        try {
+            if (chatHistory.length > 0) {
+                window.localStorage.setItem(historyExpiryKey, String(Date.now() + historyTtl));
+            }
+        } catch (error) {
+            return;
+        }
+    }
+
+    window.addEventListener('pagehide', scheduleHistoryCleanup);
+    window.addEventListener('pageshow', function () {
+        var expiresAt;
+        try {
+            expiresAt = Number(window.localStorage.getItem(historyExpiryKey));
+        } catch (error) {
+            return;
+        }
+
+        if (expiresAt && Date.now() >= expiresAt) {
+            chatHistory = [];
+            clearHistory();
+            messages.textContent = '';
+            addMessage('Xin chào! Mình là trợ lí AI Tin Nhanh. Bạn có thể hỏi về tin tức, nhờ tóm tắt bài viết hoặc hỏi thời tiết hôm nay.', false, null, false);
+        }
+    });
 
     function renderSources(sources) {
         if (!Array.isArray(sources) || sources.length === 0) return;
